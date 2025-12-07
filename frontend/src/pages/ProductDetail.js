@@ -1,7 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Star, ShoppingCart, Heart, Share2, MapPin, Package, Shield, ArrowLeft } from 'lucide-react';
-import axios from 'axios';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { Button } from '../components/ui/button';
@@ -9,21 +8,55 @@ import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { toast } from 'sonner';
-import { products } from '../mock';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { productAPI } from '../services/api';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const product = products.find(p => p.id === parseInt(id));
+  const [product, setProduct] = useState(null);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
   const { isAuthenticated } = useAuth();
   const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState(product?.image);
-  
-  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-  const API = `${BACKEND_URL}/api`;
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  useEffect(() => {
+    fetchProduct();
+  }, [id]);
+
+  const fetchProduct = async () => {
+    try {
+      setLoading(true);
+      const data = await productAPI.getProductById(id);
+      setProduct(data);
+      setSelectedImage(data.image);
+      
+      // Fetch related products
+      if (data.categoryId) {
+        const relatedData = await productAPI.getProducts({ category: data.categoryId });
+        setRelatedProducts(relatedData.filter(p => p.id !== parseInt(id)).slice(0, 4));
+      }
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      toast.error('Failed to load product');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-7xl mx-auto px-4 py-16 text-center">
+          <p className="text-xl">Loading product...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (
@@ -38,8 +71,6 @@ const ProductDetail = () => {
       </div>
     );
   }
-
-  const relatedProducts = products.filter(p => p.categoryId === product.categoryId && p.id !== product.id).slice(0, 4);
 
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
