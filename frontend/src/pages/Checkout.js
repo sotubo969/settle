@@ -62,13 +62,45 @@ const Checkout = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Simulate payment processing
-    setTimeout(() => {
-      clearCart();
-      setStep(3);
+    try {
+      // Prepare order data
+      const orderData = {
+        items: cart.map(item => ({
+          productId: item.id,
+          name: item.name,
+          brand: item.brand,
+          image: item.image,
+          price: item.price,
+          quantity: item.quantity,
+          vendorId: item.vendor?.id || item.vendorId,
+          vendorName: item.vendor?.name || 'Unknown Vendor'
+        })),
+        shippingInfo: shippingInfo,
+        paymentInfo: {
+          method: paymentMethod,
+          transactionId: `TXN-${Date.now()}`, // Mock transaction ID
+          status: 'completed'
+        },
+        subtotal: subtotal,
+        deliveryFee: delivery,
+        total: total
+      };
+
+      // Create order through backend API
+      const { orderAPI } = require('../services/api');
+      const response = await orderAPI.createOrder(orderData);
+      
+      if (response.success) {
+        await clearCart();
+        setStep(3);
+        toast.success('Order placed successfully!');
+      }
+    } catch (error) {
+      console.error('Order creation error:', error);
+      toast.error(error.response?.data?.detail || 'Failed to place order. Please try again.');
+    } finally {
       setLoading(false);
-      toast.success('Order placed successfully!');
-    }, 2000);
+    }
   };
 
   if (step === 3) {
