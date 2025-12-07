@@ -670,6 +670,58 @@ async def add_to_cart(
     
     return {"success": True, "message": "Product added to cart"}
 
+@api_router.put("/cart/update/{product_id}")
+async def update_cart_quantity(
+    product_id: int,
+    quantity: int = Query(..., ge=1),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(Cart).where(Cart.user_id == current_user.id))
+    cart = result.scalar_one_or_none()
+    
+    if not cart:
+        raise HTTPException(status_code=404, detail="Cart not found")
+    
+    items = cart.items or []
+    item_found = False
+    
+    for item in items:
+        if item['productId'] == product_id:
+            item['quantity'] = quantity
+            item_found = True
+            break
+    
+    if not item_found:
+        raise HTTPException(status_code=404, detail="Product not in cart")
+    
+    cart.items = items
+    cart.updated_at = datetime.utcnow()
+    await db.flush()
+    
+    return {"success": True, "message": "Cart updated"}
+
+@api_router.delete("/cart/remove/{product_id}")
+async def remove_from_cart(
+    product_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    result = await db.execute(select(Cart).where(Cart.user_id == current_user.id))
+    cart = result.scalar_one_or_none()
+    
+    if not cart:
+        raise HTTPException(status_code=404, detail="Cart not found")
+    
+    items = cart.items or []
+    items = [item for item in items if item['productId'] != product_id]
+    
+    cart.items = items
+    cart.updated_at = datetime.utcnow()
+    await db.flush()
+    
+    return {"success": True, "message": "Product removed from cart"}
+
 @api_router.delete("/cart/clear")
 async def clear_cart(current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Cart).where(Cart.user_id == current_user.id))
@@ -677,6 +729,7 @@ async def clear_cart(current_user: User = Depends(get_current_user), db: AsyncSe
     
     if cart:
         await db.delete(cart)
+        await db.flush()
     
     return {"success": True, "message": "Cart cleared"}
 
