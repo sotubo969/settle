@@ -12,6 +12,7 @@ import { Separator } from '../components/ui/separator';
 import { toast } from 'sonner';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { orderAPI } from '../services/api';
 
 const Checkout = () => {
   const navigate = useNavigate();
