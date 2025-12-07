@@ -167,15 +167,18 @@ frontend:
 
   - task: "Products Page Sorting"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/pages/Products.js"
     stuck_count: 0
     priority: "medium"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Initial testing required - need to test sorting by price, rating, newest, featured"
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - Sort dropdown is present and functional. Multiple sorting options available including price, rating, newest, featured."
 
   - task: "Product Detail Page"
     implemented: true
