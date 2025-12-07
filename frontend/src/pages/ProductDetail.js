@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Star, ShoppingCart, Heart, Share2, MapPin, Package, Shield, ArrowLeft } from 'lucide-react';
+import axios from 'axios';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { Button } from '../components/ui/button';
@@ -11,6 +12,9 @@ import { toast } from 'sonner';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { productAPI } from '../services/api';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const ProductDetail = () => {
   const { id } = useParams();
