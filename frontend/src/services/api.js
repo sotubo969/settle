@@ -31,6 +31,7 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       // Unauthorized - clear user data and redirect to login
+      localStorage.removeItem('afroToken');
       localStorage.removeItem('afroUser');
       window.location.href = '/login';
     }
