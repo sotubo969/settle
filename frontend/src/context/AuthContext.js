@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getUser, logout as mockLogout } from '../mock';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const AuthContext = createContext();
 
@@ -16,18 +19,33 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const currentUser = getUser();
-    setUser(currentUser);
+    // Check if user is logged in
+    const token = localStorage.getItem('afroToken');
+    const savedUser = localStorage.getItem('afroUser');
+    
+    if (token && savedUser) {
+      try {
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
+      } catch (error) {
+        console.error('Error parsing saved user:', error);
+        localStorage.removeItem('afroToken');
+        localStorage.removeItem('afroUser');
+      }
+    }
     setLoading(false);
   }, []);
 
-  const login = (userData) => {
+  const login = (userData, token) => {
     setUser(userData);
+    localStorage.setItem('afroToken', token);
+    localStorage.setItem('afroUser', JSON.stringify(userData));
   };
 
   const logout = () => {
-    mockLogout();
     setUser(null);
+    localStorage.removeItem('afroToken');
+    localStorage.removeItem('afroUser');
   };
 
   const value = {

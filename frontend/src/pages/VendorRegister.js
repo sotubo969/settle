@@ -190,7 +190,7 @@ const VendorRegister = () => {
                   <Input
                     id="city"
                     name="city"
-                    placeholder="London"
+                    placeholder="Manchester"
                     value={formData.city}
                     onChange={handleChange}
                     required

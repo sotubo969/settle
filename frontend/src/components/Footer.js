@@ -45,9 +45,29 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <a href="#" className="hover:text-emerald-400 transition-colors">
+                <Link to="/help" className="hover:text-emerald-400 transition-colors">
                   Help & Support
-                </a>
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms" className="hover:text-emerald-400 transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link to="/privacy" className="hover:text-emerald-400 transition-colors">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/shipping" className="hover:text-emerald-400 transition-colors">
+                  Shipping Information
+                </Link>
+              </li>
+              <li>
+                <Link to="/returns" className="hover:text-emerald-400 transition-colors">
+                  Returns & Refunds
+                </Link>
               </li>
             </ul>
           </div>
@@ -93,14 +113,16 @@ const Footer = () => {
               </li>
               <li className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 text-emerald-400 mt-1" />
-                <span>London, United Kingdom</span>
+                <span>England, United Kingdom</span>
               </li>
             </ul>
           </div>
         </div>
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-sm text-center">
+          <p className="text-emerald-400 font-semibold text-lg mb-3">GOD IS GOOD</p>
           <p>&copy; 2025 AfroMarket UK. All rights reserved. Built with care for the African diaspora community.</p>
+          <p className="mt-2 text-gray-500">Made by <span className="text-emerald-400 font-semibold">Dammy INC</span></p>
         </div>
       </div>
     </footer>

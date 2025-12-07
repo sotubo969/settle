@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Star, ShoppingCart, Heart, Share2, MapPin, Package, Shield, ArrowLeft } from 'lucide-react';
+import axios from 'axios';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { Button } from '../components/ui/button';
@@ -20,6 +21,9 @@ const ProductDetail = () => {
   const { isAuthenticated } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(product?.image);
+  
+  const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  const API = `${BACKEND_URL}/api`;
 
   if (!product) {
     return (
@@ -51,6 +55,25 @@ const ProductDetail = () => {
     }
     addToCart(product, quantity);
     navigate('/checkout');
+  };
+
+  const handleAddToWishlist = async () => {
+    if (!isAuthenticated) {
+      toast.error('Please login to add items to wishlist');
+      navigate('/login');
+      return;
+    }
+    
+    const token = localStorage.getItem('token');
+    try {
+      await axios.post(`${API}/wishlist/add/${product.id}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Added to wishlist!');
+    } catch (error) {
+      console.error('Wishlist error:', error);
+      toast.error('Failed to add to wishlist');
+    }
   };
 
   return (
@@ -193,7 +216,7 @@ const ProductDetail = () => {
                 Add to Cart
               </Button>
               <div className="flex gap-3">
-                <Button variant="outline" className="flex-1" size="lg">
+                <Button variant="outline" className="flex-1" size="lg" onClick={handleAddToWishlist}>
                   <Heart className="h-5 w-5 mr-2" />
                   Wishlist
                 </Button>

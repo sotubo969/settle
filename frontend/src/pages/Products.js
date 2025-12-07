@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { Star, Filter, X } from 'lucide-react';
+import axios from 'axios';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { Button } from '../components/ui/button';
@@ -8,21 +9,41 @@ import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Checkbox } from '../components/ui/checkbox';
 import { Label } from '../components/ui/label';
+import { Input } from '../components/ui/input';
 import { Slider } from '../components/ui/slider';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../components/ui/sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { products, categories, vendors } from '../mock';
+import { categories } from '../mock';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const Products = () => {
   const [searchParams] = useSearchParams();
-  const [filteredProducts, setFilteredProducts] = useState(products);
+  const [allProducts, setAllProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
-  const [selectedVendors, setSelectedVendors] = useState([]);
-  const [priceRange, setPriceRange] = useState([0, 50]);
+  const [priceRange, setPriceRange] = useState([0, 100]);
   const [sortBy, setSortBy] = useState('featured');
+  const [loading, setLoading] = useState(true);
+
+  // Fetch products from backend
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await axios.get(`${API}/products`);
+        setAllProducts(response.data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   useEffect(() => {
-    let filtered = [...products];
+    let filtered = [...allProducts];
 
     // Search filter
     const searchQuery = searchParams.get('search');
@@ -48,11 +69,6 @@ const Products = () => {
       filtered = filtered.filter(p => selectedCategories.includes(p.categoryId));
     }
 
-    // Vendor filter
-    if (selectedVendors.length > 0) {
-      filtered = filtered.filter(p => selectedVendors.includes(p.vendorId));
-    }
-
     // Price filter
     filtered = filtered.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
 
@@ -75,7 +91,7 @@ const Products = () => {
     }
 
     setFilteredProducts(filtered);
-  }, [searchParams, selectedCategories, selectedVendors, priceRange, sortBy]);
+  }, [searchParams, selectedCategories, priceRange, sortBy, allProducts]);
 
   const toggleCategory = (categoryId) => {
     setSelectedCategories(prev =>
@@ -85,19 +101,21 @@ const Products = () => {
     );
   };
 
-  const toggleVendor = (vendorId) => {
-    setSelectedVendors(prev =>
-      prev.includes(vendorId)
-        ? prev.filter(id => id !== vendorId)
-        : [...prev, vendorId]
-    );
-  };
-
   const clearFilters = () => {
     setSelectedCategories([]);
-    setSelectedVendors([]);
     setPriceRange([0, 50]);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-7xl mx-auto px-4 py-16 text-center">
+          <p className="text-xl">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
 
   const FilterSection = () => (
     <div className="space-y-6">
@@ -123,37 +141,42 @@ const Products = () => {
       {/* Price Range */}
       <div>
         <h3 className="font-semibold text-lg mb-3">Price Range</h3>
-        <div className="space-y-3">
+        <div className="space-y-4">
           <Slider
             value={priceRange}
             onValueChange={setPriceRange}
-            max={50}
+            max={100}
             step={1}
             className="w-full"
           />
-          <div className="flex justify-between text-sm text-gray-600">
-            <span>£{priceRange[0]}</span>
-            <span>£{priceRange[1]}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Vendors */}
-      <div>
-        <h3 className="font-semibold text-lg mb-3">Vendors</h3>
-        <div className="space-y-2">
-          {vendors.slice(0, 5).map(vendor => (
-            <div key={vendor.id} className="flex items-center space-x-2">
-              <Checkbox
-                id={`vendor-${vendor.id}`}
-                checked={selectedVendors.includes(vendor.id)}
-                onCheckedChange={() => toggleVendor(vendor.id)}
+          <div className="flex justify-between items-center gap-2">
+            <div className="flex-1">
+              <Label className="text-xs">Min</Label>
+              <Input
+                type="number"
+                value={priceRange[0]}
+                onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
+                min={0}
+                max={priceRange[1]}
+                className="h-9"
               />
-              <Label htmlFor={`vendor-${vendor.id}`} className="text-sm cursor-pointer">
-                {vendor.name}
-              </Label>
             </div>
-          ))}
+            <span className="text-gray-400 mt-5">-</span>
+            <div className="flex-1">
+              <Label className="text-xs">Max</Label>
+              <Input
+                type="number"
+                value={priceRange[1]}
+                onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
+                min={priceRange[0]}
+                max={50}
+                className="h-9"
+              />
+            </div>
+          </div>
+          <div className="text-center text-sm text-gray-600">
+            £{priceRange[0]} - £{priceRange[1]}
+          </div>
         </div>
       </div>
 

@@ -8,9 +8,15 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
 import VendorRegister from './pages/VendorRegister';
 import VendorDashboard from './pages/VendorDashboard';
 import Profile from './pages/Profile';
+import HelpSupport from './pages/HelpSupport';
+import TermsOfService from './pages/TermsOfService';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import ShippingInformation from './pages/ShippingInformation';
+import ReturnsRefunds from './pages/ReturnsRefunds';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 
@@ -28,9 +34,15 @@ function App() {
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/vendor/register" element={<VendorRegister />} />
               <Route path="/vendor/dashboard" element={<VendorDashboard />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/help" element={<HelpSupport />} />
+              <Route path="/terms" element={<TermsOfService />} />
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/shipping" element={<ShippingInformation />} />
+              <Route path="/returns" element={<ReturnsRefunds />} />
             </Routes>
           </BrowserRouter>
           <Toaster />

@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, ArrowLeft } from 'lucide-react';
+import axios from 'axios';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { toast } from 'sonner';
-import { mockLogin } from '../mock';
 import { useAuth } from '../context/AuthContext';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const Login = () => {
   const navigate = useNavigate();
@@ -23,14 +26,14 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await mockLogin(formData.email, formData.password);
-      if (response.success) {
-        login(response.user);
+      const response = await axios.post(`${API}/auth/login`, formData);
+      if (response.data.success) {
+        login(response.data.user, response.data.token);
         toast.success('Welcome back!');
         navigate('/');
       }
     } catch (error) {
-      toast.error('Login failed');
+      toast.error(error.response?.data?.detail || 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -90,9 +93,11 @@ const Login = () => {
               </div>
 
               <div className="flex justify-end">
-                <Button variant="link" className="px-0 text-emerald-600">
-                  Forgot password?
-                </Button>
+                <Link to="/forgot-password">
+                  <Button variant="link" className="px-0 text-emerald-600">
+                    Forgot password?
+                  </Button>
+                </Link>
               </div>
 
               <Button type="submit" className="w-full" size="lg" disabled={loading}>

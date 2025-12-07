@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User as UserIcon, ArrowLeft } from 'lucide-react';
+import axios from 'axios';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { toast } from 'sonner';
-import { mockRegister } from '../mock';
 import { useAuth } from '../context/AuthContext';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const Register = () => {
   const navigate = useNavigate();
@@ -36,14 +39,19 @@ const Register = () => {
     setLoading(true);
 
     try {
-      const response = await mockRegister(formData.name, formData.email, formData.password);
-      if (response.success) {
-        login(response.user);
+      const response = await axios.post(`${API}/auth/register`, {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password
+      });
+      
+      if (response.data.success) {
+        login(response.data.user, response.data.token);
         toast.success('Account created successfully!');
         navigate('/');
       }
     } catch (error) {
-      toast.error('Registration failed');
+      toast.error(error.response?.data?.detail || 'Registration failed');
     } finally {
       setLoading(false);
     }

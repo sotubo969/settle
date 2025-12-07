@@ -67,19 +67,20 @@ const Header = () => {
 
           {/* Search Bar */}
           <form onSubmit={handleSearch} className="flex-1 max-w-2xl">
-            <div className="relative flex">
+            <div className="relative flex shadow-lg">
               <Input
                 type="text"
                 placeholder="Search for African groceries, brands, and more..."
-                className="w-full pr-12 h-11 rounded-r-none border-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="w-full pr-12 h-12 rounded-r-none border-2 border-white focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-0 text-base"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               <Button
                 type="submit"
-                className="rounded-l-none bg-orange-500 hover:bg-orange-600 text-white h-11 px-6"
+                className="rounded-l-none bg-orange-500 hover:bg-orange-600 text-white h-12 px-8 text-base font-semibold"
               >
-                <Search className="h-5 w-5" />
+                <Search className="h-5 w-5 mr-2" />
+                Search
               </Button>
             </div>
           </form>
@@ -112,6 +113,12 @@ const Header = () => {
                     <DropdownMenuItem onClick={() => navigate('/profile')}>
                       My Profile
                     </DropdownMenuItem>
+                    {user?.role === 'vendor' && (
+                      <DropdownMenuItem onClick={() => navigate('/vendor/dashboard')}>
+                        <Store className="h-4 w-4 mr-2" />
+                        Vendor Dashboard
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={() => navigate('/profile')}>
                       <Package className="h-4 w-4 mr-2" />
                       Orders
