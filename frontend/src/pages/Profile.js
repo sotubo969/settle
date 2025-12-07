@@ -110,7 +110,7 @@ const Profile = () => {
   };
 
   const handleUpdateProfile = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('afroToken');
     try {
       await axios.put(`${API}/profile/update`, profileData, {
         headers: { Authorization: `Bearer ${token}` }
@@ -123,7 +123,7 @@ const Profile = () => {
   };
 
   const handleAddAddress = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('afroToken');
     try {
       const res = await axios.post(`${API}/profile/addresses`, newAddress, {
         headers: { Authorization: `Bearer ${token}` }
@@ -138,7 +138,7 @@ const Profile = () => {
   };
 
   const handleDeleteAddress = async (index) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('afroToken');
     try {
       const res = await axios.delete(`${API}/profile/addresses/${index}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -151,7 +151,7 @@ const Profile = () => {
   };
 
   const handleAddPaymentMethod = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('afroToken');
     try {
       const res = await axios.post(`${API}/profile/payment-methods`, newPayment, {
         headers: { Authorization: `Bearer ${token}` }
@@ -166,7 +166,7 @@ const Profile = () => {
   };
 
   const handleDeletePaymentMethod = async (index) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('afroToken');
     try {
       const res = await axios.delete(`${API}/profile/payment-methods/${index}`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -179,7 +179,7 @@ const Profile = () => {
   };
 
   const handleRemoveFromWishlist = async (productId) => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('afroToken');
     try {
       await axios.delete(`${API}/wishlist/remove/${productId}`, {
         headers: { Authorization: `Bearer ${token}` }
