@@ -217,12 +217,7 @@ const Cart = () => {
                     variant="outline"
                     size="lg"
                     className="w-full border-2 py-6"
-                    onClick={() => {
-                      if (window.confirm('Are you sure you want to clear your cart?')) {
-                        clearCart();
-                        toast.success('Cart cleared');
-                      }
-                    }}
+                    onClick={handleClearCart}
                   >
                     Clear Cart
                   </Button>
