@@ -990,12 +990,17 @@ async def remove_from_wishlist(
     result = await db.execute(select(User).where(User.id == current_user.id))
     user = result.scalar_one_or_none()
     
-    wishlist = user.wishlist if user.wishlist else []
+    wishlist = list(user.wishlist if user.wishlist else [])
     
     if product_id in wishlist:
         wishlist.remove(product_id)
         user.wishlist = wishlist
         user.updated_at = datetime.utcnow()
+        
+        # Mark as modified to trigger SQLAlchemy update
+        from sqlalchemy.orm.attributes import flag_modified
+        flag_modified(user, "wishlist")
+        
         await db.commit()
         await db.refresh(user)
     
