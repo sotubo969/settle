@@ -209,6 +209,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ WORKING - Cart functionality fully operational. Add to cart works, items stored in localStorage as 'afroCart', cart page accessible. Uses **MOCK** localStorage implementation, not backend integration."
+      - working: true
+        agent: "testing"
+        comment: "✅ BACKEND INTEGRATION WORKING - Cart now uses backend API instead of localStorage. Fixed authentication token issue in api.js. Tested: login required for cart access, add to cart (POST /api/cart/add), view cart (GET /api/cart), remove items (DELETE /api/cart/remove). Cart counter updates correctly. No localStorage usage detected."
 
   - task: "Authentication System"
     implemented: true
