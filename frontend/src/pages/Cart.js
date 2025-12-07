@@ -9,21 +9,51 @@ import { toast } from 'sonner';
 
 const Cart = () => {
   const navigate = useNavigate();
-  const { cart, removeFromCart, updateQuantity, getCartTotal, clearCart } = useCart();
+  const { cart, removeFromCart, updateQuantity, getCartTotal, clearCart, isLoading } = useCart();
 
-  const handleUpdateQuantity = (productId, newQuantity) => {
+  const handleUpdateQuantity = async (productId, newQuantity) => {
     if (newQuantity < 1) return;
-    updateQuantity(productId, newQuantity);
+    try {
+      await updateQuantity(productId, newQuantity);
+    } catch (error) {
+      toast.error('Failed to update quantity');
+    }
   };
 
-  const handleRemove = (product) => {
-    removeFromCart(product.id);
-    toast.success(`${product.name} removed from cart`);
+  const handleRemove = async (product) => {
+    try {
+      await removeFromCart(product.id);
+      toast.success(`${product.name} removed from cart`);
+    } catch (error) {
+      toast.error('Failed to remove item');
+    }
   };
 
   const handleCheckout = () => {
     navigate('/checkout');
   };
+
+  const handleClearCart = async () => {
+    if (window.confirm('Are you sure you want to clear your cart?')) {
+      try {
+        await clearCart();
+        toast.success('Cart cleared');
+      } catch (error) {
+        toast.error('Failed to clear cart');
+      }
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="max-w-7xl mx-auto px-4 py-16 text-center">
+          <p>Loading cart...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (cart.length === 0) {
     return (
