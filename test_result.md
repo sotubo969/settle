@@ -320,9 +320,12 @@ test_plan:
     - "Product Detail Page"
     - "Cart Functionality"
     - "Authentication System"
+    - "Checkout Flow"
+    - "Header Navigation and Search"
+    - "Legal and Support Pages"
   stuck_tasks: []
   test_all: true
-  test_priority: "high_first"
+  test_priority: "comprehensive_completed"
 
 agent_communication:
   - agent: "testing"
