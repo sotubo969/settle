@@ -747,6 +747,7 @@ async def clear_cart(current_user: User = Depends(get_current_user), db: AsyncSe
     if cart:
         await db.delete(cart)
         await db.flush()
+        await db.commit()
     
     return {"success": True, "message": "Cart cleared"}
 
