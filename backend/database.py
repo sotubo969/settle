@@ -115,15 +115,18 @@ class Order(Base):
 
 # Database session dependency
 async def get_db():
-    async with AsyncSessionLocal() as session:
+    session = AsyncSessionLocal()
+    try:
+        yield session
+        await session.commit()
+    except Exception:
+        await session.rollback()
+        raise
+    finally:
         try:
-            yield session
-            await session.commit()
-        except Exception:
-            await session.rollback()
-            raise
-        finally:
             await session.close()
+        except Exception:
+            pass  # Ignore close errors if session is already closed
 
 # Initialize database
 async def init_db():
