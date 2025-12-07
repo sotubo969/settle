@@ -88,10 +88,9 @@ const Checkout = () => {
       };
 
       // Create order through backend API
-      const { orderAPI } = require('../services/api');
       const response = await orderAPI.createOrder(orderData);
       
-      if (response.success) {
+      if (response.orderId) {
         await clearCart();
         setStep(3);
         toast.success('Order placed successfully!');
