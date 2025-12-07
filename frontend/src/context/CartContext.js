@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getCart, saveCart, addToCart as addToCartMock, removeFromCart as removeFromCartMock, updateCartQuantity as updateCartQuantityMock, clearCart as clearCartMock } from '../mock';
+import { cartAPI } from '../services/api';
+import { useAuth } from './AuthContext';
 
 const CartContext = createContext();
 
@@ -14,31 +15,86 @@ export const useCart = () => {
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { isAuthenticated } = useAuth();
+
+  // Fetch cart from backend
+  const fetchCart = async () => {
+    if (!isAuthenticated) {
+      setCart([]);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      const response = await cartAPI.getCart();
+      setCart(response.items || []);
+    } catch (error) {
+      console.error('Error fetching cart:', error);
+      setCart([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const savedCart = getCart();
-    setCart(savedCart);
-    setIsLoading(false);
-  }, []);
+    fetchCart();
+  }, [isAuthenticated]);
 
-  const addToCart = (product, quantity = 1) => {
-    const updatedCart = addToCartMock(product, quantity);
-    setCart(updatedCart);
+  const addToCart = async (product, quantity = 1) => {
+    if (!isAuthenticated) {
+      throw new Error('Please login to add items to cart');
+    }
+
+    try {
+      await cartAPI.addToCart(product.id, quantity);
+      await fetchCart(); // Refresh cart from backend
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      throw error;
+    }
   };
 
-  const removeFromCart = (productId) => {
-    const updatedCart = removeFromCartMock(productId);
-    setCart(updatedCart);
+  const removeFromCart = async (productId) => {
+    if (!isAuthenticated) {
+      throw new Error('Please login to modify cart');
+    }
+
+    try {
+      await cartAPI.removeFromCart(productId);
+      await fetchCart(); // Refresh cart from backend
+    } catch (error) {
+      console.error('Error removing from cart:', error);
+      throw error;
+    }
   };
 
-  const updateQuantity = (productId, quantity) => {
-    const updatedCart = updateCartQuantityMock(productId, quantity);
-    setCart(updatedCart);
+  const updateQuantity = async (productId, quantity) => {
+    if (!isAuthenticated) {
+      throw new Error('Please login to modify cart');
+    }
+
+    try {
+      await cartAPI.updateQuantity(productId, quantity);
+      await fetchCart(); // Refresh cart from backend
+    } catch (error) {
+      console.error('Error updating quantity:', error);
+      throw error;
+    }
   };
 
-  const clearCart = () => {
-    const updatedCart = clearCartMock();
-    setCart(updatedCart);
+  const clearCart = async () => {
+    if (!isAuthenticated) {
+      throw new Error('Please login to clear cart');
+    }
+
+    try {
+      await cartAPI.clearCart();
+      setCart([]);
+    } catch (error) {
+      console.error('Error clearing cart:', error);
+      throw error;
+    }
   };
 
   const getCartTotal = () => {
@@ -58,6 +114,7 @@ export const CartProvider = ({ children }) => {
     getCartTotal,
     getCartCount,
     isLoading,
+    refreshCart: fetchCart,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
