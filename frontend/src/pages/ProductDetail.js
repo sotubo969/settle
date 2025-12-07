@@ -41,20 +41,35 @@ const ProductDetail = () => {
 
   const relatedProducts = products.filter(p => p.categoryId === product.categoryId && p.id !== product.id).slice(0, 4);
 
-  const handleAddToCart = () => {
-    addToCart(product, quantity);
-    toast.success(`${product.name} added to cart!`, {
-      description: `Quantity: ${quantity}`,
-    });
+  const handleAddToCart = async () => {
+    if (!isAuthenticated) {
+      toast.error('Please login to add items to cart');
+      navigate('/login');
+      return;
+    }
+
+    try {
+      await addToCart(product, quantity);
+      toast.success(`${product.name} added to cart!`, {
+        description: `Quantity: ${quantity}`,
+      });
+    } catch (error) {
+      toast.error('Failed to add to cart. Please try again.');
+    }
   };
 
-  const handleBuyNow = () => {
+  const handleBuyNow = async () => {
     if (!isAuthenticated) {
       navigate('/login');
       return;
     }
-    addToCart(product, quantity);
-    navigate('/checkout');
+
+    try {
+      await addToCart(product, quantity);
+      navigate('/checkout');
+    } catch (error) {
+      toast.error('Failed to add to cart. Please try again.');
+    }
   };
 
   const handleAddToWishlist = async () => {
