@@ -57,7 +57,7 @@ const Profile = () => {
 
   useEffect(() => {
     // Wait for AuthContext to finish loading
-    if (loading) return;
+    if (authLoading) return;
     
     if (!isAuthenticated) {
       navigate('/login');
@@ -65,7 +65,7 @@ const Profile = () => {
     }
     console.log('Fetching user data for profile...');
     fetchUserData();
-  }, [isAuthenticated, loading]);
+  }, [isAuthenticated, authLoading]);
 
   const fetchUserData = async () => {
     const token = localStorage.getItem('afroToken');
