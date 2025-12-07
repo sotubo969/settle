@@ -114,7 +114,7 @@ const ProductDetail = () => {
       return;
     }
     
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('afroToken');
     try {
       await axios.post(`${API}/wishlist/add/${product.id}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
@@ -122,7 +122,7 @@ const ProductDetail = () => {
       toast.success('Added to wishlist!');
     } catch (error) {
       console.error('Wishlist error:', error);
-      toast.error('Failed to add to wishlist');
+      toast.error(error.response?.data?.detail || 'Failed to add to wishlist');
     }
   };
 
