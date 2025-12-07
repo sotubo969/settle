@@ -65,7 +65,7 @@ const Profile = () => {
   }, [isAuthenticated]);
 
   const fetchUserData = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('afroToken');
     console.log('Token found:', !!token);
     
     if (!token) {
