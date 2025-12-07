@@ -20,7 +20,7 @@ const API = `${BACKEND_URL}/api`;
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, loading: authLoading } = useAuth();
   const [orders, setOrders] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [addresses, setAddresses] = useState([]);
