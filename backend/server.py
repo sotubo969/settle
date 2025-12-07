@@ -655,7 +655,7 @@ async def add_to_cart(
         cart = Cart(user_id=current_user.id, items=[])
         db.add(cart)
     
-    items = cart.items or []
+    items = list(cart.items or [])
     existing_item = next((item for item in items if item['productId'] == cart_data.productId), None)
     
     if existing_item:
@@ -666,7 +666,12 @@ async def add_to_cart(
     cart.items = items
     cart.updated_at = datetime.utcnow()
     
+    # Mark as modified to trigger SQLAlchemy update
+    from sqlalchemy.orm.attributes import flag_modified
+    flag_modified(cart, "items")
+    
     await db.flush()
+    await db.commit()
     
     return {"success": True, "message": "Product added to cart"}
 
