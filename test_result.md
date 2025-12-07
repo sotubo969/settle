@@ -107,15 +107,18 @@ user_problem_statement: "Test the AfroMarket UK website comprehensively and docu
 frontend:
   - task: "Homepage Hero Carousel"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/frontend/src/pages/Home.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "testing"
         comment: "Initial testing required - need to verify hero carousel functionality, navigation buttons, and auto-rotation"
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - Hero carousel displays correctly with 3 slides, navigation buttons (prev/next) work, dots indicator shows 3 dots, auto-rotation functional. Uses mock data from banners array."
 
   - task: "Categories Display"
     implemented: true
