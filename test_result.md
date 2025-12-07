@@ -281,3 +281,5 @@ agent_communication:
     message: "Starting comprehensive testing of AfroMarket UK website. Will test all major features and document what's working vs mock implementation."
   - agent: "testing"
     message: "COMPREHENSIVE TESTING COMPLETED. Key findings: 1) Homepage, products, cart, auth all working. 2) MIXED IMPLEMENTATION: Featured products use backend API (4 API calls detected), but product details, cart, and auth use mock/localStorage. 3) All UI components functional. 4) No critical issues found. Website is fully functional with hybrid backend/mock architecture."
+  - agent: "testing"
+    message: "BACKEND CART INTEGRATION TESTING COMPLETED. Fixed authentication token issue in /app/frontend/src/services/api.js (was looking for userData.token instead of afroToken). Cart now fully integrated with backend: ✅ Login required ✅ Add to cart (POST /api/cart/add) ✅ View cart (GET /api/cart) ✅ Remove items (DELETE /api/cart/remove) ✅ No localStorage usage ✅ Cart counter updates. Authentication and cart operations working correctly with backend APIs."
