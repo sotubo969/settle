@@ -724,12 +724,18 @@ async def remove_from_cart(
     if not cart:
         raise HTTPException(status_code=404, detail="Cart not found")
     
-    items = cart.items or []
+    items = list(cart.items or [])
     items = [item for item in items if item['productId'] != product_id]
     
     cart.items = items
     cart.updated_at = datetime.utcnow()
+    
+    # Mark as modified to trigger SQLAlchemy update
+    from sqlalchemy.orm.attributes import flag_modified
+    flag_modified(cart, "items")
+    
     await db.flush()
+    await db.commit()
     
     return {"success": True, "message": "Product removed from cart"}
 
