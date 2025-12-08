@@ -3,9 +3,9 @@ import { Facebook, Twitter, Instagram, Mail, Phone, MapPin } from 'lucide-react'
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-900 text-gray-300 mt-20">
-      <div className="max-w-7xl mx-auto px-4 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+    <footer className="bg-gray-900 text-gray-300 mt-12 sm:mt-20">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-8 sm:py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           {/* About */}
           <div>
             <h3 className="text-white font-bold text-lg mb-4">About AfroMarket UK</h3>
