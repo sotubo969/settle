@@ -34,7 +34,7 @@ const categories = [
 
 const VendorDashboard = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [products, setProducts] = useState([]);
   const [stats, setStats] = useState({});
