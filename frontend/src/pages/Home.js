@@ -106,33 +106,33 @@ const Home = () => {
 
       {/* Features Bar */}
       <div className="bg-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="bg-emerald-100 p-3 rounded-full">
-                <Truck className="h-6 w-6 text-emerald-600" />
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
+            <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg hover:bg-gray-50 transition-colors">
+              <div className="bg-emerald-100 p-2 sm:p-3 rounded-full">
+                <Truck className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600" />
               </div>
               <div>
-                <h3 className="font-semibold">Fast Delivery</h3>
-                <p className="text-sm text-gray-600">Same-day delivery available</p>
+                <h3 className="font-semibold text-sm sm:text-base">Fast Delivery</h3>
+                <p className="text-xs sm:text-sm text-gray-600">Same-day delivery available</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="bg-orange-100 p-3 rounded-full">
-                <ShoppingBag className="h-6 w-6 text-orange-600" />
+            <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg hover:bg-gray-50 transition-colors">
+              <div className="bg-orange-100 p-2 sm:p-3 rounded-full">
+                <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
               </div>
               <div>
-                <h3 className="font-semibold">Authentic Products</h3>
-                <p className="text-sm text-gray-600">From verified vendors</p>
+                <h3 className="font-semibold text-sm sm:text-base">Authentic Products</h3>
+                <p className="text-xs sm:text-sm text-gray-600">From verified vendors</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="bg-blue-100 p-3 rounded-full">
-                <TrendingUp className="h-6 w-6 text-blue-600" />
+            <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg hover:bg-gray-50 transition-colors">
+              <div className="bg-blue-100 p-2 sm:p-3 rounded-full">
+                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
               </div>
               <div>
-                <h3 className="font-semibold">Best Prices</h3>
-                <p className="text-sm text-gray-600">Competitive marketplace rates</p>
+                <h3 className="font-semibold text-sm sm:text-base">Best Prices</h3>
+                <p className="text-xs sm:text-sm text-gray-600">Competitive marketplace rates</p>
               </div>
             </div>
           </div>
