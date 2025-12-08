@@ -57,6 +57,9 @@ const VendorDashboard = () => {
   });
 
   useEffect(() => {
+    // Wait for AuthContext to finish loading
+    if (authLoading) return;
+    
     if (!isAuthenticated) {
       navigate('/login');
       return;
@@ -69,7 +72,7 @@ const VendorDashboard = () => {
     }
     
     fetchDashboardData();
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, authLoading]);
 
   const fetchDashboardData = async () => {
     try {
