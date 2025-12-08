@@ -58,12 +58,12 @@ const Home = () => {
           >
             <div className="max-w-7xl mx-auto h-full flex items-center px-4">
               <div className="text-white max-w-2xl animate-fade-in">
-                <h1 className="text-5xl md:text-6xl font-bold mb-4 drop-shadow-lg">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-2 sm:mb-4 drop-shadow-lg">
                   {banner.title}
                 </h1>
-                <p className="text-xl md:text-2xl mb-8 drop-shadow-md">{banner.subtitle}</p>
+                <p className="text-base sm:text-xl md:text-2xl mb-4 sm:mb-8 drop-shadow-md">{banner.subtitle}</p>
                 <Link to={banner.link}>
-                  <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-6 text-lg font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all">
+                  <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all">
                     {banner.cta}
                   </Button>
                 </Link>
