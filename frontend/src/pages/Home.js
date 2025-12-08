@@ -106,44 +106,44 @@ const Home = () => {
 
       {/* Features Bar */}
       <div className="bg-white shadow-md">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 py-4 sm:py-6">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
-            <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="bg-emerald-100 p-2 sm:p-3 rounded-full">
-                <Truck className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600" />
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-6">
+            <div className="flex items-center gap-2 sm:gap-4 p-2 sm:p-4 rounded-lg hover:bg-gray-50 transition-colors">
+              <div className="bg-emerald-100 p-2 rounded-full flex-shrink-0">
+                <Truck className="h-4 w-4 sm:h-6 sm:w-6 text-emerald-600" />
               </div>
-              <div>
-                <h3 className="font-semibold text-sm sm:text-base">Fast Delivery</h3>
-                <p className="text-xs sm:text-sm text-gray-600">Same-day delivery available</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="bg-orange-100 p-2 sm:p-3 rounded-full">
-                <ShoppingBag className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-sm sm:text-base">Authentic Products</h3>
-                <p className="text-xs sm:text-sm text-gray-600">From verified vendors</p>
+              <div className="min-w-0">
+                <h3 className="font-semibold text-xs sm:text-base truncate">Fast Delivery</h3>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">Same-day available</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="bg-blue-100 p-2 sm:p-3 rounded-full">
-                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+            <div className="flex items-center gap-2 sm:gap-4 p-2 sm:p-4 rounded-lg hover:bg-gray-50 transition-colors">
+              <div className="bg-orange-100 p-2 rounded-full flex-shrink-0">
+                <ShoppingBag className="h-4 w-4 sm:h-6 sm:w-6 text-orange-600" />
               </div>
-              <div>
-                <h3 className="font-semibold text-sm sm:text-base">Best Prices</h3>
-                <p className="text-xs sm:text-sm text-gray-600">Competitive marketplace rates</p>
+              <div className="min-w-0">
+                <h3 className="font-semibold text-xs sm:text-base truncate">Authentic Products</h3>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">Verified vendors</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 sm:gap-4 p-2 sm:p-4 rounded-lg hover:bg-gray-50 transition-colors">
+              <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
+                <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6 text-blue-600" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-semibold text-xs sm:text-base truncate">Best Prices</h3>
+                <p className="text-xs sm:text-sm text-gray-600 truncate">Competitive rates</p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-8 sm:py-12">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-12">
         {/* Categories Section */}
-        <section className="mb-12 sm:mb-16">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-gray-900 px-2">Shop by Category</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-6">
+        <section className="mb-8 sm:mb-16">
+          <h2 className="text-xl sm:text-3xl font-bold mb-4 sm:mb-8 text-gray-900">Shop by Category</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-6">
             {categories.map((category) => (
               <Link key={category.id} to={`/products?category=${category.slug}`}>
                 <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 overflow-hidden border-2 hover:border-emerald-500">
