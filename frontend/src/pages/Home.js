@@ -221,13 +221,13 @@ const Home = () => {
         </section>
 
         {/* Call to Action */}
-        <section className="bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-xl sm:rounded-2xl p-6 sm:p-12 text-white text-center shadow-xl">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">Join Our Vendor Community</h2>
-          <p className="text-base sm:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto">
-            Are you an African grocery shop owner? Start selling on AfroMarket UK and reach thousands of customers across the UK.
+        <section className="bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-lg sm:rounded-2xl p-4 sm:p-12 text-white text-center shadow-xl">
+          <h2 className="text-xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-4">Join Our Vendor Community</h2>
+          <p className="text-sm sm:text-xl mb-4 sm:mb-8 max-w-2xl mx-auto">
+            Start selling on AfroMarket UK and reach thousands of customers.
           </p>
           <Link to="/vendor/register">
-            <Button size="lg" className="bg-white text-emerald-600 hover:bg-gray-100 px-6 sm:px-8 py-4 sm:py-6 text-base sm:text-lg font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all">
+            <Button size="lg" className="bg-white text-emerald-600 hover:bg-gray-100 px-4 sm:px-8 py-3 sm:py-6 text-sm sm:text-lg font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all">
               Become a Vendor Today
             </Button>
           </Link>
