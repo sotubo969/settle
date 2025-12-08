@@ -146,17 +146,17 @@ const Home = () => {
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-6">
             {categories.map((category) => (
               <Link key={category.id} to={`/products?category=${category.slug}`}>
-                <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 overflow-hidden border-2 hover:border-emerald-500">
+                <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden border-2 hover:border-emerald-500">
                   <CardContent className="p-0">
-                    <div className="relative h-40 overflow-hidden">
+                    <div className="relative h-24 sm:h-40 overflow-hidden">
                       <img
                         src={category.image}
                         alt={category.name}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                      <div className="absolute bottom-3 left-3 right-3">
-                        <h3 className="text-white font-semibold text-lg">{category.name}</h3>
+                      <div className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3 right-2 sm:right-3">
+                        <h3 className="text-white font-semibold text-xs sm:text-lg leading-tight">{category.name}</h3>
                       </div>
                     </div>
                   </CardContent>
