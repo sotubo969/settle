@@ -45,9 +45,18 @@ const Header = () => {
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <Link to="/vendor/register" className="hover:text-emerald-200 transition-colors">
-              Become a Vendor
-            </Link>
+            {/* Only show "Become a Vendor" if user is not already a vendor */}
+            {(!isAuthenticated || user?.role !== 'vendor') && (
+              <Link to="/vendor/register" className="hover:text-emerald-200 transition-colors">
+                Become a Vendor
+              </Link>
+            )}
+            {/* Show Vendor Dashboard if user is a vendor */}
+            {isAuthenticated && user?.role === 'vendor' && (
+              <Link to="/vendor/dashboard" className="hover:text-emerald-200 transition-colors">
+                Vendor Dashboard
+              </Link>
+            )}
             <Link to="/profile" className="hover:text-emerald-200 transition-colors">
               Track Orders
             </Link>
