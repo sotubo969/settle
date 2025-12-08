@@ -36,40 +36,44 @@ const Header = () => {
   return (
     <header className="sticky top-0 z-50 bg-gradient-to-r from-emerald-700 to-emerald-600 shadow-lg">
       {/* Top Bar */}
-      <div className="bg-emerald-800 text-white py-2 px-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center text-sm">
-          <div className="flex items-center gap-4">
+      <div className="bg-emerald-800 text-white py-2 px-2 sm:px-4">
+        <div className="max-w-7xl mx-auto flex justify-between items-center text-xs sm:text-sm">
+          <div className="flex items-center gap-2 sm:gap-4">
             <span className="flex items-center gap-1">
-              <MapPin className="h-4 w-4" />
-              Deliver to United Kingdom
+              <MapPin className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Deliver to United Kingdom</span>
+              <span className="sm:hidden">UK Delivery</span>
             </span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             {/* Only show "Become a Vendor" if user is not already a vendor */}
             {(!isAuthenticated || user?.role !== 'vendor') && (
-              <Link to="/vendor/register" className="hover:text-emerald-200 transition-colors">
-                Become a Vendor
+              <Link to="/vendor/register" className="hover:text-emerald-200 transition-colors whitespace-nowrap">
+                <span className="hidden sm:inline">Become a Vendor</span>
+                <span className="sm:hidden">Vendor</span>
               </Link>
             )}
             {/* Show Vendor Dashboard if user is a vendor */}
             {isAuthenticated && user?.role === 'vendor' && (
-              <Link to="/vendor/dashboard" className="hover:text-emerald-200 transition-colors">
-                Vendor Dashboard
+              <Link to="/vendor/dashboard" className="hover:text-emerald-200 transition-colors whitespace-nowrap">
+                <span className="hidden sm:inline">Vendor Dashboard</span>
+                <span className="sm:hidden">Dashboard</span>
               </Link>
             )}
-            <Link to="/profile" className="hover:text-emerald-200 transition-colors">
-              Track Orders
+            <Link to="/profile" className="hover:text-emerald-200 transition-colors whitespace-nowrap">
+              <span className="hidden sm:inline">Track Orders</span>
+              <span className="sm:hidden">Orders</span>
             </Link>
           </div>
         </div>
       </div>
 
       {/* Main Header */}
-      <div className="py-3 px-4">
-        <div className="max-w-7xl mx-auto flex items-center gap-6">
+      <div className="py-2 sm:py-3 px-2 sm:px-4">
+        <div className="max-w-7xl mx-auto flex items-center gap-2 sm:gap-6">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 text-white font-bold text-2xl min-w-fit">
-            <Store className="h-8 w-8" />
+          <Link to="/" className="flex items-center gap-1 sm:gap-2 text-white font-bold text-lg sm:text-2xl min-w-fit">
+            <Store className="h-6 w-6 sm:h-8 sm:w-8" />
             <span className="hidden md:block">AfroMarket UK</span>
             <span className="md:hidden">AfroMart</span>
           </Link>
@@ -79,17 +83,17 @@ const Header = () => {
             <div className="relative flex shadow-lg">
               <Input
                 type="text"
-                placeholder="Search for African groceries, brands, and more..."
-                className="w-full pr-12 h-12 rounded-r-none border-2 border-white focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-0 text-base"
+                placeholder="Search groceries..."
+                className="w-full pr-10 sm:pr-12 h-9 sm:h-12 rounded-r-none border-2 border-white focus-visible:ring-2 focus-visible:ring-orange-400 focus-visible:ring-offset-0 text-sm sm:text-base"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               <Button
                 type="submit"
-                className="rounded-l-none bg-orange-500 hover:bg-orange-600 text-white h-12 px-8 text-base font-semibold"
+                className="rounded-l-none bg-orange-500 hover:bg-orange-600 text-white h-9 sm:h-12 px-3 sm:px-8 text-sm sm:text-base font-semibold"
               >
-                <Search className="h-5 w-5 mr-2" />
-                Search
+                <Search className="h-4 w-4 sm:h-5 sm:w-5 mr-0 sm:mr-2" />
+                <span className="hidden sm:inline">Search</span>
               </Button>
             </div>
           </form>
