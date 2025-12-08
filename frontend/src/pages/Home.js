@@ -43,7 +43,7 @@ const Home = () => {
       <Header />
 
       {/* Hero Carousel */}
-      <div className="relative h-[500px] overflow-hidden bg-gradient-to-br from-emerald-50 to-orange-50">
+      <div className="relative h-[300px] sm:h-[400px] md:h-[500px] overflow-hidden bg-gradient-to-br from-emerald-50 to-orange-50">
         {banners.map((banner, index) => (
           <div
             key={banner.id}
