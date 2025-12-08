@@ -139,11 +139,11 @@ const Home = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-12">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 py-8 sm:py-12">
         {/* Categories Section */}
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold mb-8 text-gray-900">Shop by Category</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <section className="mb-12 sm:mb-16">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8 text-gray-900 px-2">Shop by Category</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 sm:gap-6">
             {categories.map((category) => (
               <Link key={category.id} to={`/products?category=${category.slug}`}>
                 <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 overflow-hidden border-2 hover:border-emerald-500">
