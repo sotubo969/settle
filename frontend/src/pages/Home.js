@@ -167,51 +167,51 @@ const Home = () => {
         </section>
 
         {/* Featured Products */}
-        <section className="mb-12 sm:mb-16">
-          <div className="flex justify-between items-center mb-6 sm:mb-8 px-2">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Featured Products</h2>
+        <section className="mb-8 sm:mb-16">
+          <div className="flex justify-between items-center mb-4 sm:mb-8">
+            <h2 className="text-xl sm:text-3xl font-bold text-gray-900">Featured Products</h2>
             <Link to="/products">
-              <Button variant="outline" className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 text-xs sm:text-sm">
+              <Button variant="outline" className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 text-xs sm:text-sm px-2 sm:px-4">
                 View All
               </Button>
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-6">
             {featuredProducts.map((product) => (
               <Link key={product.id} to={`/product/${product.id}`}>
-                <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 h-full">
-                  <CardContent className="p-4">
-                    <div className="relative mb-4 overflow-hidden rounded-lg">
+                <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-full">
+                  <CardContent className="p-2 sm:p-4">
+                    <div className="relative mb-2 sm:mb-4 overflow-hidden rounded-lg">
                       {product.originalPrice && (
-                        <Badge className="absolute top-2 left-2 bg-red-500 text-white z-10">
+                        <Badge className="absolute top-1 left-1 sm:top-2 sm:left-2 bg-red-500 text-white z-10 text-xs px-1 sm:px-2">
                           Sale
                         </Badge>
                       )}
                       <img
                         src={product.image}
                         alt={product.name}
-                        className="w-full h-48 object-cover group-hover:scale-110 transition-transform duration-500"
+                        className="w-full h-32 sm:h-48 object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                     </div>
-                    <div className="space-y-2">
-                      <p className="text-sm text-gray-600">{product.brand}</p>
-                      <h3 className="font-semibold text-gray-900 line-clamp-2 group-hover:text-emerald-600 transition-colors">
+                    <div className="space-y-1 sm:space-y-2">
+                      <p className="text-xs sm:text-sm text-gray-600 truncate">{product.brand}</p>
+                      <h3 className="font-semibold text-xs sm:text-base text-gray-900 line-clamp-2 group-hover:text-emerald-600 transition-colors leading-tight">
                         {product.name}
                       </h3>
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-medium">{product.rating}</span>
+                      <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-0.5">
+                          <Star className="h-3 w-3 sm:h-4 sm:w-4 fill-yellow-400 text-yellow-400" />
+                          <span className="text-xs sm:text-sm font-medium">{product.rating}</span>
                         </div>
-                        <span className="text-sm text-gray-500">({product.reviews})</span>
+                        <span className="text-xs text-gray-500">({product.reviews})</span>
                       </div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-2xl font-bold text-emerald-600">£{product.price}</span>
+                      <div className="flex items-baseline gap-1 sm:gap-2">
+                        <span className="text-base sm:text-2xl font-bold text-emerald-600">£{product.price}</span>
                         {product.originalPrice && (
-                          <span className="text-sm text-gray-500 line-through">£{product.originalPrice}</span>
+                          <span className="text-xs sm:text-sm text-gray-500 line-through">£{product.originalPrice}</span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-600">by {product.vendor.name}</p>
+                      <p className="text-xs text-gray-600 truncate">by {product.vendor.name}</p>
                     </div>
                   </CardContent>
                 </Card>
