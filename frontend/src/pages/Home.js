@@ -167,16 +167,16 @@ const Home = () => {
         </section>
 
         {/* Featured Products */}
-        <section className="mb-16">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">Featured Products</h2>
+        <section className="mb-12 sm:mb-16">
+          <div className="flex justify-between items-center mb-6 sm:mb-8 px-2">
+            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">Featured Products</h2>
             <Link to="/products">
-              <Button variant="outline" className="border-emerald-600 text-emerald-600 hover:bg-emerald-50">
-                View All Products
+              <Button variant="outline" className="border-emerald-600 text-emerald-600 hover:bg-emerald-50 text-xs sm:text-sm">
+                View All
               </Button>
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
             {featuredProducts.map((product) => (
               <Link key={product.id} to={`/product/${product.id}`}>
                 <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-2 h-full">
