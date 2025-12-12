@@ -11,6 +11,8 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import VendorRegister from './pages/VendorRegister';
 import VendorDashboard from './pages/VendorDashboard';
+import VendorSubscription from './pages/VendorSubscription';
+import PremiumMembership from './pages/PremiumMembership';
 import Profile from './pages/Profile';
 import HelpSupport from './pages/HelpSupport';
 import TermsOfService from './pages/TermsOfService';
@@ -37,6 +39,8 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/vendor/register" element={<VendorRegister />} />
               <Route path="/vendor/dashboard" element={<VendorDashboard />} />
+              <Route path="/vendor/subscription" element={<VendorSubscription />} />
+              <Route path="/premium" element={<PremiumMembership />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/help" element={<HelpSupport />} />
               <Route path="/terms" element={<TermsOfService />} />
