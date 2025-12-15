@@ -62,7 +62,7 @@ sudo supervisorctl restart backend
 
 **Test vendor registration:**
 ```bash
-curl -X POST https://sourcecode-fetch.preview.emergentagent.com/api/vendors/register \
+curl -X POST https://afrobasket.preview.emergentagent.com/api/vendors/register \
   -H 'Content-Type: application/json' \
   -d '{
     "businessName": "Test Store",
