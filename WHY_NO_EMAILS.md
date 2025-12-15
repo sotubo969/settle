@@ -85,7 +85,7 @@ tail -f /var/log/supervisor/backend.out.log | grep "VENDOR"
 
 ### Option 2: Test Vendor Registration
 
-Go to: https://afrobasket.preview.emergentagent.com/vendor/register
+Go to: https://sourcecode-fetch.preview.emergentagent.com/vendor/register
 
 Fill in the form and submit. Check:
 1. Backend logs (as above)

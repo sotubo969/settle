@@ -245,7 +245,7 @@ class EmailService:
                         <p>We're excited to inform you that your vendor application has been approved!</p>
                         <p>You can now start adding products and reaching customers across the UK.</p>
                         <p style="text-align: center;">
-                            <a href="https://afrobasket.preview.emergentagent.com/vendor/dashboard" class="button">Go to Dashboard</a>
+                            <a href="https://sourcecode-fetch.preview.emergentagent.com/vendor/dashboard" class="button">Go to Dashboard</a>
                         </p>
                         <p>If you have any questions, feel free to contact us.</p>
                         <p>Best regards,<br>The AfroMarket UK Team</p>
