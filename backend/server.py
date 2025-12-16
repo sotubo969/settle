@@ -1320,7 +1320,12 @@ logger = logging.getLogger(__name__)
 async def startup():
     await init_db()
     logger.info("Database initialized")
+    # Initialize MongoDB indexes for Emergent Auth
+    await init_mongo_indexes()
+    logger.info("MongoDB indexes initialized")
 
 @app.on_event("shutdown")
 async def shutdown():
+    from mongo_db import close_mongo_connection
+    await close_mongo_connection()
     logger.info("Shutting down")
