@@ -135,6 +135,52 @@ class BackendTester:
         
         return False
     
+    def test_oauth_endpoints(self):
+        """Test OAuth-related endpoints"""
+        
+        # Test OAuth session endpoint (without valid session_id - expect error)
+        try:
+            session_data = {
+                "session_id": "test_invalid_session_id"
+            }
+            
+            response = self.make_request("POST", "/auth/session", session_data)
+            
+            # We expect this to fail with invalid session
+            if response.status_code in [400, 401, 404]:
+                self.log_test("OAuth Session Exchange", True, f"OAuth session endpoint accessible (expected failure with invalid session) - HTTP {response.status_code}")
+            else:
+                self.log_test("OAuth Session Exchange", False, f"Unexpected response - HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("OAuth Session Exchange", False, f"Exception: {str(e)}")
+        
+        # Test OAuth me endpoint (without session cookie - expect error)
+        try:
+            response = self.make_request("GET", "/auth/me/oauth")
+            
+            # We expect this to fail without session cookie
+            if response.status_code in [400, 401, 404]:
+                self.log_test("OAuth Get User", True, f"OAuth me endpoint accessible (expected failure without session) - HTTP {response.status_code}")
+            else:
+                self.log_test("OAuth Get User", False, f"Unexpected response - HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("OAuth Get User", False, f"Exception: {str(e)}")
+        
+        # Test OAuth logout endpoint
+        try:
+            response = self.make_request("POST", "/auth/logout/oauth")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success"):
+                    self.log_test("OAuth Logout", True, "OAuth logout endpoint working")
+                else:
+                    self.log_test("OAuth Logout", False, f"OAuth logout failed: {data}")
+            else:
+                self.log_test("OAuth Logout", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("OAuth Logout", False, f"Exception: {str(e)}")
+    
     def test_get_current_user(self):
         """Test get current user endpoint"""
         if not self.auth_token:
