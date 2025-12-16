@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ShoppingCart, User, Menu, MapPin, Package, Store } from 'lucide-react';
-import { useState } from 'react';
+import { Search, ShoppingCart, User, Menu, MapPin, Package, Store, Download } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { Button } from './ui/button';
@@ -20,6 +20,56 @@ const Header = () => {
   const { user, logout, isAuthenticated } = useAuth();
   const { getCartCount } = useCart();
   const [searchQuery, setSearchQuery] = useState('');
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isInstalled, setIsInstalled] = useState(false);
+
+  useEffect(() => {
+    // Check if already installed
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsInstalled(true);
+      return;
+    }
+
+    // Listen for install prompt
+    const handleBeforeInstall = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    const handleAppInstalled = () => {
+      setIsInstalled(true);
+      setDeferredPrompt(null);
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) {
+      // Check if iOS
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      if (isIOS) {
+        alert('To install on iOS:\n1. Tap the Share button (⎋)\n2. Scroll and tap "Add to Home Screen"\n3. Tap "Add" to confirm');
+      } else {
+        alert('To install:\n1. Look for the install icon (⊕) in your browser address bar\n2. Or use browser menu → "Install app"');
+      }
+      return;
+    }
+
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+      console.log('App installed');
+    }
+    setDeferredPrompt(null);
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
