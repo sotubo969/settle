@@ -593,19 +593,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Homepage Hero Carousel"
-    - "Categories Display"
-    - "Featured Products API Integration"
-    - "Products Page Filters"
-    - "Product Detail Page"
-    - "Cart Functionality"
-    - "Authentication System"
-    - "Checkout Flow"
-    - "Header Navigation and Search"
-    - "Legal and Support Pages"
-  stuck_tasks: []
+    - "OAuth Session Management"
+  stuck_tasks: 
+    - "OAuth Session Management"
   test_all: true
-  test_priority: "comprehensive_completed"
+  test_priority: "backend_comprehensive_completed"
 
 agent_communication:
   - agent: "testing"
