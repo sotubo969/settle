@@ -13,6 +13,7 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const Home = () => {
+  const { user, isAuthenticated } = useAuth();
   const [currentBanner, setCurrentBanner] = useState(0);
   const [featuredProducts, setFeaturedProducts] = useState([]);
 
@@ -220,18 +221,42 @@ const Home = () => {
           </div>
         </section>
 
-        {/* Call to Action */}
-        <section className="bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-lg sm:rounded-2xl p-4 sm:p-12 text-white text-center shadow-xl">
-          <h2 className="text-xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-4">Join Our Vendor Community</h2>
-          <p className="text-sm sm:text-xl mb-4 sm:mb-8 max-w-2xl mx-auto">
-            Start selling on AfroMarket UK and reach thousands of customers.
-          </p>
-          <Link to="/vendor/register">
-            <Button size="lg" className="bg-white text-emerald-600 hover:bg-gray-100 px-4 sm:px-8 py-3 sm:py-6 text-sm sm:text-lg font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all">
-              Become a Vendor Today
-            </Button>
-          </Link>
-        </section>
+        {/* Call to Action - Only show to non-vendors */}
+        {(!isAuthenticated || (user && user.role !== 'vendor')) && (
+          <section className="bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-lg sm:rounded-2xl p-4 sm:p-12 text-white text-center shadow-xl">
+            <h2 className="text-xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-4">Join Our Vendor Community</h2>
+            <p className="text-sm sm:text-xl mb-4 sm:mb-8 max-w-2xl mx-auto">
+              Start selling on AfroMarket UK and reach thousands of customers.
+            </p>
+            <Link to="/vendor/register">
+              <Button size="lg" className="bg-white text-emerald-600 hover:bg-gray-100 px-4 sm:px-8 py-3 sm:py-6 text-sm sm:text-lg font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all">
+                Become a Vendor Today
+              </Button>
+            </Link>
+          </section>
+        )}
+
+        {/* Vendor-specific CTA - Only show to vendors */}
+        {isAuthenticated && user && user.role === 'vendor' && (
+          <section className="bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-lg sm:rounded-2xl p-4 sm:p-12 text-white text-center shadow-xl">
+            <h2 className="text-xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-4">Welcome Back, {user.name}!</h2>
+            <p className="text-sm sm:text-xl mb-4 sm:mb-8 max-w-2xl mx-auto">
+              Manage your products, track sales, and grow your business on AfroMarket UK.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/vendor/dashboard">
+                <Button size="lg" className="bg-white text-emerald-600 hover:bg-gray-100 px-4 sm:px-8 py-3 sm:py-6 text-sm sm:text-lg font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all">
+                  Go to Dashboard
+                </Button>
+              </Link>
+              <Link to="/vendor/products">
+                <Button size="lg" variant="outline" className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-emerald-600 px-4 sm:px-8 py-3 sm:py-6 text-sm sm:text-lg font-semibold">
+                  Manage Products
+                </Button>
+              </Link>
+            </div>
+          </section>
+        )}
       </div>
 
       <Footer />
