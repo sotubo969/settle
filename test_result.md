@@ -104,6 +104,283 @@
 
 user_problem_statement: "Test the AfroMarket UK website comprehensively and document what features are actually working vs mock"
 
+backend:
+  - task: "API Health Check"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - API health endpoint responding correctly with status 'ok' and message 'AfroMarket UK API is running'"
+
+  - task: "User Registration API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - User registration endpoint (POST /api/auth/register) working correctly. Successfully creates new users with name, email, password and returns JWT token and user data."
+
+  - task: "User Login API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - User login endpoint (POST /api/auth/login) working correctly with test credentials (info@surulerefoods.com). Returns JWT token and user data including name 'Surulere Foods London'."
+
+  - task: "JWT Authentication"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - JWT token validation working correctly. GET /api/auth/me endpoint successfully retrieves current user data when valid token provided."
+
+  - task: "OAuth Session Management"
+    implemented: true
+    working: false
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ PARTIAL - OAuth endpoints implemented but have issues: POST /api/auth/session returns 401 (expected with invalid session), GET /api/auth/me/oauth returns 500 Internal Server Error, POST /api/auth/logout/oauth returns 502. OAuth session exchange endpoint accessible but MongoDB session management has errors."
+
+  - task: "Products API - List All"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - GET /api/products endpoint working correctly. Returns 12 products with complete product data including id, name, brand, price, category, vendor info, stock, etc."
+
+  - task: "Products API - Featured Filter"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - GET /api/products?featured=true endpoint working correctly. Returns 6 featured products, all properly marked as featured=true."
+
+  - task: "Products API - Category Filter"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - GET /api/products?category=Fresh Produce endpoint working correctly. Returns 2 products filtered by 'Fresh Produce' category."
+
+  - task: "Products API - Search"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - GET /api/products?search=rice endpoint working correctly. Search functionality implemented and responding (returned 0 results for 'rice' search, indicating no rice products in current dataset)."
+
+  - task: "Products API - Product Detail"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - GET /api/products/:id endpoint working correctly. Successfully retrieved product details for ID 1: 'Ayoola Poundo Yam Flour' with complete product information."
+
+  - task: "Cart API - Get Cart"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - GET /api/cart endpoint working correctly. Requires authentication and returns cart items with product details including name, brand, price, image, quantity, stock, weight, vendor info."
+
+  - task: "Cart API - Add to Cart"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - POST /api/cart/add endpoint working correctly. Successfully adds products to cart with productId and quantity. Requires authentication."
+
+  - task: "Cart API - Update Quantity"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - PUT /api/cart/update/:id endpoint working correctly. Successfully updates cart item quantities using query parameter (?quantity=3). Requires authentication."
+
+  - task: "Cart API - Remove Item"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - DELETE /api/cart/remove/:id endpoint working correctly. Successfully removes individual items from cart. Requires authentication."
+
+  - task: "Cart API - Clear Cart"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - DELETE /api/cart/clear endpoint working correctly. Successfully clears entire cart. Requires authentication."
+
+  - task: "Orders API - Get Orders"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - GET /api/orders endpoint working correctly. Returns user's order history with order details including id, orderId, items count, total, status, date. Requires authentication."
+
+  - task: "Orders API - Create Order"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - POST /api/orders endpoint working correctly. Successfully creates orders with items, shipping info, payment info, subtotal, delivery fee, total. Returns order ID (e.g., ORD-2025-3915). Requires authentication."
+
+  - task: "Profile API - Update Profile"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - PUT /api/profile/update endpoint working correctly. Successfully updates user profile information (name, phone, avatar). Returns updated user data. Requires authentication."
+
+  - task: "Profile API - Add Address"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - POST /api/profile/addresses endpoint working correctly. Successfully adds user addresses with fullName, address, city, postcode, phone, isDefault fields. Returns updated addresses array. Requires authentication."
+
+  - task: "Wishlist API - Get Wishlist"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - GET /api/wishlist endpoint working correctly. Returns user's wishlist items with product details including id, name, brand, price, originalPrice, image, rating, reviews, inStock. Requires authentication."
+
+  - task: "Wishlist API - Add to Wishlist"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - POST /api/wishlist/add/:id endpoint working correctly. Successfully adds products to user's wishlist. Requires authentication."
+
+  - task: "Wishlist API - Remove from Wishlist"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - DELETE /api/wishlist/remove/:id endpoint working correctly. Successfully removes products from user's wishlist. Requires authentication."
+
+  - task: "Vendor Registration API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - POST /api/vendors/register endpoint working correctly. Successfully registers new vendors with businessName, description, email, phone, address, city, postcode. Returns vendor ID and status. Sends email notification to admin."
+
 frontend:
   - task: "Homepage Hero Carousel"
     implemented: true
