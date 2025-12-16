@@ -375,11 +375,11 @@ async def forgot_password(email_data: dict, db: AsyncSession = Depends(get_db)):
     # TODO: Generate reset token and send email
     # For now, just log it
     print(f"\n{'='*60}")
-    print(f"PASSWORD RESET REQUEST")
+    print("PASSWORD RESET REQUEST")
     print(f"{'='*60}")
     print(f"Email: {email}")
     print(f"User: {user.name}")
-    print(f"Reset Link: https://afrobasket.preview.emergentagent.com/reset-password?token=GENERATED_TOKEN")
+    print("Reset Link: https://afrobasket.preview.emergentagent.com/reset-password?token=GENERATED_TOKEN")
     print(f"{'='*60}\n")
     
     return {"success": True, "message": "Password reset instructions sent"}
