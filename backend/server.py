@@ -1183,7 +1183,7 @@ async def create_product(
     }
 
 @api_router.get("/vendor/my-products")
-async def get_vendor_products(
+async def get_my_vendor_products(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
