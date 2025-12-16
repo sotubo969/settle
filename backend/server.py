@@ -270,6 +270,83 @@ async def get_me(current_user: User = Depends(get_current_user)):
         "wishlist": current_user.wishlist
     }
 
+# ============ EMERGENT AUTH ROUTES (Google OAuth) ============
+class SessionExchangeRequest(BaseModel):
+    session_id: str
+
+@api_router.post("/auth/session")
+async def exchange_session(request: SessionExchangeRequest):
+    """
+    Exchange session_id from Emergent Auth for user data and set session cookie
+    """
+    from fastapi import Response
+    
+    # Get user data from Emergent Auth service
+    user_data = await exchange_session_id(request.session_id)
+    
+    # Get MongoDB instance
+    mongo_db = get_mongo_db()
+    
+    # Create or update user in MongoDB
+    user_id = await create_or_update_user(mongo_db, user_data)
+    
+    # Save session to database
+    session_token = user_data.get("session_token")
+    await save_session(mongo_db, user_id, session_token)
+    
+    # Return user data (frontend will handle cookie setting for now)
+    return {
+        "success": True,
+        "session_token": session_token,
+        "user": {
+            "user_id": user_id,
+            "email": user_data.get("email"),
+            "name": user_data.get("name"),
+            "picture": user_data.get("picture")
+        }
+    }
+
+@api_router.get("/auth/me/oauth")
+async def get_me_oauth():
+    """
+    Get current user from Emergent Auth session
+    """
+    from fastapi import Cookie, Header
+    from typing import Optional
+    
+    # Get MongoDB instance
+    mongo_db = get_mongo_db()
+    
+    # Get user from session token
+    user_data = await get_current_user_from_token(db=mongo_db)
+    
+    return {
+        "user_id": user_data.get("user_id"),
+        "email": user_data.get("email"),
+        "name": user_data.get("name"),
+        "picture": user_data.get("picture"),
+        "role": user_data.get("role", "customer")
+    }
+
+@api_router.post("/auth/logout/oauth")
+async def logout_oauth():
+    """
+    Logout user and delete session from Emergent Auth
+    """
+    from fastapi import Cookie, Response
+    from typing import Optional
+    
+    session_token: Optional[str] = Cookie(None)
+    
+    if session_token:
+        # Get MongoDB instance
+        mongo_db = get_mongo_db()
+        
+        # Delete session from database
+        await delete_session(mongo_db, session_token)
+    
+    return {"success": True, "message": "Logged out successfully"}
+
 @api_router.post("/auth/forgot-password")
 async def forgot_password(email_data: dict, db: AsyncSession = Depends(get_db)):
     email = email_data.get('email')
