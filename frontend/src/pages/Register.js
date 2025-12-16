@@ -58,7 +58,12 @@ const Register = () => {
   };
 
   const handleGoogleSignup = () => {
-    toast.info('Google signup will be integrated with backend');
+    // Use dynamic redirect URL based on current domain
+    const redirectUrl = `${window.location.origin}/`;
+    const emergentAuthUrl = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+    
+    // Redirect to Emergent Auth
+    window.location.href = emergentAuthUrl;
   };
 
   return (
