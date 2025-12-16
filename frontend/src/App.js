@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { Toaster } from './components/ui/sonner';
 import './App.css';
 import Home from './pages/Home';
@@ -19,8 +19,42 @@ import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import ShippingInformation from './pages/ShippingInformation';
 import ReturnsRefunds from './pages/ReturnsRefunds';
+import AuthCallback from './components/AuthCallback';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+
+// Router component that checks for session_id synchronously
+function AppRouter() {
+  const location = useLocation();
+  
+  // Check for session_id in URL fragment (synchronous check during render)
+  if (location.hash?.includes('session_id=')) {
+    return <AuthCallback />;
+  }
+  
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/products" element={<Products />} />
+      <Route path="/product/:id" element={<ProductDetail />} />
+      <Route path="/cart" element={<Cart />} />
+      <Route path="/checkout" element={<Checkout />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/vendor/register" element={<VendorRegister />} />
+      <Route path="/vendor/dashboard" element={<VendorDashboard />} />
+      <Route path="/vendor/subscription" element={<VendorSubscription />} />
+      <Route path="/premium" element={<PremiumMembership />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="/help" element={<HelpSupport />} />
+      <Route path="/terms" element={<TermsOfService />} />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/shipping" element={<ShippingInformation />} />
+      <Route path="/returns" element={<ReturnsRefunds />} />
+    </Routes>
+  );
+}
 
 function App() {
   return (
@@ -28,26 +62,7 @@ function App() {
       <CartProvider>
         <div className="App">
           <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/product/:id" element={<ProductDetail />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/vendor/register" element={<VendorRegister />} />
-              <Route path="/vendor/dashboard" element={<VendorDashboard />} />
-              <Route path="/vendor/subscription" element={<VendorSubscription />} />
-              <Route path="/premium" element={<PremiumMembership />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/help" element={<HelpSupport />} />
-              <Route path="/terms" element={<TermsOfService />} />
-              <Route path="/privacy" element={<PrivacyPolicy />} />
-              <Route path="/shipping" element={<ShippingInformation />} />
-              <Route path="/returns" element={<ReturnsRefunds />} />
-            </Routes>
+            <AppRouter />
           </BrowserRouter>
           <Toaster />
         </div>
