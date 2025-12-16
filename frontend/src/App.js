@@ -20,6 +20,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import ShippingInformation from './pages/ShippingInformation';
 import ReturnsRefunds from './pages/ReturnsRefunds';
 import AuthCallback from './components/AuthCallback';
+import InstallPrompt from './components/InstallPrompt';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 
