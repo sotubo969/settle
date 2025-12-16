@@ -1,22 +1,32 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, ArrowRight, Loader2, Tag, TruckIcon, Shield } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { Button } from '../components/ui/button';
-import { Card, CardContent } from '../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Badge } from '../components/ui/badge';
+import { Separator } from '../components/ui/separator';
 import { useCart } from '../context/CartContext';
 import { toast } from 'sonner';
+import { useState } from 'react';
 
 const Cart = () => {
   const navigate = useNavigate();
   const { cart, removeFromCart, updateQuantity, getCartTotal, clearCart, isLoading } = useCart();
+  const [updatingItems, setUpdatingItems] = useState({});
 
   const handleUpdateQuantity = async (productId, newQuantity) => {
     if (newQuantity < 1) return;
+    
+    setUpdatingItems(prev => ({ ...prev, [productId]: true }));
     try {
       await updateQuantity(productId, newQuantity);
+      toast.success('Quantity updated');
     } catch (error) {
-      toast.error('Failed to update quantity');
+      toast.error('Failed to update quantity. Please try again.');
+      console.error('Update error:', error);
+    } finally {
+      setUpdatingItems(prev => ({ ...prev, [productId]: false }));
     }
   };
 
@@ -34,10 +44,10 @@ const Cart = () => {
   };
 
   const handleClearCart = async () => {
-    if (window.confirm('Are you sure you want to clear your cart?')) {
+    if (window.confirm('Are you sure you want to clear your entire cart?')) {
       try {
         await clearCart();
-        toast.success('Cart cleared');
+        toast.success('Cart cleared successfully');
       } catch (error) {
         toast.error('Failed to clear cart');
       }
@@ -46,10 +56,15 @@ const Cart = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
         <Header />
-        <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-          <p>Loading cart...</p>
+        <div className="max-w-7xl mx-auto px-4 py-16">
+          <Card className="p-12">
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <Loader2 className="h-12 w-12 text-emerald-600 animate-spin" />
+              <p className="text-lg text-gray-600">Loading your cart...</p>
+            </div>
+          </Card>
         </div>
       </div>
     );
@@ -57,19 +72,31 @@ const Cart = () => {
 
   if (cart.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
         <Header />
-        <div className="max-w-7xl mx-auto px-4 py-16">
-          <Card className="text-center py-16">
-            <CardContent>
-              <ShoppingBag className="h-24 w-24 text-gray-300 mx-auto mb-6" />
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Your cart is empty</h2>
-              <p className="text-gray-600 mb-8">Add some delicious African groceries to get started!</p>
-              <Link to="/products">
-                <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700">
-                  Start Shopping
-                </Button>
-              </Link>
+        <div className="max-w-4xl mx-auto px-4 py-16">
+          <Card className="border-2 border-dashed border-gray-300 bg-white shadow-lg">
+            <CardContent className="text-center py-20">
+              <div className="bg-gray-100 rounded-full w-32 h-32 flex items-center justify-center mx-auto mb-6">
+                <ShoppingBag className="h-16 w-16 text-gray-400" />
+              </div>
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">Your Cart is Empty</h2>
+              <p className="text-lg text-gray-600 mb-8 max-w-md mx-auto">
+                Discover authentic African and Caribbean groceries and start adding items to your cart!
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Link to="/products">
+                  <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700 shadow-lg hover:shadow-xl transition-all">
+                    <ShoppingBag className="mr-2 h-5 w-5" />
+                    Start Shopping
+                  </Button>
+                </Link>
+                <Link to="/">
+                  <Button size="lg" variant="outline">
+                    Back to Home
+                  </Button>
+                </Link>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -78,93 +105,197 @@ const Cart = () => {
   }
 
   const subtotal = getCartTotal();
-  const delivery = subtotal > 30 ? 0 : 4.99;
-  const total = subtotal + delivery;
-  const commission = 1 * cart.reduce((sum, item) => sum + item.quantity, 0);
+  const deliveryFee = subtotal >= 50 ? 0 : subtotal >= 30 ? 3.99 : 5.99;
+  const serviceFee = parseFloat((subtotal * 0.02).toFixed(2)); // 2% service fee
+  const savings = subtotal >= 50 ? 5.99 : 0;
+  const total = subtotal + deliveryFee + serviceFee;
+  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <Header />
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-8 gap-2">
-          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900">
-            Shopping Cart <span className="text-gray-500 text-lg sm:text-2xl">({cart.length} items)</span>
-          </h1>
-          <Button variant="outline" onClick={() => navigate('/products')} className="text-xs sm:text-sm">
-            Continue Shopping
-          </Button>
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-12">
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+                Shopping Cart
+              </h1>
+              <p className="text-gray-600">
+                <Badge variant="secondary" className="mr-2">
+                  {totalItems} {totalItems === 1 ? 'item' : 'items'}
+                </Badge>
+                in your cart
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => navigate('/products')}
+                className="hover:bg-emerald-50"
+              >
+                Continue Shopping
+              </Button>
+              {cart.length > 0 && (
+                <Button
+                  variant="ghost"
+                  onClick={handleClearCart}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  Clear Cart
+                </Button>
+              )}
+            </div>
+          </div>
+          
+          {/* Progress Bar for Free Delivery */}
+          {subtotal < 50 && (
+            <Card className="mt-6 bg-emerald-50 border-emerald-200">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <TruckIcon className="h-5 w-5 text-emerald-600" />
+                    <span className="font-medium text-emerald-900">
+                      Add £{(50 - subtotal).toFixed(2)} more for FREE delivery!
+                    </span>
+                  </div>
+                  <Badge className="bg-emerald-600">Save £{deliveryFee}</Badge>
+                </div>
+                <div className="w-full bg-emerald-200 rounded-full h-2.5">
+                  <div
+                    className="bg-emerald-600 h-2.5 rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min((subtotal / 50) * 100, 100)}%` }}
+                  ></div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Cart Items */}
-          <div className="lg:col-span-2 space-y-3 sm:space-y-4">
+          <div className="lg:col-span-2 space-y-4">
             {cart.map((item) => (
-              <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <CardContent className="p-3 sm:p-6">
-                  <div className="flex gap-3 sm:gap-6">
-                    <Link to={`/product/${item.id}`} className="flex-shrink-0">
+              <Card key={item.id} className="hover:shadow-lg transition-shadow duration-300">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex gap-4">
+                    {/* Product Image */}
+                    <div className="flex-shrink-0">
                       <img
                         src={item.image}
                         alt={item.name}
-                        className="w-20 h-20 sm:w-32 sm:h-32 object-cover rounded-lg hover:opacity-80 transition-opacity"
+                        className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg border-2 border-gray-200"
                       />
-                    </Link>
+                    </div>
 
-                    <div className="flex-1 flex flex-col justify-between min-w-0">
-                      <div>
-                        <Link to={`/product/${item.id}`}>
-                          <h3 className="font-semibold text-sm sm:text-xl text-gray-900 hover:text-emerald-600 transition-colors mb-1 line-clamp-2">
-                            {item.name}
-                          </h3>
-                        </Link>
-                        <p className="text-xs sm:text-sm text-gray-600 mb-1 truncate">{item.brand} • {item.weight}</p>
-                        <p className="text-xs sm:text-sm text-emerald-600 font-medium truncate">Sold by {item.vendor.name}</p>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-2 sm:mt-4 gap-2">
-                        {/* Quantity Controls */}
-                        <div className="flex items-center border-2 rounded-lg">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
-                            disabled={item.quantity <= 1}
-                            className="px-2 sm:px-3 py-1 hover:bg-gray-100 h-8 sm:h-auto"
-                          >
-                            <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </Button>
-                          <span className="px-3 sm:px-6 py-1 font-semibold border-x-2 text-sm sm:text-base">{item.quantity}</span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
-                            disabled={item.quantity >= item.stock}
-                            className="px-2 sm:px-3 py-1 hover:bg-gray-100 h-8 sm:h-auto"
-                          >
-                            <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </Button>
+                    {/* Product Details */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between gap-4">
+                        <div className="flex-1">
+                          <Link to={`/product/${item.id}`}>
+                            <h3 className="text-lg font-semibold text-gray-900 hover:text-emerald-600 transition-colors line-clamp-2">
+                              {item.name}
+                            </h3>
+                          </Link>
+                          <div className="mt-1 space-y-1">
+                            {item.brand && (
+                              <p className="text-sm text-gray-600">
+                                <span className="font-medium">Brand:</span> {item.brand}
+                              </p>
+                            )}
+                            {item.weight && (
+                              <p className="text-sm text-gray-600">
+                                <span className="font-medium">Weight:</span> {item.weight}
+                              </p>
+                            )}
+                            {item.vendor && (
+                              <p className="text-sm text-gray-600">
+                                <span className="font-medium">Seller:</span> {item.vendor.name}
+                              </p>
+                            )}
+                          </div>
+                          {item.inStock ? (
+                            <Badge className="mt-2 bg-green-100 text-green-800 hover:bg-green-100">
+                              In Stock
+                            </Badge>
+                          ) : (
+                            <Badge variant="destructive" className="mt-2">
+                              Out of Stock
+                            </Badge>
+                          )}
                         </div>
 
                         {/* Price */}
                         <div className="text-right">
-                          <p className="text-lg sm:text-2xl font-bold text-emerald-600">
-                            £{(item.price * item.quantity).toFixed(2)}
+                          <p className="text-xl sm:text-2xl font-bold text-emerald-600">
+                            £{item.price.toFixed(2)}
                           </p>
-                          <p className="text-xs sm:text-sm text-gray-500">£{item.price.toFixed(2)} each</p>
+                          {item.originalPrice && item.originalPrice > item.price && (
+                            <p className="text-sm text-gray-500 line-through">
+                              £{item.originalPrice.toFixed(2)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Quantity Controls & Remove */}
+                      <div className="flex items-center justify-between mt-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-600 mr-2">Quantity:</span>
+                          <div className="flex items-center border border-gray-300 rounded-lg">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
+                              disabled={item.quantity <= 1 || updatingItems[item.id]}
+                              className="h-9 w-9 p-0 hover:bg-gray-100"
+                            >
+                              {updatingItems[item.id] ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Minus className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <span className="w-12 text-center font-semibold">{item.quantity}</span>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
+                              disabled={updatingItems[item.id]}
+                              className="h-9 w-9 p-0 hover:bg-gray-100"
+                            >
+                              {updatingItems[item.id] ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Plus className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemove(item)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Remove
+                        </Button>
+                      </div>
+
+                      {/* Item Subtotal */}
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Item subtotal:</span>
+                          <span className="text-lg font-bold text-gray-900">
+                            £{(item.price * item.quantity).toFixed(2)}
+                          </span>
                         </div>
                       </div>
                     </div>
-
-                    {/* Remove Button */}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemove(item)}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50 self-start h-8 w-8 sm:h-10 sm:w-10"
-                    >
-                      <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
-                    </Button>
                   </div>
                 </CardContent>
               </Card>
@@ -173,67 +304,107 @@ const Cart = () => {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <Card className="sticky top-24 shadow-xl">
-              <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Order Summary</h2>
-
-                <div className="space-y-2 sm:space-y-3 py-3 sm:py-4 border-y">
-                  <div className="flex justify-between text-sm sm:text-base text-gray-700">
-                    <span>Subtotal ({cart.reduce((sum, item) => sum + item.quantity, 0)} items)</span>
+            <div className="sticky top-4">
+              <Card className="shadow-xl border-2 border-emerald-100">
+                <CardHeader className="bg-gradient-to-r from-emerald-50 to-green-50">
+                  <CardTitle className="text-2xl">Order Summary</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6 space-y-4">
+                  {/* Subtotal */}
+                  <div className="flex justify-between text-base">
+                    <span className="text-gray-600">Subtotal ({totalItems} items)</span>
                     <span className="font-semibold">£{subtotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-sm sm:text-base text-gray-700">
-                    <span>Delivery Fee</span>
-                    <span className="font-semibold">
-                      {delivery === 0 ? (
-                        <span className="text-green-600">FREE</span>
-                      ) : (
-                        `£${delivery.toFixed(2)}`
-                      )}
+
+                  {/* Service Fee */}
+                  <div className="flex justify-between text-base">
+                    <span className="text-gray-600 flex items-center gap-1">
+                      Service Fee
+                      <span className="text-xs text-gray-500">(2%)</span>
+                    </span>
+                    <span className="font-semibold">£{serviceFee.toFixed(2)}</span>
+                  </div>
+
+                  {/* Delivery */}
+                  <div className="flex justify-between text-base">
+                    <span className="text-gray-600 flex items-center gap-1">
+                      <TruckIcon className="h-4 w-4" />
+                      Delivery
+                    </span>
+                    <span className={`font-semibold ${deliveryFee === 0 ? 'text-green-600' : ''}`}>
+                      {deliveryFee === 0 ? 'FREE' : `£${deliveryFee.toFixed(2)}`}
                     </span>
                   </div>
-                  {delivery > 0 && (
-                    <p className="text-xs sm:text-sm text-emerald-600">
-                      Add £{(30 - subtotal).toFixed(2)} more for FREE delivery!
-                    </p>
+
+                  {/* Savings */}
+                  {savings > 0 && (
+                    <div className="flex justify-between text-base text-green-600">
+                      <span className="flex items-center gap-1">
+                        <Tag className="h-4 w-4" />
+                        You Save
+                      </span>
+                      <span className="font-semibold">-£{savings.toFixed(2)}</span>
+                    </div>
                   )}
-                </div>
 
-                <div className="flex justify-between text-lg sm:text-xl font-bold text-gray-900 py-2 sm:py-3">
-                  <span>Total</span>
-                  <span className="text-emerald-600">£{total.toFixed(2)}</span>
-                </div>
+                  <Separator className="my-4" />
 
-                <div className="space-y-2 sm:space-y-3">
+                  {/* Total */}
+                  <div className="flex justify-between text-xl font-bold">
+                    <span>Total</span>
+                    <span className="text-emerald-600">£{total.toFixed(2)}</span>
+                  </div>
+
+                  {/* Checkout Button */}
                   <Button
-                    size="lg"
-                    className="w-full bg-orange-500 hover:bg-orange-600 text-white text-base sm:text-lg py-4 sm:py-6 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all"
                     onClick={handleCheckout}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white h-14 text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
                   >
                     Proceed to Checkout
-                    <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+                    <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="w-full border-2 py-4 sm:py-6 text-sm sm:text-base"
-                    onClick={handleClearCart}
-                  >
-                    Clear Cart
-                  </Button>
-                </div>
 
-                {/* Trust Badges */}
-                <div className="bg-emerald-50 rounded-lg p-3 sm:p-4 space-y-1 sm:space-y-2">
-                  <p className="text-xs sm:text-sm font-semibold text-emerald-900">✓ Secure checkout</p>
-                  <p className="text-xs sm:text-sm font-semibold text-emerald-900">✓ Same-day delivery available</p>
-                  <p className="text-xs sm:text-sm font-semibold text-emerald-900">✓ Support local vendors</p>
-                  <p className="text-xs sm:text-sm text-gray-600 mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-emerald-200">
-                    Platform commission: £{commission.toFixed(2)} (£1 per item)
+                  {/* Trust Badges */}
+                  <div className="pt-4 space-y-3 text-sm text-gray-600">
+                    <div className="flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-emerald-600" />
+                      <span>Secure checkout</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <TruckIcon className="h-4 w-4 text-emerald-600" />
+                      <span>Fast UK delivery</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Tag className="h-4 w-4 text-emerald-600" />
+                      <span>Best price guarantee</span>
+                    </div>
+                  </div>
+
+                  {/* Accepted Payments */}
+                  <div className="pt-4 border-t border-gray-200">
+                    <p className="text-xs text-gray-500 mb-2">We accept:</p>
+                    <div className="flex gap-2 items-center">
+                      <div className="px-3 py-1 border rounded text-xs font-semibold">VISA</div>
+                      <div className="px-3 py-1 border rounded text-xs font-semibold">Mastercard</div>
+                      <div className="px-3 py-1 border rounded text-xs font-semibold">PayPal</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Help Card */}
+              <Card className="mt-4 bg-blue-50 border-blue-200">
+                <CardContent className="p-4">
+                  <p className="text-sm text-blue-900 font-medium mb-2">Need Help?</p>
+                  <p className="text-xs text-blue-800">
+                    Contact our support team for assistance with your order.
                   </p>
-                </div>
-              </CardContent>
-            </Card>
+                  <Button variant="link" className="text-blue-600 p-0 h-auto mt-2" onClick={() => navigate('/help')}>
+                    Get Help →
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </div>
