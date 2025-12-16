@@ -307,18 +307,22 @@ async def exchange_session(request: SessionExchangeRequest):
     }
 
 @api_router.get("/auth/me/oauth")
-async def get_me_oauth():
+async def get_me_oauth(
+    session_token: Optional[str] = Cookie(None),
+    authorization: Optional[str] = Header(None)
+):
     """
     Get current user from Emergent Auth session
     """
-    from fastapi import Cookie, Header
-    from typing import Optional
-    
     # Get MongoDB instance
     mongo_db = get_mongo_db()
     
     # Get user from session token
-    user_data = await get_current_user_from_token(db=mongo_db)
+    user_data = await get_current_user_from_token(
+        session_token=session_token,
+        authorization=authorization,
+        db=mongo_db
+    )
     
     return {
         "user_id": user_data.get("user_id"),
@@ -329,15 +333,10 @@ async def get_me_oauth():
     }
 
 @api_router.post("/auth/logout/oauth")
-async def logout_oauth():
+async def logout_oauth(session_token: Optional[str] = Cookie(None)):
     """
     Logout user and delete session from Emergent Auth
     """
-    from fastapi import Cookie, Response
-    from typing import Optional
-    
-    session_token: Optional[str] = Cookie(None)
-    
     if session_token:
         # Get MongoDB instance
         mongo_db = get_mongo_db()
