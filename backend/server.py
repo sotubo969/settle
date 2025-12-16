@@ -17,6 +17,14 @@ from payments import StripePayment, PayPalPaymentService
 from oauth import GoogleOAuth, AppleOAuth
 from utils import generate_order_id
 from email_service import EmailService
+from mongo_db import get_mongo_db, init_mongo_indexes
+from auth_emergent import (
+    exchange_session_id, 
+    create_or_update_user, 
+    save_session, 
+    delete_session,
+    get_current_user_from_token
+)
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
