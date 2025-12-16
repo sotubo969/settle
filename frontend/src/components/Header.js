@@ -149,7 +149,19 @@ const Header = () => {
           </form>
 
           {/* Right Actions */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Install App Button */}
+            {!isInstalled && (
+              <Button
+                variant="ghost"
+                className="text-white hover:bg-emerald-600 gap-1 sm:gap-2 hidden sm:flex"
+                onClick={handleInstallClick}
+              >
+                <Download className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="text-xs sm:text-sm font-semibold">Install App</span>
+              </Button>
+            )}
+            
             {/* Account Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
