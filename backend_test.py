@@ -580,6 +580,11 @@ class BackendTester:
         if login_success:
             self.test_get_current_user()
         
+        # OAuth tests
+        print("\n🔐 OAUTH TESTS")
+        print("-" * 40)
+        self.test_oauth_endpoints()
+        
         # Product tests
         print("\n📦 PRODUCT TESTS")
         print("-" * 40)
