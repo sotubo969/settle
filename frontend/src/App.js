@@ -65,6 +65,7 @@ function App() {
           <BrowserRouter>
             <AppRouter />
           </BrowserRouter>
+          <InstallPrompt />
           <Toaster />
         </div>
       </CartProvider>
