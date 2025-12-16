@@ -1315,6 +1315,141 @@ async def get_pending_vendors(db: AsyncSession = Depends(get_db)):
 async def health_check():
     return {"status": "ok", "message": "AfroMarket UK API is running"}
 
+@api_router.get("/")
+async def root():
+    return {"status": "ok", "message": "AfroMarket UK API is running"}
+
+# ============ SUBSCRIPTION & MONETIZATION ENDPOINTS ============
+
+@api_router.get("/subscriptions/vendor-tiers")
+async def get_vendor_tiers():
+    """Get all vendor subscription tiers with pricing and features"""
+    return {
+        "tiers": {
+            "basic": VENDOR_PRICING[VendorTier.BASIC],
+            "professional": VENDOR_PRICING[VendorTier.PROFESSIONAL],
+            "elite": VENDOR_PRICING[VendorTier.ELITE]
+        }
+    }
+
+@api_router.get("/subscriptions/customer-tiers")
+async def get_customer_tiers():
+    """Get customer membership tiers"""
+    return {
+        "tiers": {
+            "free": CUSTOMER_PRICING[MembershipTier.FREE],
+            "plus": CUSTOMER_PRICING[MembershipTier.PLUS]
+        }
+    }
+
+@api_router.post("/subscriptions/vendor/calculate-roi")
+async def vendor_roi_calculator(
+    current_tier: str,
+    target_tier: str,
+    monthly_sales: float
+):
+    """Calculate ROI for vendor tier upgrade"""
+    try:
+        current = VendorTier(current_tier)
+        target = VendorTier(target_tier)
+        roi = calculate_roi_for_vendor(monthly_sales, current, target)
+        return {
+            "success": True,
+            "roi": roi
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@api_router.post("/subscriptions/customer/calculate-roi")
+async def customer_roi_calculator(
+    monthly_orders: int,
+    avg_order_value: float
+):
+    """Calculate ROI for premium membership"""
+    roi = calculate_customer_roi(monthly_orders, avg_order_value)
+    return {
+        "success": True,
+        "roi": roi
+    }
+
+@api_router.get("/subscriptions/featured-pricing")
+async def get_featured_pricing():
+    """Get featured listing pricing"""
+    return {"pricing": FEATURED_PRICING}
+
+@api_router.post("/orders/calculate-fees")
+async def calculate_order_fees(
+    order_total: float,
+    is_express: bool = False,
+    is_premium_member: bool = False
+):
+    """Calculate all fees for an order"""
+    service_fee = calculate_service_fee(order_total)
+    delivery_fee = calculate_delivery_fee(order_total, is_express, is_premium_member)
+    premium_discount = calculate_premium_discount(order_total, 
+        MembershipTier.PLUS if is_premium_member else MembershipTier.FREE)
+    
+    subtotal = order_total
+    total = subtotal + service_fee + delivery_fee - premium_discount
+    
+    return {
+        "subtotal": round(subtotal, 2),
+        "service_fee": service_fee,
+        "delivery_fee": delivery_fee,
+        "premium_discount": premium_discount,
+        "total": round(total, 2),
+        "breakdown": {
+            "order_items": round(subtotal, 2),
+            "service_fee": f"+£{service_fee}",
+            "delivery": f"+£{delivery_fee}" if delivery_fee > 0 else "FREE",
+            "premium_discount": f"-£{premium_discount}" if premium_discount > 0 else None
+        }
+    }
+
+@api_router.post("/vendors/upgrade-tier")
+async def upgrade_vendor_tier(
+    vendor_id: int,
+    new_tier: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Upgrade vendor subscription tier"""
+    if current_user.role != "vendor":
+        raise HTTPException(status_code=403, detail="Only vendors can upgrade tiers")
+    
+    try:
+        tier = VendorTier(new_tier)
+        vendor = await db.get(Vendor, vendor_id)
+        
+        if not vendor or vendor.user_id != current_user.id:
+            raise HTTPException(status_code=404, detail="Vendor not found")
+        
+        # Update vendor tier (add subscription_tier field if not exists)
+        # This would integrate with Stripe for actual billing
+        
+        return {
+            "success": True,
+            "message": f"Upgraded to {tier.value} tier",
+            "benefits": get_vendor_benefits(tier)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@api_router.post("/customers/upgrade-premium")
+async def upgrade_customer_premium(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Upgrade customer to premium membership"""
+    # This would integrate with Stripe for actual billing
+    
+    return {
+        "success": True,
+        "message": "Upgraded to AfroMarket PLUS",
+        "benefits": get_customer_benefits(MembershipTier.PLUS),
+        "next_billing_date": (datetime.now() + timedelta(days=30)).isoformat()
+    }
+
 app.include_router(api_router)
 
 app.add_middleware(
