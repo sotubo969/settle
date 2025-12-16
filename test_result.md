@@ -586,6 +586,54 @@ frontend:
         agent: "testing"
         comment: "✅ COMPREHENSIVE TEST PASSED - All legal pages accessible: ✅ Terms of Service (/terms) ✅ Privacy Policy (/privacy) ✅ Shipping Information (/shipping) ✅ Returns & Refunds (/returns) ✅ Help & Support (/help) with FAQ and contact information."
 
+  - task: "Install App Button"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/Header.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PRIORITY TEST PASSED - Install App button found and visible in header (next to cart icon as requested). Button is clickable and triggers install prompt/instructions. PWA functionality confirmed with service worker registered and manifest.json present. Install button properly hidden when app is in standalone mode."
+
+  - task: "PWA Features"
+    implemented: true
+    working: true
+    file: "/app/frontend/public/manifest.json"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PWA FEATURES WORKING - Service worker registered successfully, manifest.json link present and accessible, app is installable. InstallPrompt component provides iOS and Android/Desktop install instructions. Performance good with 280ms load time."
+
+  - task: "Mobile Responsiveness"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/components/Header.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ MOBILE ISSUES - Hamburger menu not found/working on mobile viewport (390x844). Mobile menu functionality appears to be missing or not properly implemented. Desktop navigation works fine."
+
+  - task: "Content Loading Issues"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/pages/Home.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ CONTENT LOADING ISSUES - Hero carousel not loading on homepage, featured products section appears empty. Some 404 resource errors detected in console. Categories section loads correctly with 4 visible categories (Fresh Produce, Grains & Flours, Condiments, Frozen Foods)."
+
 metadata:
   created_by: "testing_agent"
   version: "1.0"
