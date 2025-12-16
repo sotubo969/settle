@@ -276,7 +276,9 @@ class BackendTester:
                         
                         # Test update cart quantity
                         try:
-                            response = self.make_request("PUT", f"/cart/update/{self.test_product_id}", {"quantity": 3})
+                            # Use query parameter instead of request body
+                            url = f"/cart/update/{self.test_product_id}?quantity=3"
+                            response = self.make_request("PUT", url)
                             
                             if response.status_code == 200:
                                 data = response.json()
