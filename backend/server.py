@@ -8,7 +8,7 @@ import os
 import logging
 from pathlib import Path
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 from pydantic import BaseModel, EmailStr
 
 from database import get_db, init_db, User, Vendor, Product, Cart, Order
