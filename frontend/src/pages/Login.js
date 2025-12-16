@@ -40,7 +40,12 @@ const Login = () => {
   };
 
   const handleGoogleLogin = () => {
-    toast.info('Google login will be integrated with backend');
+    // Use dynamic redirect URL based on current domain
+    const redirectUrl = `${window.location.origin}/`;
+    const emergentAuthUrl = `https://auth.emergentagent.com/?redirect=${encodeURIComponent(redirectUrl)}`;
+    
+    // Redirect to Emergent Auth
+    window.location.href = emergentAuthUrl;
   };
 
   return (
