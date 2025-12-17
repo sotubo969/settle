@@ -626,13 +626,52 @@ frontend:
     implemented: true
     working: false
     file: "/app/frontend/src/pages/Home.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
       - working: false
         agent: "testing"
         comment: "❌ CONTENT LOADING ISSUES - Hero carousel not loading on homepage, featured products section appears empty. Some 404 resource errors detected in console. Categories section loads correctly with 4 visible categories (Fresh Produce, Grains & Flours, Condiments, Frozen Foods)."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL CONTENT LOADING FAILURE (Dec 17, 2024) - Hero carousel completely missing from homepage (no carousel container, dots, or navigation buttons detected). Featured products section empty. Categories display working (4 cards visible). Missing useAuth import in Home.js was fixed but content still not loading. Homepage severely broken."
+
+  - task: "Cart Add to Cart Functionality"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/pages/Products.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL CART FAILURE (Dec 17, 2024) - No 'Add to Cart' buttons found on products page despite 12 products being displayed. Products page shows items but lacks interactive cart functionality. Cart operations completely broken - no way to add items to cart."
+
+  - task: "Cart Quantity Controls"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/pages/Cart.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL CART QUANTITY CONTROLS FAILURE (Dec 17, 2024) - No quantity increase (+) or decrease (-) buttons found in cart. Cart shows 'Your Cart is Empty' even after login. Previously reported as working but now completely non-functional. This was a CRITICAL requirement that is broken."
+
+  - task: "Search Input Field"
+    implemented: true
+    working: false
+    file: "/app/frontend/src/components/Header.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "testing"
+        comment: "❌ SEARCH INPUT MISSING (Dec 17, 2024) - Search input field not detected in header despite search button being present. Users cannot enter search terms. Search functionality broken at input level."
 
 metadata:
   created_by: "testing_agent"
