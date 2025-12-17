@@ -680,11 +680,17 @@ metadata:
 
 test_plan:
   current_focus:
-    - "OAuth Session Management"
+    - "Content Loading Issues"
+    - "Cart Add to Cart Functionality"
+    - "Cart Quantity Controls"
+    - "Mobile Responsiveness"
   stuck_tasks: 
-    - "OAuth Session Management"
+    - "Content Loading Issues"
+    - "Cart Add to Cart Functionality"
+    - "Cart Quantity Controls"
+    - "Mobile Responsiveness"
   test_all: true
-  test_priority: "backend_comprehensive_completed"
+  test_priority: "critical_issues_first"
 
 agent_communication:
   - agent: "testing"
