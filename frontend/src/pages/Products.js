@@ -277,14 +277,19 @@ const Products = () => {
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6">
                 {filteredProducts.map((product) => (
-                  <Link key={product.id} to={`/product/${product.id}`}>
-                    <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-full">
+                  <Card key={product.id} className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 h-full flex flex-col">
+                    <Link to={`/product/${product.id}`} className="flex-1">
                       <CardContent className="p-2 sm:p-4">
                         <div className="relative mb-2 sm:mb-4 overflow-hidden rounded-lg">
                           {product.originalPrice && (
                             <Badge className="absolute top-1 left-1 sm:top-2 sm:left-2 bg-red-500 text-white z-10 text-xs px-1 sm:px-2">
                               {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
                             </Badge>
+                          )}
+                          {!product.inStock && (
+                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                              <Badge variant="destructive" className="text-sm">Out of Stock</Badge>
+                            </div>
                           )}
                           <img
                             src={product.image}
@@ -311,15 +316,38 @@ const Products = () => {
                             )}
                           </div>
                           <p className="text-xs text-gray-600 truncate">by {product.vendor.name}</p>
-                          {product.stock < 20 && (
+                          {product.stock < 20 && product.inStock && (
                             <Badge variant="outline" className="text-red-600 border-red-300 text-xs px-1">
                               Only {product.stock} left
                             </Badge>
                           )}
                         </div>
                       </CardContent>
-                    </Card>
-                  </Link>
+                    </Link>
+                    {/* Add to Cart Button - Outside Link */}
+                    <div className="p-2 sm:p-4 pt-0">
+                      <Button
+                        onClick={(e) => handleAddToCart(e, product)}
+                        disabled={!product.inStock || addingToCart[product.id]}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        size="sm"
+                      >
+                        {addingToCart[product.id] ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                            Adding...
+                          </>
+                        ) : product.inStock ? (
+                          <>
+                            <ShoppingCart className="h-4 w-4 mr-2" />
+                            Add to Cart
+                          </>
+                        ) : (
+                          'Out of Stock'
+                        )}
+                      </Button>
+                    </div>
+                  </Card>
                 ))}
               </div>
             )}
