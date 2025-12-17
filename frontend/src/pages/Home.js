@@ -274,12 +274,12 @@ const Home = () => {
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
                     <Link to="/vendor/dashboard">
                       <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 sm:px-8 py-3 sm:py-6 text-sm sm:text-lg font-semibold shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all w-full sm:w-auto">
-                        View Dashboard
+                        Manage Inventory
                       </Button>
                     </Link>
-                    <Link to="/vendor/products">
+                    <Link to="/vendor/dashboard">
                       <Button size="lg" variant="outline" className="bg-transparent border-2 border-white text-white hover:bg-white hover:text-slate-800 px-4 sm:px-8 py-3 sm:py-6 text-sm sm:text-lg font-semibold w-full sm:w-auto">
-                        Manage Inventory
+                        Track Orders
                       </Button>
                     </Link>
                     <Link to="/vendor/subscription">
