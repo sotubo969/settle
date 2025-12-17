@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { Star, Filter, X } from 'lucide-react';
+import { Star, Filter, X, ShoppingCart, Plus } from 'lucide-react';
 import axios from 'axios';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -14,6 +14,8 @@ import { Slider } from '../components/ui/slider';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../components/ui/sheet';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { categories } from '../mock';
+import { useCart } from '../context/CartContext';
+import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -26,6 +28,24 @@ const Products = () => {
   const [priceRange, setPriceRange] = useState([0, 100]);
   const [sortBy, setSortBy] = useState('featured');
   const [loading, setLoading] = useState(true);
+  const [addingToCart, setAddingToCart] = useState({});
+  const { addToCart } = useCart();
+  
+  const handleAddToCart = async (e, product) => {
+    e.preventDefault(); // Prevent navigation
+    e.stopPropagation(); // Stop event bubbling
+    
+    setAddingToCart(prev => ({ ...prev, [product.id]: true }));
+    try {
+      await addToCart(product);
+      toast.success(`${product.name} added to cart!`);
+    } catch (error) {
+      toast.error('Failed to add to cart');
+      console.error('Add to cart error:', error);
+    } finally {
+      setAddingToCart(prev => ({ ...prev, [product.id]: false }));
+    }
+  };
 
   // Fetch products from backend
   useEffect(() => {
