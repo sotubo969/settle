@@ -21,6 +21,7 @@ import ShippingInformation from './pages/ShippingInformation';
 import ReturnsRefunds from './pages/ReturnsRefunds';
 import AuthCallback from './components/AuthCallback';
 import InstallPrompt from './components/InstallPrompt';
+import AdminDashboard from './pages/AdminDashboard';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 
@@ -53,6 +54,7 @@ function AppRouter() {
       <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/shipping" element={<ShippingInformation />} />
       <Route path="/returns" element={<ReturnsRefunds />} />
+      <Route path="/admin/dashboard" element={<AdminDashboard />} />
     </Routes>
   );
 }
