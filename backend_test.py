@@ -730,13 +730,50 @@ class BackendTester:
             except Exception as e:
                 self.log_test("Owner Sales", False, f"Exception: {str(e)}")
             
-            # Test owner deliveries endpoint (if implemented)
+            # Test owner deliveries endpoint
             try:
                 response = self.make_request("GET", "/owner/deliveries")
                 
                 if response.status_code == 200:
                     data = response.json()
-                    self.log_test("Owner Deliveries", True, f"Deliveries endpoint accessible - Response: {type(data)}")
+                    if "deliveries" in data:
+                        deliveries = data["deliveries"]
+                        status_counts = data.get("statusCounts", {})
+                        self.log_test("Owner Deliveries", True, 
+                                    f"Retrieved {len(deliveries)} deliveries with status tracking - "
+                                    f"Processing: {status_counts.get('processing', 0)}, "
+                                    f"Delivered: {status_counts.get('delivered', 0)}")
+                        
+                        # Test delivery update if there are any orders
+                        if deliveries:
+                            try:
+                                # Try to update the first delivery
+                                first_delivery = deliveries[0]
+                                order_id = first_delivery.get("orderId")
+                                
+                                if order_id:
+                                    update_data = {
+                                        "deliveryStatus": "shipped",
+                                        "trackingNumber": "TEST123456",
+                                        "carrier": "Royal Mail"
+                                    }
+                                    
+                                    update_response = self.make_request("PUT", f"/owner/deliveries/{order_id}", update_data)
+                                    
+                                    if update_response.status_code == 200:
+                                        update_result = update_response.json()
+                                        if update_result.get("success"):
+                                            self.log_test("Delivery Update", True, 
+                                                        f"Delivery status updated for order {order_id}")
+                                        else:
+                                            self.log_test("Delivery Update", False, f"Delivery update failed: {update_result}")
+                                    else:
+                                        self.log_test("Delivery Update", False, 
+                                                    f"HTTP {update_response.status_code}: {update_response.text}")
+                            except Exception as e:
+                                self.log_test("Delivery Update", False, f"Exception: {str(e)}")
+                    else:
+                        self.log_test("Owner Deliveries", False, f"Invalid deliveries response: {data}")
                 elif response.status_code == 404:
                     self.log_test("Owner Deliveries", False, "Deliveries endpoint not implemented (404)")
                 elif response.status_code == 403:
