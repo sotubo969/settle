@@ -363,27 +363,166 @@ async def logout_oauth(session_token: Optional[str] = Cookie(None)):
     
     return {"success": True, "message": "Logged out successfully"}
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    password: str
+    confirmPassword: str
+
 @api_router.post("/auth/forgot-password")
-async def forgot_password(email_data: dict, db: AsyncSession = Depends(get_db)):
-    email = email_data.get('email')
-    result = await db.execute(select(User).where(User.email == email))
+async def forgot_password(request: ForgotPasswordRequest, db: AsyncSession = Depends(get_db)):
+    """Request password reset - sends email with reset link"""
+    from email_service import email_service
+    
+    # Find user by email
+    result = await db.execute(select(User).where(User.email == request.email))
     user = result.scalar_one_or_none()
     
+    # Always return success message to prevent email enumeration
+    success_message = "If an account with this email exists, you will receive a password reset link shortly."
+    
     if not user:
-        # Don't reveal if email exists for security
-        return {"success": True, "message": "If email exists, reset instructions sent"}
+        return {"success": True, "message": success_message}
     
-    # TODO: Generate reset token and send email
-    # For now, just log it
-    print(f"\n{'='*60}")
-    print("PASSWORD RESET REQUEST")
-    print(f"{'='*60}")
-    print(f"Email: {email}")
-    print(f"User: {user.name}")
-    print("Reset Link: https://afrobasket.preview.emergentagent.com/reset-password?token=GENERATED_TOKEN")
-    print(f"{'='*60}\n")
+    # Invalidate any existing reset tokens for this user
+    await db.execute(
+        update(PasswordResetToken)
+        .where(PasswordResetToken.user_id == user.id, PasswordResetToken.used == False)
+        .values(used=True)
+    )
     
-    return {"success": True, "message": "Password reset instructions sent"}
+    # Generate secure token
+    reset_token = secrets.token_urlsafe(32)
+    
+    # Set expiration to 30 minutes from now
+    expires_at = datetime.utcnow() + timedelta(minutes=30)
+    
+    # Save token to database
+    new_token = PasswordResetToken(
+        user_id=user.id,
+        token=reset_token,
+        expires_at=expires_at,
+        used=False
+    )
+    db.add(new_token)
+    await db.flush()
+    
+    # Generate reset link
+    frontend_url = os.environ.get('FRONTEND_URL', 'https://code-fetcher-23.preview.emergentagent.com')
+    reset_link = f"{frontend_url}/reset-password?token={reset_token}"
+    
+    # Send email
+    try:
+        email_service.send_password_reset_email(
+            to_email=user.email,
+            user_name=user.name,
+            reset_link=reset_link
+        )
+        logger.info(f"Password reset email sent to {user.email}")
+    except Exception as e:
+        logger.error(f"Failed to send password reset email: {str(e)}")
+    
+    return {"success": True, "message": success_message}
+
+@api_router.get("/auth/reset-password/verify/{token}")
+async def verify_reset_token(token: str, db: AsyncSession = Depends(get_db)):
+    """Verify if a reset token is valid"""
+    result = await db.execute(
+        select(PasswordResetToken).where(
+            PasswordResetToken.token == token,
+            PasswordResetToken.used == False,
+            PasswordResetToken.expires_at > datetime.utcnow()
+        )
+    )
+    reset_token = result.scalar_one_or_none()
+    
+    if not reset_token:
+        raise HTTPException(
+            status_code=400, 
+            detail="Invalid or expired reset link. Please request a new password reset."
+        )
+    
+    # Get user info (don't expose too much)
+    user_result = await db.execute(select(User).where(User.id == reset_token.user_id))
+    user = user_result.scalar_one_or_none()
+    
+    return {
+        "valid": True,
+        "email": user.email if user else None,
+        "expiresAt": reset_token.expires_at.isoformat()
+    }
+
+@api_router.post("/auth/reset-password")
+async def reset_password(request: ResetPasswordRequest, db: AsyncSession = Depends(get_db)):
+    """Reset password using token"""
+    from email_service import email_service
+    
+    # Validate passwords match
+    if request.password != request.confirmPassword:
+        raise HTTPException(status_code=400, detail="Passwords do not match")
+    
+    # Validate password strength
+    if len(request.password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters long")
+    
+    if not any(c.isupper() for c in request.password):
+        raise HTTPException(status_code=400, detail="Password must contain at least one uppercase letter")
+    
+    if not any(c.islower() for c in request.password):
+        raise HTTPException(status_code=400, detail="Password must contain at least one lowercase letter")
+    
+    if not any(c.isdigit() for c in request.password):
+        raise HTTPException(status_code=400, detail="Password must contain at least one number")
+    
+    # Find and validate token
+    result = await db.execute(
+        select(PasswordResetToken).where(
+            PasswordResetToken.token == request.token,
+            PasswordResetToken.used == False,
+            PasswordResetToken.expires_at > datetime.utcnow()
+        )
+    )
+    reset_token = result.scalar_one_or_none()
+    
+    if not reset_token:
+        raise HTTPException(
+            status_code=400, 
+            detail="Invalid or expired reset link. Please request a new password reset."
+        )
+    
+    # Get user
+    user_result = await db.execute(select(User).where(User.id == reset_token.user_id))
+    user = user_result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=400, detail="User not found")
+    
+    # Hash new password
+    user.password = hash_password(request.password)
+    user.updated_at = datetime.utcnow()
+    
+    # Invalidate the token
+    reset_token.used = True
+    
+    await db.flush()
+    await db.commit()
+    
+    # Send confirmation email
+    try:
+        email_service.send_password_changed_confirmation(
+            to_email=user.email,
+            user_name=user.name
+        )
+        logger.info(f"Password changed confirmation sent to {user.email}")
+    except Exception as e:
+        logger.error(f"Failed to send password changed email: {str(e)}")
+    
+    return {
+        "success": True, 
+        "message": "Your password has been successfully reset. You can now login with your new password."
+    }
 
 # ============ PRODUCT ROUTES ============
 @api_router.get("/products")
