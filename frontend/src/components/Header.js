@@ -194,6 +194,12 @@ const Header = () => {
                         Vendor Dashboard
                       </DropdownMenuItem>
                     )}
+                    {user?.email === 'sotubodammy@gmail.com' && (
+                      <DropdownMenuItem onClick={() => navigate('/owner/dashboard')} className="text-emerald-600 font-semibold">
+                        <Store className="h-4 w-4 mr-2" />
+                        Owner Dashboard
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={() => navigate('/profile')}>
                       <Package className="h-4 w-4 mr-2" />
                       Orders
