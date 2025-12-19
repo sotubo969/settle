@@ -1121,6 +1121,9 @@ class BackendTester:
         print("-" * 40)
         self.test_oauth_endpoints()
         
+        # Forgot Password tests
+        self.test_forgot_password_flow()
+        
         # Product tests
         print("\n📦 PRODUCT TESTS")
         print("-" * 40)
