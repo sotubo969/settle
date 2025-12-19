@@ -62,6 +62,7 @@ const OwnerDashboard = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
+      const token = getToken();
       const headers = { 'Authorization': `Bearer ${token}` };
       
       // Fetch all data in parallel
