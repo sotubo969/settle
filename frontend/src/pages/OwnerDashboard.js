@@ -14,7 +14,7 @@ import {
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const OwnerDashboard = () => {
-  const { user, token } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
@@ -37,9 +37,16 @@ const OwnerDashboard = () => {
   // Check if user is owner
   const OWNER_EMAIL = 'sotubodammy@gmail.com';
   const isOwner = user?.email === OWNER_EMAIL;
+  
+  // Get token from localStorage
+  const getToken = () => localStorage.getItem('afroToken');
 
   useEffect(() => {
-    if (!user || !token) {
+    // Wait for auth to load
+    if (authLoading) return;
+    
+    const token = getToken();
+    if (!isAuthenticated || !token) {
       navigate('/login');
       return;
     }
@@ -50,7 +57,7 @@ const OwnerDashboard = () => {
     }
     
     fetchDashboardData();
-  }, [user, token, isOwner, navigate]);
+  }, [isAuthenticated, authLoading, isOwner, navigate]);
 
   const fetchDashboardData = async () => {
     setLoading(true);
