@@ -108,10 +108,41 @@ class Order(Base):
     commission = Column(Float, nullable=False)
     total = Column(Float, nullable=False)
     status = Column(String(50), default='pending')
+    # Delivery tracking fields
+    delivery_status = Column(String(50), default='processing')  # processing, shipped, in_transit, out_for_delivery, delivered
+    tracking_number = Column(String(100), nullable=True)
+    carrier = Column(String(100), nullable=True)
+    estimated_delivery = Column(DateTime, nullable=True)
+    delivered_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     user = relationship('User', back_populates='orders')
+
+
+class Analytics(Base):
+    __tablename__ = 'analytics'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    event_type = Column(String(50), nullable=False)  # page_view, product_view, product_click, add_to_cart
+    page_url = Column(String(500), nullable=True)
+    product_id = Column(Integer, ForeignKey('products.id'), nullable=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=True)
+    session_id = Column(String(100), nullable=True)
+    ip_address = Column(String(50), nullable=True)
+    user_agent = Column(String(500), nullable=True)
+    referrer = Column(String(500), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class PageVisit(Base):
+    __tablename__ = 'page_visits'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    date = Column(DateTime, default=datetime.utcnow)
+    page = Column(String(255), nullable=False)
+    visits = Column(Integer, default=1)
+    unique_visitors = Column(Integer, default=1)
 
 # Database session dependency
 async def get_db():
