@@ -1450,6 +1450,647 @@ async def upgrade_customer_premium(
         "next_billing_date": (datetime.now() + timedelta(days=30)).isoformat()
     }
 
+# ============ OWNER DASHBOARD ROUTES (Protected) ============
+OWNER_EMAIL = "sotubodammy@gmail.com"
+
+async def verify_owner(current_user: User = Depends(get_current_user)):
+    """Verify that the current user is the owner"""
+    if current_user.email != OWNER_EMAIL:
+        raise HTTPException(status_code=403, detail="Access denied. Owner only.")
+    return current_user
+
+@api_router.get("/owner/dashboard")
+async def get_owner_dashboard(
+    current_user: User = Depends(verify_owner),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get owner dashboard overview with all statistics"""
+    from sqlalchemy import func
+    
+    # Get total vendors
+    vendor_result = await db.execute(select(func.count(Vendor.id)))
+    total_vendors = vendor_result.scalar() or 0
+    
+    # Get approved vendors
+    approved_result = await db.execute(select(func.count(Vendor.id)).where(Vendor.status == "approved"))
+    approved_vendors = approved_result.scalar() or 0
+    
+    # Get pending vendors
+    pending_result = await db.execute(select(func.count(Vendor.id)).where(Vendor.status == "pending"))
+    pending_vendors = pending_result.scalar() or 0
+    
+    # Get total products
+    product_result = await db.execute(select(func.count(Product.id)))
+    total_products = product_result.scalar() or 0
+    
+    # Get total orders
+    order_result = await db.execute(select(func.count(Order.id)))
+    total_orders = order_result.scalar() or 0
+    
+    # Get total revenue
+    revenue_result = await db.execute(select(func.sum(Order.total)))
+    total_revenue = revenue_result.scalar() or 0
+    
+    # Get total commission earned
+    commission_result = await db.execute(select(func.sum(Order.commission)))
+    total_commission = commission_result.scalar() or 0
+    
+    # Get total users
+    user_result = await db.execute(select(func.count(User.id)))
+    total_users = user_result.scalar() or 0
+    
+    # Get orders by status
+    pending_orders_result = await db.execute(select(func.count(Order.id)).where(Order.status == "pending"))
+    pending_orders = pending_orders_result.scalar() or 0
+    
+    completed_orders_result = await db.execute(select(func.count(Order.id)).where(Order.status == "completed"))
+    completed_orders = completed_orders_result.scalar() or 0
+    
+    # Get recent orders (last 7 days)
+    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    recent_orders_result = await db.execute(
+        select(func.count(Order.id)).where(Order.created_at >= seven_days_ago)
+    )
+    recent_orders = recent_orders_result.scalar() or 0
+    
+    # Get page visits (last 30 days)
+    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+    visits_result = await db.execute(
+        select(func.sum(PageVisit.visits)).where(PageVisit.date >= thirty_days_ago)
+    )
+    total_visits = visits_result.scalar() or 0
+    
+    # Get product analytics (clicks)
+    product_clicks_result = await db.execute(
+        select(func.count(Analytics.id)).where(Analytics.event_type == "product_click")
+    )
+    product_clicks = product_clicks_result.scalar() or 0
+    
+    return {
+        "overview": {
+            "totalVendors": total_vendors,
+            "approvedVendors": approved_vendors,
+            "pendingVendors": pending_vendors,
+            "totalProducts": total_products,
+            "totalOrders": total_orders,
+            "totalRevenue": round(total_revenue, 2),
+            "totalCommission": round(total_commission, 2),
+            "totalUsers": total_users,
+            "pendingOrders": pending_orders,
+            "completedOrders": completed_orders,
+            "recentOrders": recent_orders,
+            "totalPageVisits": total_visits,
+            "productClicks": product_clicks
+        }
+    }
+
+@api_router.get("/owner/vendors")
+async def get_owner_vendors(
+    current_user: User = Depends(verify_owner),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get all vendors with detailed information"""
+    from sqlalchemy import func
+    
+    result = await db.execute(select(Vendor).order_by(Vendor.created_at.desc()))
+    vendors = result.scalars().all()
+    
+    vendor_data = []
+    for vendor in vendors:
+        # Get product count for vendor
+        product_count_result = await db.execute(
+            select(func.count(Product.id)).where(Product.vendor_id == vendor.id)
+        )
+        product_count = product_count_result.scalar() or 0
+        
+        # Calculate vendor revenue from orders
+        # Get orders containing this vendor's products
+        orders_result = await db.execute(select(Order))
+        all_orders = orders_result.scalars().all()
+        
+        vendor_revenue = 0
+        vendor_orders = 0
+        for order in all_orders:
+            for item in order.items:
+                if item.get('vendorId') == vendor.id:
+                    vendor_revenue += item.get('price', 0) * item.get('quantity', 1)
+                    vendor_orders += 1
+        
+        vendor_data.append({
+            "id": vendor.id,
+            "businessName": vendor.business_name,
+            "email": vendor.email,
+            "phone": vendor.phone,
+            "address": vendor.address,
+            "city": vendor.city,
+            "postcode": vendor.postcode,
+            "location": vendor.location,
+            "description": vendor.description,
+            "status": vendor.status,
+            "verified": vendor.verified,
+            "rating": vendor.rating,
+            "totalSales": vendor.total_sales,
+            "commission": vendor.commission,
+            "productCount": product_count,
+            "revenue": round(vendor_revenue, 2),
+            "orderCount": vendor_orders,
+            "createdAt": vendor.created_at.isoformat(),
+            "updatedAt": vendor.updated_at.isoformat()
+        })
+    
+    return {"vendors": vendor_data}
+
+@api_router.get("/owner/products")
+async def get_owner_products(
+    current_user: User = Depends(verify_owner),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get all products with vendor details and analytics"""
+    from sqlalchemy import func
+    
+    result = await db.execute(select(Product).order_by(Product.created_at.desc()))
+    products = result.scalars().all()
+    
+    product_data = []
+    for product in products:
+        # Get click count for this product
+        clicks_result = await db.execute(
+            select(func.count(Analytics.id)).where(
+                Analytics.product_id == product.id,
+                Analytics.event_type == "product_click"
+            )
+        )
+        clicks = clicks_result.scalar() or 0
+        
+        # Get view count
+        views_result = await db.execute(
+            select(func.count(Analytics.id)).where(
+                Analytics.product_id == product.id,
+                Analytics.event_type == "product_view"
+            )
+        )
+        views = views_result.scalar() or 0
+        
+        # Get add to cart count
+        cart_adds_result = await db.execute(
+            select(func.count(Analytics.id)).where(
+                Analytics.product_id == product.id,
+                Analytics.event_type == "add_to_cart"
+            )
+        )
+        cart_adds = cart_adds_result.scalar() or 0
+        
+        # Get vendor info
+        vendor_result = await db.execute(select(Vendor).where(Vendor.id == product.vendor_id))
+        vendor = vendor_result.scalar_one_or_none()
+        
+        product_data.append({
+            "id": product.id,
+            "name": product.name,
+            "brand": product.brand,
+            "description": product.description,
+            "price": product.price,
+            "originalPrice": product.original_price,
+            "image": product.image,
+            "category": product.category,
+            "categoryId": product.category_id,
+            "stock": product.stock,
+            "weight": product.weight,
+            "inStock": product.in_stock,
+            "featured": product.featured,
+            "rating": product.rating,
+            "reviews": product.reviews,
+            "vendorId": product.vendor_id,
+            "vendorName": vendor.business_name if vendor else "Unknown",
+            "vendorStatus": vendor.status if vendor else "unknown",
+            "analytics": {
+                "clicks": clicks,
+                "views": views,
+                "cartAdds": cart_adds
+            },
+            "createdAt": product.created_at.isoformat(),
+            "updatedAt": product.updated_at.isoformat()
+        })
+    
+    return {"products": product_data}
+
+@api_router.get("/owner/analytics")
+async def get_owner_analytics(
+    days: int = Query(30, ge=1, le=365),
+    current_user: User = Depends(verify_owner),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get detailed analytics for the platform"""
+    from sqlalchemy import func
+    
+    start_date = datetime.utcnow() - timedelta(days=days)
+    
+    # Get page visits by day
+    visits_result = await db.execute(
+        select(PageVisit).where(PageVisit.date >= start_date).order_by(PageVisit.date)
+    )
+    visits = visits_result.scalars().all()
+    
+    daily_visits = {}
+    for visit in visits:
+        date_key = visit.date.strftime("%Y-%m-%d")
+        if date_key not in daily_visits:
+            daily_visits[date_key] = {"visits": 0, "uniqueVisitors": 0}
+        daily_visits[date_key]["visits"] += visit.visits
+        daily_visits[date_key]["uniqueVisitors"] += visit.unique_visitors
+    
+    # Get product analytics
+    product_analytics_result = await db.execute(
+        select(
+            Analytics.product_id,
+            Analytics.event_type,
+            func.count(Analytics.id).label('count')
+        ).where(
+            Analytics.created_at >= start_date,
+            Analytics.product_id.isnot(None)
+        ).group_by(Analytics.product_id, Analytics.event_type)
+    )
+    product_analytics = product_analytics_result.all()
+    
+    # Get top products by clicks
+    top_products_result = await db.execute(
+        select(
+            Analytics.product_id,
+            func.count(Analytics.id).label('clicks')
+        ).where(
+            Analytics.event_type == "product_click",
+            Analytics.product_id.isnot(None)
+        ).group_by(Analytics.product_id).order_by(func.count(Analytics.id).desc()).limit(10)
+    )
+    top_products_data = top_products_result.all()
+    
+    top_products = []
+    for prod_id, clicks in top_products_data:
+        prod_result = await db.execute(select(Product).where(Product.id == prod_id))
+        product = prod_result.scalar_one_or_none()
+        if product:
+            top_products.append({
+                "id": product.id,
+                "name": product.name,
+                "image": product.image,
+                "clicks": clicks
+            })
+    
+    # Get orders by day
+    orders_result = await db.execute(
+        select(Order).where(Order.created_at >= start_date).order_by(Order.created_at)
+    )
+    orders = orders_result.scalars().all()
+    
+    daily_orders = {}
+    daily_revenue = {}
+    for order in orders:
+        date_key = order.created_at.strftime("%Y-%m-%d")
+        if date_key not in daily_orders:
+            daily_orders[date_key] = 0
+            daily_revenue[date_key] = 0
+        daily_orders[date_key] += 1
+        daily_revenue[date_key] += order.total
+    
+    return {
+        "period": f"Last {days} days",
+        "dailyVisits": daily_visits,
+        "dailyOrders": daily_orders,
+        "dailyRevenue": daily_revenue,
+        "topProducts": top_products,
+        "totalVisits": sum(v["visits"] for v in daily_visits.values()),
+        "totalOrders": len(orders),
+        "totalRevenue": round(sum(daily_revenue.values()), 2)
+    }
+
+@api_router.get("/owner/transactions")
+async def get_owner_transactions(
+    current_user: User = Depends(verify_owner),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get all transactions grouped by vendor"""
+    from sqlalchemy import func
+    
+    # Get all orders
+    orders_result = await db.execute(select(Order).order_by(Order.created_at.desc()))
+    orders = orders_result.scalars().all()
+    
+    # Get all vendors
+    vendors_result = await db.execute(select(Vendor))
+    vendors = {v.id: v for v in vendors_result.scalars().all()}
+    
+    vendor_transactions = {}
+    all_transactions = []
+    
+    for order in orders:
+        # Get user info
+        user_result = await db.execute(select(User).where(User.id == order.user_id))
+        user = user_result.scalar_one_or_none()
+        
+        # Track by vendor
+        for item in order.items:
+            vendor_id = item.get('vendorId')
+            if vendor_id:
+                if vendor_id not in vendor_transactions:
+                    vendor = vendors.get(vendor_id)
+                    vendor_transactions[vendor_id] = {
+                        "vendorId": vendor_id,
+                        "vendorName": vendor.business_name if vendor else "Unknown",
+                        "totalRevenue": 0,
+                        "totalOrders": 0,
+                        "totalCommission": 0,
+                        "transactions": []
+                    }
+                
+                item_total = item.get('price', 0) * item.get('quantity', 1)
+                item_commission = item_total * 0.10  # 10% commission
+                
+                vendor_transactions[vendor_id]["totalRevenue"] += item_total
+                vendor_transactions[vendor_id]["totalOrders"] += 1
+                vendor_transactions[vendor_id]["totalCommission"] += item_commission
+                vendor_transactions[vendor_id]["transactions"].append({
+                    "orderId": order.order_id,
+                    "productName": item.get('name'),
+                    "quantity": item.get('quantity'),
+                    "price": item.get('price'),
+                    "total": item_total,
+                    "commission": round(item_commission, 2),
+                    "vendorEarning": round(item_total - item_commission, 2),
+                    "date": order.created_at.isoformat(),
+                    "status": order.status
+                })
+        
+        all_transactions.append({
+            "id": order.id,
+            "orderId": order.order_id,
+            "customerName": user.name if user else "Unknown",
+            "customerEmail": user.email if user else "Unknown",
+            "items": len(order.items),
+            "subtotal": order.subtotal,
+            "deliveryFee": order.delivery_fee,
+            "commission": order.commission,
+            "total": order.total,
+            "status": order.status,
+            "paymentMethod": order.payment_info.get('method', 'Unknown'),
+            "createdAt": order.created_at.isoformat()
+        })
+    
+    # Round totals
+    for vid in vendor_transactions:
+        vendor_transactions[vid]["totalRevenue"] = round(vendor_transactions[vid]["totalRevenue"], 2)
+        vendor_transactions[vid]["totalCommission"] = round(vendor_transactions[vid]["totalCommission"], 2)
+    
+    return {
+        "vendorTransactions": list(vendor_transactions.values()),
+        "allTransactions": all_transactions,
+        "summary": {
+            "totalTransactions": len(all_transactions),
+            "totalRevenue": round(sum(t["total"] for t in all_transactions), 2),
+            "totalCommission": round(sum(t["commission"] for t in all_transactions), 2)
+        }
+    }
+
+@api_router.get("/owner/sales")
+async def get_owner_sales(
+    current_user: User = Depends(verify_owner),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get sales statistics per vendor"""
+    from sqlalchemy import func
+    
+    # Get all vendors
+    vendors_result = await db.execute(select(Vendor))
+    vendors = vendors_result.scalars().all()
+    
+    # Get all orders
+    orders_result = await db.execute(select(Order))
+    orders = orders_result.scalars().all()
+    
+    vendor_sales = []
+    for vendor in vendors:
+        # Calculate sales from orders
+        total_sales = 0
+        total_items_sold = 0
+        order_count = 0
+        
+        for order in orders:
+            for item in order.items:
+                if item.get('vendorId') == vendor.id:
+                    total_sales += item.get('price', 0) * item.get('quantity', 1)
+                    total_items_sold += item.get('quantity', 1)
+                    order_count += 1
+        
+        # Get product count
+        product_count_result = await db.execute(
+            select(func.count(Product.id)).where(Product.vendor_id == vendor.id)
+        )
+        product_count = product_count_result.scalar() or 0
+        
+        commission_earned = total_sales * 0.10  # 10% commission
+        vendor_earning = total_sales - commission_earned
+        
+        vendor_sales.append({
+            "vendorId": vendor.id,
+            "vendorName": vendor.business_name,
+            "email": vendor.email,
+            "status": vendor.status,
+            "verified": vendor.verified,
+            "productCount": product_count,
+            "totalSales": round(total_sales, 2),
+            "totalItemsSold": total_items_sold,
+            "orderCount": order_count,
+            "commissionEarned": round(commission_earned, 2),
+            "vendorEarning": round(vendor_earning, 2),
+            "averageOrderValue": round(total_sales / order_count, 2) if order_count > 0 else 0
+        })
+    
+    # Sort by total sales
+    vendor_sales.sort(key=lambda x: x["totalSales"], reverse=True)
+    
+    return {
+        "vendorSales": vendor_sales,
+        "summary": {
+            "totalVendors": len(vendors),
+            "totalSales": round(sum(v["totalSales"] for v in vendor_sales), 2),
+            "totalCommission": round(sum(v["commissionEarned"] for v in vendor_sales), 2),
+            "totalVendorEarnings": round(sum(v["vendorEarning"] for v in vendor_sales), 2)
+        }
+    }
+
+@api_router.get("/owner/deliveries")
+async def get_owner_deliveries(
+    status: Optional[str] = None,
+    current_user: User = Depends(verify_owner),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get all deliveries with tracking information"""
+    query = select(Order).order_by(Order.created_at.desc())
+    
+    if status:
+        query = query.where(Order.delivery_status == status)
+    
+    result = await db.execute(query)
+    orders = result.scalars().all()
+    
+    deliveries = []
+    for order in orders:
+        # Get user info
+        user_result = await db.execute(select(User).where(User.id == order.user_id))
+        user = user_result.scalar_one_or_none()
+        
+        deliveries.append({
+            "id": order.id,
+            "orderId": order.order_id,
+            "customerName": user.name if user else "Unknown",
+            "customerEmail": user.email if user else "Unknown",
+            "shippingAddress": order.shipping_info,
+            "items": order.items,
+            "itemCount": len(order.items),
+            "total": order.total,
+            "orderStatus": order.status,
+            "deliveryStatus": order.delivery_status or "processing",
+            "trackingNumber": order.tracking_number,
+            "carrier": order.carrier,
+            "estimatedDelivery": order.estimated_delivery.isoformat() if order.estimated_delivery else None,
+            "deliveredAt": order.delivered_at.isoformat() if order.delivered_at else None,
+            "createdAt": order.created_at.isoformat(),
+            "updatedAt": order.updated_at.isoformat()
+        })
+    
+    # Count by status
+    status_counts = {
+        "processing": 0,
+        "shipped": 0,
+        "in_transit": 0,
+        "out_for_delivery": 0,
+        "delivered": 0
+    }
+    for d in deliveries:
+        status_key = d["deliveryStatus"]
+        if status_key in status_counts:
+            status_counts[status_key] += 1
+    
+    return {
+        "deliveries": deliveries,
+        "statusCounts": status_counts,
+        "totalDeliveries": len(deliveries)
+    }
+
+class DeliveryUpdateRequest(BaseModel):
+    deliveryStatus: str
+    trackingNumber: Optional[str] = None
+    carrier: Optional[str] = None
+    estimatedDelivery: Optional[str] = None
+
+@api_router.put("/owner/deliveries/{order_id}")
+async def update_delivery(
+    order_id: str,
+    delivery_data: DeliveryUpdateRequest,
+    current_user: User = Depends(verify_owner),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update delivery status and tracking information"""
+    result = await db.execute(select(Order).where(Order.order_id == order_id))
+    order = result.scalar_one_or_none()
+    
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    order.delivery_status = delivery_data.deliveryStatus
+    
+    if delivery_data.trackingNumber:
+        order.tracking_number = delivery_data.trackingNumber
+    if delivery_data.carrier:
+        order.carrier = delivery_data.carrier
+    if delivery_data.estimatedDelivery:
+        order.estimated_delivery = datetime.fromisoformat(delivery_data.estimatedDelivery.replace('Z', '+00:00'))
+    
+    if delivery_data.deliveryStatus == "delivered":
+        order.delivered_at = datetime.utcnow()
+        order.status = "completed"
+    
+    order.updated_at = datetime.utcnow()
+    await db.flush()
+    
+    return {"success": True, "message": "Delivery updated successfully"}
+
+# Analytics tracking endpoint
+class AnalyticsEventRequest(BaseModel):
+    eventType: str
+    pageUrl: Optional[str] = None
+    productId: Optional[int] = None
+    sessionId: Optional[str] = None
+
+@api_router.post("/analytics/track")
+async def track_analytics_event(
+    event_data: AnalyticsEventRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """Track analytics events (page views, product clicks, etc.)"""
+    new_event = Analytics(
+        event_type=event_data.eventType,
+        page_url=event_data.pageUrl,
+        product_id=event_data.productId,
+        session_id=event_data.sessionId
+    )
+    
+    db.add(new_event)
+    await db.flush()
+    
+    # Also update page visits if it's a page view
+    if event_data.eventType == "page_view" and event_data.pageUrl:
+        today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        result = await db.execute(
+            select(PageVisit).where(
+                PageVisit.date == today,
+                PageVisit.page == event_data.pageUrl
+            )
+        )
+        page_visit = result.scalar_one_or_none()
+        
+        if page_visit:
+            page_visit.visits += 1
+        else:
+            new_visit = PageVisit(
+                date=today,
+                page=event_data.pageUrl,
+                visits=1,
+                unique_visitors=1
+            )
+            db.add(new_visit)
+    
+    return {"success": True}
+
+# Vendor approval by owner
+@api_router.put("/owner/vendors/{vendor_id}/approve")
+async def owner_approve_vendor(
+    vendor_id: int,
+    status: str = Query(..., regex="^(approved|rejected)$"),
+    current_user: User = Depends(verify_owner),
+    db: AsyncSession = Depends(get_db)
+):
+    """Approve or reject a vendor"""
+    result = await db.execute(select(Vendor).where(Vendor.id == vendor_id))
+    vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+    
+    vendor.status = status
+    vendor.verified = (status == "approved")
+    vendor.updated_at = datetime.utcnow()
+    
+    await db.flush()
+    
+    # Send email notification
+    if status == "approved":
+        try:
+            await EmailService.send_vendor_approval_notification(vendor.email, vendor.business_name)
+        except:
+            pass
+    
+    return {"success": True, "message": f"Vendor {status}"}
+
 app.include_router(api_router)
 
 app.add_middleware(
