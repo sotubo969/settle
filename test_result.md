@@ -813,9 +813,59 @@ test_plan:
   test_priority: "critical_issues_first"
   owner_dashboard_testing: "completed"
 
+  - task: "Forgot Password API - Request Reset"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - POST /api/auth/forgot-password endpoint working correctly. Tested with valid email (sotubodammy@gmail.com) and invalid email. Returns same success message for security (prevents email enumeration). Token generation and database storage working properly."
+
+  - task: "Forgot Password API - Token Verification"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - GET /api/auth/reset-password/verify/{token} endpoint working correctly. Valid tokens return user email and expiration time. Invalid/expired tokens return 400 error with appropriate message. Token validation logic functioning properly."
+
+  - task: "Forgot Password API - Password Reset"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - POST /api/auth/reset-password endpoint working correctly. All password validation rules working: minimum 8 characters, uppercase letter, lowercase letter, number required. Password confirmation matching validated. Token invalidation after use working. Password hash update successful."
+
+  - task: "Forgot Password Flow - End-to-End"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - Complete forgot password flow tested successfully: 1) Password reset request ✅ 2) Token verification ✅ 3) Password validation (5 test cases) ✅ 4) Password reset ✅ 5) Token invalidation ✅ 6) Login with new password ✅ 7) Old password rejection ✅. All 12 test cases passed (100% success rate). Owner password changed to 'NewPassword123!' during testing."
+
 agent_communication:
   - agent: "main"
     message: "Implemented comprehensive Forgot Password functionality with secure token-based reset. New endpoints: POST /api/auth/forgot-password, GET /api/auth/reset-password/verify/{token}, POST /api/auth/reset-password. Features: Email validation, secure time-limited tokens (30 min), password strength validation, confirmation emails. Frontend pages: ForgotPassword.js (redesigned), ResetPassword.js (new). Owner password was changed during testing to: NewPassword123! - Please test the forgot password flow."
+  - agent: "testing"
+    message: "COMPREHENSIVE FORGOT PASSWORD TESTING COMPLETED (Dec 19, 2024) - 100% SUCCESS RATE: ✅ ALL 3 ENDPOINTS WORKING: POST /api/auth/forgot-password (email validation, security features), GET /api/auth/reset-password/verify/{token} (token validation), POST /api/auth/reset-password (password validation, reset functionality) ✅ COMPLETE FLOW TESTED: Request reset → Token verification → Password validation (5 rules) → Password reset → Token invalidation → Login verification ✅ SECURITY FEATURES: Email enumeration prevention, secure token generation, time-limited tokens (30 min), password strength validation, token invalidation after use ✅ PASSWORD VALIDATION: All rules working (8+ chars, uppercase, lowercase, number, confirmation match) ✅ END-TO-END VERIFICATION: Login with new password successful, old password properly rejected 🏁 VERDICT: Forgot Password functionality is production-ready with comprehensive security measures and full functionality."
   - agent: "testing"
     message: "Starting comprehensive testing of AfroMarket UK website. Will test all major features and document what's working vs mock implementation."
   - agent: "testing"
