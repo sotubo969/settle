@@ -565,6 +565,303 @@ class BackendTester:
             except Exception as e:
                 self.log_test("Add to Wishlist", False, f"Exception: {str(e)}")
     
+    def test_owner_login(self):
+        """Test owner login to get owner token"""
+        try:
+            login_data = {
+                "email": OWNER_EMAIL,
+                "password": OWNER_PASSWORD
+            }
+            
+            response = self.make_request("POST", "/auth/login", login_data)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success") and data.get("token"):
+                    self.owner_token = data["token"]
+                    self.owner_data = data.get("user")
+                    self.log_test("Owner Login", True, f"Owner login successful - User: {self.owner_data.get('name')} ({self.owner_data.get('email')})")
+                    return True
+                else:
+                    self.log_test("Owner Login", False, f"Owner login failed: {data}")
+            elif response.status_code == 401:
+                self.log_test("Owner Login", False, f"Invalid owner credentials - HTTP 401: {response.text}")
+            else:
+                self.log_test("Owner Login", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Owner Login", False, f"Exception: {str(e)}")
+        
+        return False
+    
+    def test_owner_dashboard_endpoints(self):
+        """Test all owner dashboard endpoints"""
+        if not self.owner_token:
+            self.log_test("Owner Dashboard Tests", False, "No owner token available")
+            return
+        
+        # Temporarily store current token and set owner token
+        original_token = self.auth_token
+        self.auth_token = self.owner_token
+        
+        try:
+            # Test owner dashboard overview
+            try:
+                response = self.make_request("GET", "/owner/dashboard")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "overview" in data:
+                        overview = data["overview"]
+                        self.log_test("Owner Dashboard Overview", True, 
+                                    f"Dashboard data retrieved - Vendors: {overview.get('totalVendors')}, "
+                                    f"Products: {overview.get('totalProducts')}, "
+                                    f"Orders: {overview.get('totalOrders')}, "
+                                    f"Revenue: £{overview.get('totalRevenue', 0)}")
+                    else:
+                        self.log_test("Owner Dashboard Overview", False, f"Invalid dashboard response: {data}")
+                elif response.status_code == 403:
+                    self.log_test("Owner Dashboard Overview", False, "Access denied - not owner")
+                else:
+                    self.log_test("Owner Dashboard Overview", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Owner Dashboard Overview", False, f"Exception: {str(e)}")
+            
+            # Test owner vendors endpoint
+            try:
+                response = self.make_request("GET", "/owner/vendors")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "vendors" in data:
+                        vendors = data["vendors"]
+                        self.log_test("Owner Vendors List", True, 
+                                    f"Retrieved {len(vendors)} vendors with detailed information")
+                    else:
+                        self.log_test("Owner Vendors List", False, f"Invalid vendors response: {data}")
+                elif response.status_code == 403:
+                    self.log_test("Owner Vendors List", False, "Access denied - not owner")
+                else:
+                    self.log_test("Owner Vendors List", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Owner Vendors List", False, f"Exception: {str(e)}")
+            
+            # Test owner products endpoint
+            try:
+                response = self.make_request("GET", "/owner/products")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "products" in data:
+                        products = data["products"]
+                        self.log_test("Owner Products List", True, 
+                                    f"Retrieved {len(products)} products with vendor info and analytics")
+                    else:
+                        self.log_test("Owner Products List", False, f"Invalid products response: {data}")
+                elif response.status_code == 403:
+                    self.log_test("Owner Products List", False, "Access denied - not owner")
+                else:
+                    self.log_test("Owner Products List", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Owner Products List", False, f"Exception: {str(e)}")
+            
+            # Test owner analytics endpoint
+            try:
+                response = self.make_request("GET", "/owner/analytics", {"days": 30})
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "period" in data:
+                        self.log_test("Owner Analytics", True, 
+                                    f"Analytics data retrieved for {data.get('period')} - "
+                                    f"Total visits: {data.get('totalVisits')}, "
+                                    f"Total orders: {data.get('totalOrders')}, "
+                                    f"Total revenue: £{data.get('totalRevenue', 0)}")
+                    else:
+                        self.log_test("Owner Analytics", False, f"Invalid analytics response: {data}")
+                elif response.status_code == 403:
+                    self.log_test("Owner Analytics", False, "Access denied - not owner")
+                else:
+                    self.log_test("Owner Analytics", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Owner Analytics", False, f"Exception: {str(e)}")
+            
+            # Test owner transactions endpoint
+            try:
+                response = self.make_request("GET", "/owner/transactions")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "vendorTransactions" in data and "allTransactions" in data:
+                        vendor_transactions = data["vendorTransactions"]
+                        all_transactions = data["allTransactions"]
+                        summary = data.get("summary", {})
+                        self.log_test("Owner Transactions", True, 
+                                    f"Transactions retrieved - Vendor groups: {len(vendor_transactions)}, "
+                                    f"Total transactions: {len(all_transactions)}, "
+                                    f"Total revenue: £{summary.get('totalRevenue', 0)}")
+                    else:
+                        self.log_test("Owner Transactions", False, f"Invalid transactions response: {data}")
+                elif response.status_code == 403:
+                    self.log_test("Owner Transactions", False, "Access denied - not owner")
+                else:
+                    self.log_test("Owner Transactions", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Owner Transactions", False, f"Exception: {str(e)}")
+            
+            # Test owner sales endpoint
+            try:
+                response = self.make_request("GET", "/owner/sales")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "vendorSales" in data:
+                        vendor_sales = data["vendorSales"]
+                        summary = data.get("summary", {})
+                        self.log_test("Owner Sales", True, 
+                                    f"Sales data retrieved for {len(vendor_sales)} vendors - "
+                                    f"Total sales: £{summary.get('totalSales', 0)}, "
+                                    f"Total commission: £{summary.get('totalCommission', 0)}")
+                    else:
+                        self.log_test("Owner Sales", False, f"Invalid sales response: {data}")
+                elif response.status_code == 403:
+                    self.log_test("Owner Sales", False, "Access denied - not owner")
+                else:
+                    self.log_test("Owner Sales", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Owner Sales", False, f"Exception: {str(e)}")
+            
+            # Test owner deliveries endpoint (if implemented)
+            try:
+                response = self.make_request("GET", "/owner/deliveries")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    self.log_test("Owner Deliveries", True, f"Deliveries endpoint accessible - Response: {type(data)}")
+                elif response.status_code == 404:
+                    self.log_test("Owner Deliveries", False, "Deliveries endpoint not implemented (404)")
+                elif response.status_code == 403:
+                    self.log_test("Owner Deliveries", False, "Access denied - not owner")
+                else:
+                    self.log_test("Owner Deliveries", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Owner Deliveries", False, f"Exception: {str(e)}")
+            
+        finally:
+            # Restore original token
+            self.auth_token = original_token
+    
+    def test_owner_access_control(self):
+        """Test that non-owner users get 403 error for owner endpoints"""
+        if not self.auth_token:
+            self.log_test("Owner Access Control", False, "No regular user token available")
+            return
+        
+        # Test with regular user token (should get 403)
+        owner_endpoints = [
+            "/owner/dashboard",
+            "/owner/vendors", 
+            "/owner/products",
+            "/owner/analytics",
+            "/owner/transactions",
+            "/owner/sales"
+        ]
+        
+        access_denied_count = 0
+        for endpoint in owner_endpoints:
+            try:
+                response = self.make_request("GET", endpoint)
+                if response.status_code == 403:
+                    access_denied_count += 1
+                elif response.status_code == 401:
+                    # Also acceptable - unauthorized
+                    access_denied_count += 1
+            except Exception:
+                pass
+        
+        if access_denied_count == len(owner_endpoints):
+            self.log_test("Owner Access Control", True, 
+                        f"All {len(owner_endpoints)} owner endpoints properly deny access to non-owner users")
+        else:
+            self.log_test("Owner Access Control", False, 
+                        f"Only {access_denied_count}/{len(owner_endpoints)} owner endpoints deny access properly")
+    
+    def test_analytics_tracking(self):
+        """Test analytics tracking endpoint"""
+        try:
+            # Test analytics tracking (should work without authentication)
+            analytics_data = {
+                "productId": 1,
+                "eventType": "product_view"
+            }
+            
+            response = self.make_request("POST", "/analytics/track", analytics_data)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success"):
+                    self.log_test("Analytics Tracking", True, "Analytics event tracked successfully")
+                else:
+                    self.log_test("Analytics Tracking", False, f"Analytics tracking failed: {data}")
+            elif response.status_code == 404:
+                self.log_test("Analytics Tracking", False, "Analytics tracking endpoint not implemented (404)")
+            else:
+                self.log_test("Analytics Tracking", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Analytics Tracking", False, f"Exception: {str(e)}")
+    
+    def test_vendor_approval(self):
+        """Test vendor approval endpoint (owner only)"""
+        if not self.owner_token:
+            self.log_test("Vendor Approval", False, "No owner token available")
+            return
+        
+        # Temporarily store current token and set owner token
+        original_token = self.auth_token
+        self.auth_token = self.owner_token
+        
+        try:
+            # First, get list of vendors to find a pending one
+            response = self.make_request("GET", "/owner/vendors")
+            
+            if response.status_code == 200:
+                data = response.json()
+                vendors = data.get("vendors", [])
+                pending_vendor = None
+                
+                for vendor in vendors:
+                    if vendor.get("status") == "pending":
+                        pending_vendor = vendor
+                        break
+                
+                if pending_vendor:
+                    # Test vendor approval
+                    vendor_id = pending_vendor["id"]
+                    approval_url = f"/owner/vendors/{vendor_id}/approve"
+                    
+                    response = self.make_request("PUT", approval_url, {"status": "approved"})
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        if data.get("success"):
+                            self.log_test("Vendor Approval", True, 
+                                        f"Vendor {vendor_id} approved successfully")
+                        else:
+                            self.log_test("Vendor Approval", False, f"Vendor approval failed: {data}")
+                    elif response.status_code == 404:
+                        self.log_test("Vendor Approval", False, "Vendor approval endpoint not implemented (404)")
+                    else:
+                        self.log_test("Vendor Approval", False, f"HTTP {response.status_code}: {response.text}")
+                else:
+                    self.log_test("Vendor Approval", True, "No pending vendors found to test approval (all vendors already processed)")
+            else:
+                self.log_test("Vendor Approval", False, f"Could not get vendors list: HTTP {response.status_code}")
+        
+        except Exception as e:
+            self.log_test("Vendor Approval", False, f"Exception: {str(e)}")
+        finally:
+            # Restore original token
+            self.auth_token = original_token
+    
     def run_all_tests(self):
         """Run all backend tests"""
         print("=" * 80)
