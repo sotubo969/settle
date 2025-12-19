@@ -812,6 +812,7 @@ test_plan:
   test_all: true
   test_priority: "critical_issues_first"
   owner_dashboard_testing: "completed"
+  forgot_password_testing: "completed"
 
   - task: "Forgot Password API - Request Reset"
     implemented: true
