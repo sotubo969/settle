@@ -128,6 +128,7 @@ const OwnerDashboard = () => {
 
   const approveVendor = async (vendorId, status) => {
     try {
+      const token = getToken();
       const response = await fetch(`${API_URL}/api/owner/vendors/${vendorId}/approve?status=${status}`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` }
