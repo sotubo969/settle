@@ -693,6 +693,8 @@ test_plan:
   test_priority: "critical_issues_first"
 
 agent_communication:
+  - agent: "main"
+    message: "Added Owner Dashboard feature with full backend and frontend implementation. New endpoints: /api/owner/dashboard, /api/owner/vendors, /api/owner/products, /api/owner/analytics, /api/owner/transactions, /api/owner/sales, /api/owner/deliveries. Owner account created: sotubodammy@gmail.com with password owner2025!. Need to test the owner dashboard functionality."
   - agent: "testing"
     message: "Starting comprehensive testing of AfroMarket UK website. Will test all major features and document what's working vs mock implementation."
   - agent: "testing"
