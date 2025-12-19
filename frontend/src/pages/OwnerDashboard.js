@@ -229,7 +229,7 @@ const OwnerDashboard = () => {
     );
   }
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
