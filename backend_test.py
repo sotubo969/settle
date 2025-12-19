@@ -922,6 +922,24 @@ class BackendTester:
         print("-" * 40)
         self.test_vendor_registration()
         
+        # Owner Dashboard tests
+        print("\n👑 OWNER DASHBOARD TESTS")
+        print("-" * 40)
+        owner_login_success = self.test_owner_login()
+        
+        if owner_login_success:
+            self.test_owner_dashboard_endpoints()
+            self.test_vendor_approval()
+        
+        # Test access control with regular user
+        if login_success:
+            self.test_owner_access_control()
+        
+        # Analytics tracking test
+        print("\n📊 ANALYTICS TESTS")
+        print("-" * 40)
+        self.test_analytics_tracking()
+        
         # Summary
         self.print_summary()
     
