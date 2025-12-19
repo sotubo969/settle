@@ -381,6 +381,126 @@ backend:
         agent: "testing"
         comment: "✅ WORKING - POST /api/vendors/register endpoint working correctly. Successfully registers new vendors with businessName, description, email, phone, address, city, postcode. Returns vendor ID and status. Sends email notification to admin."
 
+  - task: "Owner Dashboard Overview API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - GET /api/owner/dashboard endpoint working correctly. Owner authentication successful with sotubodammy@gmail.com. Returns comprehensive dashboard data including totalVendors: 13, totalProducts: 12, totalOrders: 5, totalRevenue: £74.9, commission tracking, and user statistics."
+
+  - task: "Owner Vendors Management API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - GET /api/owner/vendors endpoint working correctly. Retrieved 13 vendors with detailed information including business details, status, verification, product counts, revenue calculations, and order statistics."
+
+  - task: "Owner Products Management API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - GET /api/owner/products endpoint working correctly. Retrieved 12 products with vendor information and analytics including clicks, views, cart additions, and vendor status tracking."
+
+  - task: "Owner Analytics API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - GET /api/owner/analytics?days=30 endpoint working correctly. Returns analytics data for Last 30 days including daily visits, orders, revenue tracking, and top products analysis."
+
+  - task: "Owner Transactions API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - GET /api/owner/transactions endpoint working correctly. Returns transactions grouped by vendor with detailed breakdown, commission calculations, and comprehensive transaction summary."
+
+  - task: "Owner Sales API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - GET /api/owner/sales endpoint working correctly. Retrieved sales statistics for 13 vendors including total sales, commission calculations, vendor earnings, and performance metrics."
+
+  - task: "Owner Deliveries Management API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - GET /api/owner/deliveries and PUT /api/owner/deliveries/{order_id} endpoints working correctly. Retrieved 5 deliveries with status tracking (Processing: 5, Delivered: 0). Successfully updated delivery status for order ORD-2025-3390 with tracking information."
+
+  - task: "Owner Vendor Approval API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - PUT /api/owner/vendors/{vendor_id}/approve?status=approved endpoint working correctly. Successfully approved vendor 13. Proper query parameter handling and email notification integration."
+
+  - task: "Analytics Tracking API"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - POST /api/analytics/track endpoint working correctly. Successfully tracks analytics events with productId and eventType parameters. Supports page views, product clicks, and cart additions."
+
+  - task: "Owner Access Control"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - Owner access control properly implemented. All 6 owner endpoints (/api/owner/*) correctly deny access to non-owner users with 403 status. Only sotubodammy@gmail.com can access owner dashboard functionality."
+
 frontend:
   - task: "Homepage Hero Carousel"
     implemented: true
