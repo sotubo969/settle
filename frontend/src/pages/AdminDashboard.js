@@ -322,7 +322,7 @@ const AdminDashboard = () => {
             <TabsTrigger value="products">Products</TabsTrigger>
             <TabsTrigger value="orders">Orders</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
-          </Tabs>
+          </TabsList>
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-6">
