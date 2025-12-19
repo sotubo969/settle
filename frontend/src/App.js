@@ -56,6 +56,7 @@ function AppRouter() {
       <Route path="/shipping" element={<ShippingInformation />} />
       <Route path="/returns" element={<ReturnsRefunds />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      <Route path="/owner/dashboard" element={<OwnerDashboard />} />
     </Routes>
   );
 }
