@@ -811,6 +811,7 @@ test_plan:
     - "Mobile Responsiveness"
   test_all: true
   test_priority: "critical_issues_first"
+  owner_dashboard_testing: "completed"
 
 agent_communication:
   - agent: "main"
