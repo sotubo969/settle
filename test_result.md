@@ -815,7 +815,7 @@ test_plan:
 
 agent_communication:
   - agent: "main"
-    message: "Added Owner Dashboard feature with full backend and frontend implementation. New endpoints: /api/owner/dashboard, /api/owner/vendors, /api/owner/products, /api/owner/analytics, /api/owner/transactions, /api/owner/sales, /api/owner/deliveries. Owner account created: sotubodammy@gmail.com with password owner2025!. Need to test the owner dashboard functionality."
+    message: "Implemented comprehensive Forgot Password functionality with secure token-based reset. New endpoints: POST /api/auth/forgot-password, GET /api/auth/reset-password/verify/{token}, POST /api/auth/reset-password. Features: Email validation, secure time-limited tokens (30 min), password strength validation, confirmation emails. Frontend pages: ForgotPassword.js (redesigned), ResetPassword.js (new). Owner password was changed during testing to: NewPassword123! - Please test the forgot password flow."
   - agent: "testing"
     message: "Starting comprehensive testing of AfroMarket UK website. Will test all major features and document what's working vs mock implementation."
   - agent: "testing"
