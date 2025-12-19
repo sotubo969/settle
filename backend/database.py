@@ -144,6 +144,17 @@ class PageVisit(Base):
     visits = Column(Integer, default=1)
     unique_visitors = Column(Integer, default=1)
 
+
+class PasswordResetToken(Base):
+    __tablename__ = 'password_reset_tokens'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    token = Column(String(255), unique=True, nullable=False, index=True)
+    expires_at = Column(DateTime, nullable=False)
+    used = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
 # Database session dependency
 async def get_db():
     session = AsyncSessionLocal()
