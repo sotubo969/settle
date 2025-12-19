@@ -22,6 +22,7 @@ import ReturnsRefunds from './pages/ReturnsRefunds';
 import AuthCallback from './components/AuthCallback';
 import InstallPrompt from './components/InstallPrompt';
 import AdminDashboard from './pages/AdminDashboard';
+import OwnerDashboard from './pages/OwnerDashboard';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 
