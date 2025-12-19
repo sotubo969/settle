@@ -9,6 +9,7 @@ import Checkout from './pages/Checkout';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import VendorRegister from './pages/VendorRegister';
 import VendorDashboard from './pages/VendorDashboard';
 import VendorSubscription from './pages/VendorSubscription';
