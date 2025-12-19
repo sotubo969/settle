@@ -65,7 +65,7 @@ PAYPAL_MODE="sandbox"  # Use "live" for production
 # Get keys from: https://console.cloud.google.com/apis/credentials
 GOOGLE_CLIENT_ID="YOUR_CLIENT_ID.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET="YOUR_CLIENT_SECRET_HERE"
-GOOGLE_REDIRECT_URI="https://afrobasket.preview.emergentagent.com/api/auth/google/callback"
+GOOGLE_REDIRECT_URI="https://code-fetcher-23.preview.emergentagent.com/api/auth/google/callback"
 ```
 
 **How to get Google OAuth keys:**
@@ -74,7 +74,7 @@ GOOGLE_REDIRECT_URI="https://afrobasket.preview.emergentagent.com/api/auth/googl
 3. Enable Google+ API
 4. Go to Credentials → Create Credentials → OAuth 2.0 Client ID
 5. Application type: Web application
-6. Add authorized redirect URI: `https://afrobasket.preview.emergentagent.com/api/auth/google/callback`
+6. Add authorized redirect URI: `https://code-fetcher-23.preview.emergentagent.com/api/auth/google/callback`
 7. Copy Client ID and Client Secret
 8. Paste them in `.env` file
 

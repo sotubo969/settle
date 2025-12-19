@@ -146,7 +146,7 @@ tail -f /var/log/supervisor/backend.err.log | grep "VENDOR"
 ## 📱 User Features
 
 ### Profile Management
-- **URL:** https://afrobasket.preview.emergentagent.com/profile
+- **URL:** https://code-fetcher-23.preview.emergentagent.com/profile
 - Edit profile information
 - Manage addresses
 - Add payment methods

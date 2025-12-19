@@ -10,7 +10,7 @@ import sys
 from typing import Dict, Any, Optional
 
 # Configuration
-BASE_URL = "https://sourcecode-fetch.preview.emergentagent.com/api"
+BASE_URL = "https://code-fetcher-23.preview.emergentagent.com/api"
 TEST_EMAIL = "info@surulerefoods.com"
 TEST_PASSWORD = "changeme123"
 
