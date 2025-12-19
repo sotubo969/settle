@@ -23,6 +23,8 @@ class BackendTester:
         self.session = requests.Session()
         self.auth_token = None
         self.user_data = None
+        self.owner_token = None
+        self.owner_data = None
         self.test_results = []
         
     def log_test(self, test_name: str, success: bool, details: str, response_data: Any = None):
