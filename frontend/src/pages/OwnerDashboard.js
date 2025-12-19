@@ -49,23 +49,45 @@ const OwnerDashboard = () => {
   const [trackingForm, setTrackingForm] = useState({ trackingNumber: '', carrier: '', estimatedDelivery: '' });
   
   const OWNER_EMAIL = 'sotubodammy@gmail.com';
-  const isOwner = user?.email === OWNER_EMAIL;
   const getToken = () => localStorage.getItem('afroToken');
+  const getStoredUser = () => {
+    try {
+      const savedUser = localStorage.getItem('afroUser');
+      return savedUser ? JSON.parse(savedUser) : null;
+    } catch {
+      return null;
+    }
+  };
   const ITEMS_PER_PAGE = 10;
+  
+  // Check owner status from both context and localStorage
+  const storedUser = getStoredUser();
+  const currentUser = user || storedUser;
+  const isOwner = currentUser?.email === OWNER_EMAIL;
 
   useEffect(() => {
+    // Wait for auth to finish loading
     if (authLoading) return;
+    
+    // Get auth info from localStorage as backup
     const token = getToken();
-    if (!isAuthenticated || !token) {
+    const localUser = getStoredUser();
+    
+    // Check authentication
+    if (!token || (!isAuthenticated && !localUser)) {
       navigate('/login');
       return;
     }
-    if (!isOwner) {
+    
+    // Check owner status
+    const userToCheck = user || localUser;
+    if (userToCheck?.email !== OWNER_EMAIL) {
       navigate('/');
       return;
     }
+    
     fetchDashboardData();
-  }, [isAuthenticated, authLoading, isOwner, navigate]);
+  }, [isAuthenticated, authLoading, user, navigate]);
 
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
