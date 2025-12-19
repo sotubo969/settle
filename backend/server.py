@@ -11,7 +11,8 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel, EmailStr
 
-from database import get_db, init_db, User, Vendor, Product, Cart, Order, Analytics, PageVisit
+from database import get_db, init_db, User, Vendor, Product, Cart, Order, Analytics, PageVisit, PasswordResetToken
+import secrets
 from auth import hash_password, verify_password, create_access_token, get_current_user
 from payments import StripePayment, PayPalPaymentService
 from oauth import GoogleOAuth, AppleOAuth
