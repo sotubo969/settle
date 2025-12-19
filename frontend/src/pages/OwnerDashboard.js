@@ -104,6 +104,7 @@ const OwnerDashboard = () => {
 
   const updateDeliveryStatus = async (orderId, status, trackingNumber = '', carrier = '') => {
     try {
+      const token = getToken();
       const response = await fetch(`${API_URL}/api/owner/deliveries/${orderId}`, {
         method: 'PUT',
         headers: {
