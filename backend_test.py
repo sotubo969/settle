@@ -836,9 +836,9 @@ class BackendTester:
                 if pending_vendor:
                     # Test vendor approval
                     vendor_id = pending_vendor["id"]
-                    approval_url = f"/owner/vendors/{vendor_id}/approve"
+                    approval_url = f"/owner/vendors/{vendor_id}/approve?status=approved"
                     
-                    response = self.make_request("PUT", approval_url, {"status": "approved"})
+                    response = self.make_request("PUT", approval_url)
                     
                     if response.status_code == 200:
                         data = response.json()
