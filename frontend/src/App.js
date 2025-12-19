@@ -46,6 +46,7 @@ function AppRouter() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/vendor/register" element={<VendorRegister />} />
       <Route path="/vendor/dashboard" element={<VendorDashboard />} />
       <Route path="/vendor/subscription" element={<VendorSubscription />} />
