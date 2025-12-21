@@ -23,7 +23,7 @@ class StripePayment:
                 'clientSecret': intent.client_secret,
                 'paymentIntentId': intent.id
             }
-        except stripe.error.StripeError as e:
+        except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
     
     @staticmethod
@@ -36,7 +36,7 @@ class StripePayment:
                 'amount': intent.amount / 100,  # Convert back to pounds
                 'id': intent.id
             }
-        except stripe.error.StripeError as e:
+        except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
     
     @staticmethod
@@ -48,7 +48,7 @@ class StripePayment:
                 name=name
             )
             return customer.id
-        except stripe.error.StripeError as e:
+        except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
 
     @staticmethod
@@ -70,5 +70,5 @@ class StripePayment:
                 'paymentIntentId': intent.id,
                 'amount': intent.amount / 100
             }
-        except stripe.error.StripeError as e:
+        except Exception as e:
             raise HTTPException(status_code=400, detail=str(e))
