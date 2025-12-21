@@ -1,6 +1,10 @@
 import stripe
 import os
 from fastapi import HTTPException
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
 
