@@ -612,9 +612,9 @@ frontend:
 
   - task: "Cart Functionality"
     implemented: true
-    working: true
+    working: false
     file: "/app/frontend/src/context/CartContext.js"
-    stuck_count: 0
+    stuck_count: 2
     priority: "high"
     needs_retesting: false
     status_history:
@@ -630,6 +630,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ COMPREHENSIVE CART FUNCTIONALITY TEST PASSED (Dec 7, 2024) - ALL REQUESTED FEATURES WORKING: ✅ Login with info@surulerefoods.com successful ✅ Added 3 different products to cart (Ayoola Poundo Yam Flour, Fresh Plantains Bundle, Tropical Sun Nigerian Curry Powder) ✅ Cart displays 'Shopping Cart (3 items)' ✅ Quantity controls (+ and - buttons) present and functional ✅ Product removal buttons (trash icons) available ✅ Cart persistence after page refresh working ✅ Backend API integration confirmed ✅ All cart operations use proper API endpoints. Cart functionality is production-ready and fully operational."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL CART FUNCTIONALITY FAILURE (Dec 21, 2024) - Complete breakdown of cart operations: 12 'Add to Cart' buttons found on products page but clicking them results in 'Failed to add to cart' toast messages. No items added to cart, cart remains empty, no auth token present for API calls. Root cause: Authentication failure prevents cart operations from working. Cart functionality completely non-functional due to broken login system."
 
   - task: "Authentication System"
     implemented: true
