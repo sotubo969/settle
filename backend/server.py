@@ -998,6 +998,22 @@ async def create_order(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
+    from email_service import email_service
+    
+    # Validate shipping info has required fields
+    shipping_info = order_data.shippingInfo
+    required_fields = ['fullName', 'address', 'city', 'postcode', 'phone']
+    missing_fields = [f for f in required_fields if not shipping_info.get(f)]
+    
+    if missing_fields:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Missing required shipping information: {', '.join(missing_fields)}"
+        )
+    
+    # Calculate proper commission (10% of subtotal)
+    commission = order_data.subtotal * 0.10
+    
     new_order = Order(
         order_id=generate_order_id(),
         user_id=current_user.id,
@@ -1006,19 +1022,78 @@ async def create_order(
         payment_info=order_data.paymentInfo,
         subtotal=order_data.subtotal,
         delivery_fee=order_data.deliveryFee,
-        commission=len(order_data.items) * 1.0,
+        commission=commission,
         total=order_data.total,
-        status="pending"
+        status="confirmed",
+        delivery_status="processing"
     )
     
     db.add(new_order)
     await db.flush()
     await db.refresh(new_order)
     
+    # Clear the cart
     result = await db.execute(select(Cart).where(Cart.user_id == current_user.id))
     cart = result.scalar_one_or_none()
     if cart:
         await db.delete(cart)
+    
+    # Send confirmation email to customer
+    try:
+        order_email_data = {
+            'orderId': new_order.order_id,
+            'items': order_data.items,
+            'subtotal': order_data.subtotal,
+            'deliveryFee': order_data.deliveryFee,
+            'total': order_data.total,
+            'shippingInfo': order_data.shippingInfo
+        }
+        email_service.send_order_confirmation(
+            to_email=current_user.email,
+            customer_name=current_user.name,
+            order_data=order_email_data
+        )
+        logger.info(f"Order confirmation email sent to {current_user.email}")
+    except Exception as e:
+        logger.error(f"Failed to send order confirmation email: {str(e)}")
+    
+    # Send notification to vendors
+    try:
+        # Group items by vendor
+        vendor_items = {}
+        for item in order_data.items:
+            vendor_id = item.get('vendorId')
+            if vendor_id:
+                if vendor_id not in vendor_items:
+                    vendor_items[vendor_id] = []
+                vendor_items[vendor_id].append(item)
+        
+        # Send email to each vendor
+        for vendor_id, items in vendor_items.items():
+            vendor_result = await db.execute(select(Vendor).where(Vendor.id == vendor_id))
+            vendor = vendor_result.scalar_one_or_none()
+            if vendor:
+                customer_info = {
+                    'name': shipping_info.get('fullName', current_user.name),
+                    'email': current_user.email,
+                    'phone': shipping_info.get('phone', ''),
+                    'address': shipping_info.get('address', ''),
+                    'city': shipping_info.get('city', ''),
+                    'postcode': shipping_info.get('postcode', '')
+                }
+                vendor_order_data = {
+                    'orderId': new_order.order_id,
+                    'items': items
+                }
+                email_service.send_vendor_order_notification(
+                    to_email=vendor.email,
+                    vendor_name=vendor.business_name,
+                    order_data=vendor_order_data,
+                    customer_info=customer_info
+                )
+                logger.info(f"Order notification sent to vendor {vendor.business_name}")
+    except Exception as e:
+        logger.error(f"Failed to send vendor notification: {str(e)}")
     
     return {
         "id": new_order.id,
