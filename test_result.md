@@ -489,6 +489,18 @@ backend:
         agent: "testing"
         comment: "✅ WORKING - POST /api/analytics/track endpoint working correctly. Successfully tracks analytics events with productId and eventType parameters. Supports page views, product clicks, and cart additions."
 
+  - task: "Stripe Payment Flow"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WORKING - Complete Stripe payment flow tested successfully: 1) User login ✅ 2) Product retrieval ✅ 3) Add to cart ✅ 4) Cart verification ✅ 5) Stripe payment intent creation ✅ 6) Order creation with shipping validation ✅ 7) Order verification ✅. Fixed Stripe error handling issue in payments/stripe_payment.py (updated from deprecated stripe.error.StripeError to generic Exception). All 9 test cases passed (100% success rate). Payment intent returns valid clientSecret, order creation properly validates shipping fields, and complete orders are successfully created."
+
   - task: "Owner Access Control"
     implemented: true
     working: true
