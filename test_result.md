@@ -833,19 +833,23 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Content Loading Issues"
-    - "Cart Add to Cart Functionality"
-    - "Cart Quantity Controls"
-    - "Mobile Responsiveness"
+    - "Authentication System"
+    - "Cart Functionality" 
+    - "Stripe Payment Flow - Frontend Integration"
+    - "Checkout Flow"
   stuck_tasks: 
+    - "Authentication System"
+    - "Cart Functionality"
+    - "Stripe Payment Flow - Frontend Integration"
     - "Content Loading Issues"
     - "Cart Add to Cart Functionality"
     - "Cart Quantity Controls"
     - "Mobile Responsiveness"
   test_all: true
-  test_priority: "critical_issues_first"
+  test_priority: "critical_authentication_first"
   owner_dashboard_testing: "completed"
   forgot_password_testing: "completed"
+  stripe_checkout_testing: "failed_due_to_auth_issues"
 
   - task: "Forgot Password API - Request Reset"
     implemented: true
