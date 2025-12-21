@@ -616,5 +616,411 @@ class EmailService:
             text_content=text_content
         )
 
+    def send_order_confirmation(self, to_email: str, customer_name: str, order_data: dict):
+        """Send order confirmation email to customer after successful payment"""
+        order_id = order_data.get('orderId', 'N/A')
+        total = order_data.get('total', 0)
+        items = order_data.get('items', [])
+        shipping_info = order_data.get('shippingInfo', {})
+        
+        # Build items HTML
+        items_html = ""
+        for item in items:
+            items_html += f"""
+            <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <img src="{item.get('image', '')}" alt="{item.get('name', '')}" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover;">
+                        <div>
+                            <p style="margin: 0; font-weight: 600; color: #1f2937;">{item.get('name', 'Product')}</p>
+                            <p style="margin: 4px 0 0; color: #6b7280; font-size: 14px;">Qty: {item.get('quantity', 1)}</p>
+                        </div>
+                    </div>
+                </td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">
+                    £{item.get('price', 0):.2f}
+                </td>
+            </tr>
+            """
+        
+        subject = f"🎉 Order Confirmed - #{order_id}"
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    margin: 0;
+                    padding: 0;
+                    background-color: #f4f4f4;
+                }}
+                .container {{
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                }}
+                .header {{
+                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                    color: white;
+                    padding: 40px 30px;
+                    text-align: center;
+                    border-radius: 16px 16px 0 0;
+                }}
+                .content {{
+                    background: white;
+                    padding: 40px 30px;
+                    border-radius: 0 0 16px 16px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                }}
+                .order-box {{
+                    background: #f0fdf4;
+                    border: 2px solid #10b981;
+                    border-radius: 12px;
+                    padding: 20px;
+                    text-align: center;
+                    margin: 20px 0;
+                }}
+                .order-id {{
+                    font-size: 24px;
+                    font-weight: 700;
+                    color: #059669;
+                    margin: 0;
+                }}
+                .section {{
+                    margin: 30px 0;
+                }}
+                .section-title {{
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: #1f2937;
+                    margin-bottom: 15px;
+                    padding-bottom: 10px;
+                    border-bottom: 2px solid #e5e7eb;
+                }}
+                .address-box {{
+                    background: #f9fafb;
+                    border-radius: 8px;
+                    padding: 15px;
+                }}
+                .total-row {{
+                    display: flex;
+                    justify-content: space-between;
+                    padding: 10px 0;
+                    border-bottom: 1px solid #e5e7eb;
+                }}
+                .total-row.final {{
+                    border-bottom: none;
+                    font-size: 20px;
+                    font-weight: 700;
+                    color: #059669;
+                    padding-top: 15px;
+                    margin-top: 10px;
+                    border-top: 2px solid #10b981;
+                }}
+                .button {{
+                    display: inline-block;
+                    padding: 14px 30px;
+                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                    color: white !important;
+                    text-decoration: none;
+                    border-radius: 8px;
+                    font-weight: 600;
+                }}
+                .footer {{
+                    text-align: center;
+                    padding: 30px 20px;
+                    color: #9ca3af;
+                    font-size: 12px;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🎉 Order Confirmed!</h1>
+                    <p>Thank you for shopping with AfroMarket UK</p>
+                </div>
+                <div class="content">
+                    <p>Hello {customer_name},</p>
+                    <p>Great news! Your order has been confirmed and is being processed. Here are your order details:</p>
+                    
+                    <div class="order-box">
+                        <p style="margin: 0 0 5px; color: #6b7280;">Order Number</p>
+                        <p class="order-id">#{order_id}</p>
+                    </div>
+                    
+                    <div class="section">
+                        <h3 class="section-title">📦 Order Items</h3>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            {items_html}
+                        </table>
+                    </div>
+                    
+                    <div class="section">
+                        <h3 class="section-title">💰 Order Summary</h3>
+                        <div class="total-row">
+                            <span>Subtotal</span>
+                            <span>£{order_data.get('subtotal', 0):.2f}</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Delivery Fee</span>
+                            <span>£{order_data.get('deliveryFee', 0):.2f}</span>
+                        </div>
+                        <div class="total-row final">
+                            <span>Total Paid</span>
+                            <span>£{total:.2f}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="section">
+                        <h3 class="section-title">📍 Delivery Address</h3>
+                        <div class="address-box">
+                            <p style="margin: 0; font-weight: 600;">{shipping_info.get('fullName', customer_name)}</p>
+                            <p style="margin: 5px 0 0; color: #6b7280;">
+                                {shipping_info.get('address', '')}<br>
+                                {shipping_info.get('city', '')}, {shipping_info.get('postcode', '')}<br>
+                                {shipping_info.get('phone', '')}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #fef3c7; border-radius: 8px; padding: 15px; margin: 20px 0;">
+                        <p style="margin: 0; color: #92400e;">
+                            <strong>📧 What's Next?</strong><br>
+                            You'll receive another email when your order is shipped with tracking information.
+                        </p>
+                    </div>
+                    
+                    <p style="text-align: center; margin-top: 30px;">
+                        <a href="https://code-fetcher-23.preview.emergentagent.com/profile" class="button">Track Your Order</a>
+                    </p>
+                    
+                    <p style="margin-top: 30px; color: #666;">
+                        Thank you for choosing AfroMarket UK!<br>
+                        <strong>The AfroMarket UK Team</strong>
+                    </p>
+                </div>
+                <div class="footer">
+                    <p>Questions? Contact us at support@afromarket.co.uk</p>
+                    <p>&copy; 2025 AfroMarket UK. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        text_content = f"""
+        Order Confirmed - AfroMarket UK
+        
+        Hello {customer_name},
+        
+        Your order #{order_id} has been confirmed!
+        
+        Order Total: £{total:.2f}
+        
+        Delivery Address:
+        {shipping_info.get('fullName', customer_name)}
+        {shipping_info.get('address', '')}
+        {shipping_info.get('city', '')}, {shipping_info.get('postcode', '')}
+        
+        You'll receive tracking information once your order ships.
+        
+        Thank you for shopping with AfroMarket UK!
+        """
+        
+        return self.send_email(
+            to_email=to_email,
+            subject=subject,
+            html_content=html_content,
+            text_content=text_content
+        )
+
+    def send_vendor_order_notification(self, to_email: str, vendor_name: str, order_data: dict, customer_info: dict):
+        """Send order notification to vendor with customer details"""
+        order_id = order_data.get('orderId', 'N/A')
+        items = order_data.get('items', [])
+        
+        # Build items HTML
+        items_html = ""
+        total_vendor_amount = 0
+        for item in items:
+            item_total = item.get('price', 0) * item.get('quantity', 1)
+            total_vendor_amount += item_total
+            items_html += f"""
+            <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">{item.get('name', 'Product')}</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">{item.get('quantity', 1)}</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">£{item.get('price', 0):.2f}</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">£{item_total:.2f}</td>
+            </tr>
+            """
+        
+        commission = total_vendor_amount * 0.10
+        vendor_earning = total_vendor_amount - commission
+        
+        subject = f"🛒 New Order Received - #{order_id}"
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    margin: 0;
+                    padding: 0;
+                    background-color: #f4f4f4;
+                }}
+                .container {{
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                }}
+                .header {{
+                    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+                    color: white;
+                    padding: 40px 30px;
+                    text-align: center;
+                    border-radius: 16px 16px 0 0;
+                }}
+                .content {{
+                    background: white;
+                    padding: 40px 30px;
+                    border-radius: 0 0 16px 16px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                }}
+                .customer-box {{
+                    background: #f0f9ff;
+                    border: 2px solid #0ea5e9;
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin: 20px 0;
+                }}
+                .customer-title {{
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: #0369a1;
+                    margin: 0 0 15px;
+                }}
+                .customer-info {{
+                    display: grid;
+                    gap: 10px;
+                }}
+                .info-row {{
+                    display: flex;
+                    gap: 10px;
+                }}
+                .info-label {{
+                    font-weight: 600;
+                    color: #64748b;
+                    min-width: 80px;
+                }}
+                .earnings-box {{
+                    background: #f0fdf4;
+                    border: 2px solid #10b981;
+                    border-radius: 12px;
+                    padding: 20px;
+                    margin: 20px 0;
+                }}
+                .footer {{
+                    text-align: center;
+                    padding: 30px 20px;
+                    color: #9ca3af;
+                    font-size: 12px;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🛒 New Order Received!</h1>
+                    <p>Order #{order_id}</p>
+                </div>
+                <div class="content">
+                    <p>Hello {vendor_name},</p>
+                    <p>Great news! You have received a new order. Please prepare the items for delivery.</p>
+                    
+                    <div class="customer-box">
+                        <p class="customer-title">👤 Customer Information</p>
+                        <div class="customer-info">
+                            <div class="info-row">
+                                <span class="info-label">Name:</span>
+                                <span>{customer_info.get('name', 'N/A')}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Email:</span>
+                                <span>{customer_info.get('email', 'N/A')}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Phone:</span>
+                                <span>{customer_info.get('phone', 'N/A')}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Address:</span>
+                                <span>{customer_info.get('address', 'N/A')}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">City:</span>
+                                <span>{customer_info.get('city', 'N/A')}, {customer_info.get('postcode', 'N/A')}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 style="color: #1f2937; margin-top: 30px;">📦 Order Items</h3>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                        <thead>
+                            <tr style="background: #f3f4f6;">
+                                <th style="padding: 12px; text-align: left;">Product</th>
+                                <th style="padding: 12px; text-align: center;">Qty</th>
+                                <th style="padding: 12px; text-align: right;">Price</th>
+                                <th style="padding: 12px; text-align: right;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {items_html}
+                        </tbody>
+                    </table>
+                    
+                    <div class="earnings-box">
+                        <h3 style="color: #059669; margin: 0 0 15px;">💰 Your Earnings</h3>
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #d1fae5;">
+                            <span>Order Total</span>
+                            <span>£{total_vendor_amount:.2f}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #d1fae5;">
+                            <span>Platform Fee (10%)</span>
+                            <span style="color: #ef4444;">-£{commission:.2f}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 12px 0; font-size: 18px; font-weight: 700; color: #059669;">
+                            <span>Your Earning</span>
+                            <span>£{vendor_earning:.2f}</span>
+                        </div>
+                    </div>
+                    
+                    <p style="margin-top: 30px; color: #666;">
+                        Please prepare the order for delivery as soon as possible.<br>
+                        <strong>The AfroMarket UK Team</strong>
+                    </p>
+                </div>
+                <div class="footer">
+                    <p>&copy; 2025 AfroMarket UK. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        return self.send_email(
+            to_email=to_email,
+            subject=subject,
+            html_content=html_content
+        )
+
 # Singleton instance
 email_service = EmailService()
