@@ -1348,6 +1348,363 @@ async def get_wishlist(
     
     return {"items": products}
 
+# ============ VENDOR DASHBOARD ROUTES ============
+async def get_vendor_for_user(user_id: int, db: AsyncSession):
+    """Helper to get vendor for a user"""
+    result = await db.execute(select(Vendor).where(Vendor.user_id == user_id))
+    return result.scalar_one_or_none()
+
+@api_router.get("/vendor/dashboard")
+async def get_vendor_dashboard(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get comprehensive vendor dashboard data"""
+    from sqlalchemy import func
+    
+    vendor = await get_vendor_for_user(current_user.id, db)
+    if not vendor:
+        raise HTTPException(status_code=403, detail="You are not a registered vendor")
+    
+    # Get vendor products
+    products_result = await db.execute(select(Product).where(Product.vendor_id == vendor.id))
+    products = products_result.scalars().all()
+    product_ids = [p.id for p in products]
+    
+    # Get all orders
+    orders_result = await db.execute(select(Order))
+    all_orders = orders_result.scalars().all()
+    
+    # Calculate vendor statistics
+    total_revenue = 0
+    total_orders = 0
+    total_items_sold = 0
+    pending_orders = 0
+    completed_orders = 0
+    processing_orders = 0
+    
+    for order in all_orders:
+        for item in order.items:
+            if item.get('vendorId') == vendor.id:
+                item_total = item.get('price', 0) * item.get('quantity', 1)
+                total_revenue += item_total
+                total_items_sold += item.get('quantity', 1)
+                total_orders += 1
+                
+                if order.status == 'pending':
+                    pending_orders += 1
+                elif order.status == 'completed':
+                    completed_orders += 1
+                else:
+                    processing_orders += 1
+    
+    commission = total_revenue * 0.10
+    net_earnings = total_revenue - commission
+    
+    # Get product analytics
+    analytics_result = await db.execute(
+        select(func.count(Analytics.id)).where(
+            Analytics.product_id.in_(product_ids),
+            Analytics.event_type == "product_view"
+        )
+    )
+    total_views = analytics_result.scalar() or 0
+    
+    clicks_result = await db.execute(
+        select(func.count(Analytics.id)).where(
+            Analytics.product_id.in_(product_ids),
+            Analytics.event_type == "product_click"
+        )
+    )
+    total_clicks = clicks_result.scalar() or 0
+    
+    return {
+        "vendor": {
+            "id": vendor.id,
+            "businessName": vendor.business_name,
+            "email": vendor.email,
+            "status": vendor.status,
+            "verified": vendor.verified,
+            "rating": vendor.rating
+        },
+        "stats": {
+            "totalProducts": len(products),
+            "totalRevenue": round(total_revenue, 2),
+            "totalOrders": total_orders,
+            "totalItemsSold": total_items_sold,
+            "commission": round(commission, 2),
+            "netEarnings": round(net_earnings, 2),
+            "pendingOrders": pending_orders,
+            "processingOrders": processing_orders,
+            "completedOrders": completed_orders,
+            "totalViews": total_views,
+            "totalClicks": total_clicks
+        }
+    }
+
+@api_router.get("/vendor/orders")
+async def get_vendor_orders(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get all orders for this vendor with customer details"""
+    vendor = await get_vendor_for_user(current_user.id, db)
+    if not vendor:
+        raise HTTPException(status_code=403, detail="You are not a registered vendor")
+    
+    # Get all orders
+    orders_result = await db.execute(select(Order).order_by(Order.created_at.desc()))
+    all_orders = orders_result.scalars().all()
+    
+    vendor_orders = []
+    for order in all_orders:
+        vendor_items = []
+        vendor_total = 0
+        
+        for item in order.items:
+            if item.get('vendorId') == vendor.id:
+                vendor_items.append(item)
+                vendor_total += item.get('price', 0) * item.get('quantity', 1)
+        
+        if vendor_items:
+            # Get customer info
+            user_result = await db.execute(select(User).where(User.id == order.user_id))
+            customer = user_result.scalar_one_or_none()
+            shipping = order.shipping_info or {}
+            
+            vendor_orders.append({
+                "id": order.id,
+                "orderId": order.order_id,
+                "customer": {
+                    "name": shipping.get('fullName', customer.name if customer else 'Unknown'),
+                    "email": customer.email if customer else 'Unknown',
+                    "phone": shipping.get('phone', customer.phone if customer else ''),
+                    "address": shipping.get('address', ''),
+                    "city": shipping.get('city', ''),
+                    "postcode": shipping.get('postcode', '')
+                },
+                "items": vendor_items,
+                "itemCount": len(vendor_items),
+                "total": round(vendor_total, 2),
+                "commission": round(vendor_total * 0.10, 2),
+                "netEarning": round(vendor_total * 0.90, 2),
+                "status": order.status,
+                "deliveryStatus": order.delivery_status or 'processing',
+                "trackingNumber": order.tracking_number,
+                "createdAt": order.created_at.isoformat(),
+                "updatedAt": order.updated_at.isoformat()
+            })
+    
+    return {"orders": vendor_orders, "totalOrders": len(vendor_orders)}
+
+@api_router.get("/vendor/sales")
+async def get_vendor_sales(
+    days: int = Query(30, ge=1, le=365),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get sales data for charts"""
+    from sqlalchemy import func
+    from collections import defaultdict
+    
+    vendor = await get_vendor_for_user(current_user.id, db)
+    if not vendor:
+        raise HTTPException(status_code=403, detail="You are not a registered vendor")
+    
+    # Get vendor products
+    products_result = await db.execute(select(Product).where(Product.vendor_id == vendor.id))
+    products = {p.id: p for p in products_result.scalars().all()}
+    
+    start_date = datetime.utcnow() - timedelta(days=days)
+    
+    # Get orders within date range
+    orders_result = await db.execute(
+        select(Order).where(Order.created_at >= start_date).order_by(Order.created_at)
+    )
+    orders = orders_result.scalars().all()
+    
+    # Calculate daily sales
+    daily_sales = defaultdict(lambda: {"revenue": 0, "orders": 0, "items": 0})
+    product_sales = defaultdict(lambda: {"quantity": 0, "revenue": 0})
+    
+    for order in orders:
+        date_key = order.created_at.strftime("%Y-%m-%d")
+        
+        for item in order.items:
+            if item.get('vendorId') == vendor.id:
+                item_revenue = item.get('price', 0) * item.get('quantity', 1)
+                daily_sales[date_key]["revenue"] += item_revenue
+                daily_sales[date_key]["orders"] += 1
+                daily_sales[date_key]["items"] += item.get('quantity', 1)
+                
+                product_id = item.get('productId')
+                if product_id:
+                    product_sales[product_id]["quantity"] += item.get('quantity', 1)
+                    product_sales[product_id]["revenue"] += item_revenue
+    
+    # Format daily sales for chart
+    chart_data = []
+    for date_key in sorted(daily_sales.keys()):
+        chart_data.append({
+            "date": date_key,
+            "revenue": round(daily_sales[date_key]["revenue"], 2),
+            "orders": daily_sales[date_key]["orders"],
+            "items": daily_sales[date_key]["items"]
+        })
+    
+    # Format product sales
+    product_chart_data = []
+    for product_id, data in sorted(product_sales.items(), key=lambda x: x[1]["revenue"], reverse=True):
+        product = products.get(product_id)
+        if product:
+            product_chart_data.append({
+                "productId": product_id,
+                "productName": product.name,
+                "image": product.image,
+                "quantity": data["quantity"],
+                "revenue": round(data["revenue"], 2)
+            })
+    
+    return {
+        "period": f"Last {days} days",
+        "dailySales": chart_data,
+        "productSales": product_chart_data[:10],  # Top 10 products
+        "summary": {
+            "totalRevenue": round(sum(d["revenue"] for d in chart_data), 2),
+            "totalOrders": sum(d["orders"] for d in chart_data),
+            "totalItemsSold": sum(d["items"] for d in chart_data)
+        }
+    }
+
+@api_router.get("/vendor/transactions")
+async def get_vendor_transactions(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get vendor transactions/payouts from platform"""
+    vendor = await get_vendor_for_user(current_user.id, db)
+    if not vendor:
+        raise HTTPException(status_code=403, detail="You are not a registered vendor")
+    
+    # Get all orders
+    orders_result = await db.execute(select(Order).order_by(Order.created_at.desc()))
+    orders = orders_result.scalars().all()
+    
+    transactions = []
+    total_earned = 0
+    total_commission = 0
+    total_pending = 0
+    total_paid = 0
+    
+    for order in orders:
+        vendor_items = []
+        vendor_revenue = 0
+        
+        for item in order.items:
+            if item.get('vendorId') == vendor.id:
+                vendor_items.append(item)
+                vendor_revenue += item.get('price', 0) * item.get('quantity', 1)
+        
+        if vendor_items:
+            commission = vendor_revenue * 0.10
+            net_earning = vendor_revenue - commission
+            
+            # Determine payout status based on order status
+            payout_status = "pending"
+            if order.status == "completed":
+                payout_status = "paid"
+                total_paid += net_earning
+            else:
+                total_pending += net_earning
+            
+            total_earned += vendor_revenue
+            total_commission += commission
+            
+            transactions.append({
+                "id": order.id,
+                "orderId": order.order_id,
+                "date": order.created_at.isoformat(),
+                "items": len(vendor_items),
+                "grossAmount": round(vendor_revenue, 2),
+                "platformFee": round(commission, 2),
+                "netAmount": round(net_earning, 2),
+                "orderStatus": order.status,
+                "payoutStatus": payout_status
+            })
+    
+    return {
+        "transactions": transactions,
+        "summary": {
+            "totalGrossEarnings": round(total_earned, 2),
+            "totalPlatformFees": round(total_commission, 2),
+            "totalNetEarnings": round(total_earned - total_commission, 2),
+            "pendingPayout": round(total_pending, 2),
+            "totalPaid": round(total_paid, 2)
+        }
+    }
+
+@api_router.get("/vendor/products/analytics")
+async def get_vendor_product_analytics(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get analytics for vendor's products"""
+    from sqlalchemy import func
+    
+    vendor = await get_vendor_for_user(current_user.id, db)
+    if not vendor:
+        raise HTTPException(status_code=403, detail="You are not a registered vendor")
+    
+    # Get vendor products
+    products_result = await db.execute(select(Product).where(Product.vendor_id == vendor.id))
+    products = products_result.scalars().all()
+    
+    product_analytics = []
+    for product in products:
+        # Get views
+        views_result = await db.execute(
+            select(func.count(Analytics.id)).where(
+                Analytics.product_id == product.id,
+                Analytics.event_type == "product_view"
+            )
+        )
+        views = views_result.scalar() or 0
+        
+        # Get clicks
+        clicks_result = await db.execute(
+            select(func.count(Analytics.id)).where(
+                Analytics.product_id == product.id,
+                Analytics.event_type == "product_click"
+            )
+        )
+        clicks = clicks_result.scalar() or 0
+        
+        # Get add to cart
+        cart_adds_result = await db.execute(
+            select(func.count(Analytics.id)).where(
+                Analytics.product_id == product.id,
+                Analytics.event_type == "add_to_cart"
+            )
+        )
+        cart_adds = cart_adds_result.scalar() or 0
+        
+        product_analytics.append({
+            "id": product.id,
+            "name": product.name,
+            "image": product.image,
+            "price": product.price,
+            "stock": product.stock,
+            "views": views,
+            "clicks": clicks,
+            "cartAdds": cart_adds,
+            "conversionRate": round((cart_adds / views * 100) if views > 0 else 0, 2)
+        })
+    
+    # Sort by views
+    product_analytics.sort(key=lambda x: x["views"], reverse=True)
+    
+    return {"products": product_analytics}
+
 # ============ VENDOR PRODUCT MANAGEMENT ============
 @api_router.post("/vendor/products")
 async def create_product(
