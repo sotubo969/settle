@@ -1042,6 +1042,108 @@ class BackendTester:
         except Exception as e:
             self.log_test("Analytics Tracking", False, f"Exception: {str(e)}")
     
+    def test_chatbot_welcome(self):
+        """Test AfroBot welcome endpoint"""
+        try:
+            response = self.make_request("GET", "/chatbot/welcome")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if (data.get("success") and 
+                    data.get("message") and 
+                    data.get("quick_replies") and 
+                    data.get("bot_name") == "AfroBot"):
+                    self.log_test("Chatbot Welcome", True, 
+                                f"Welcome endpoint working - Bot: {data.get('bot_name')}, "
+                                f"Quick replies: {len(data.get('quick_replies', []))}")
+                else:
+                    self.log_test("Chatbot Welcome", False, f"Invalid welcome response: {data}")
+            else:
+                self.log_test("Chatbot Welcome", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Chatbot Welcome", False, f"Exception: {str(e)}")
+    
+    def test_chatbot_message(self):
+        """Test AfroBot message endpoint"""
+        try:
+            # Test 1: Send message without session_id (should generate one)
+            message_data = {
+                "message": "What products do you sell?"
+            }
+            
+            response = self.make_request("POST", "/chatbot/message", message_data)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if (data.get("success") and 
+                    data.get("session_id") and 
+                    data.get("response") and 
+                    data.get("timestamp")):
+                    session_id = data.get("session_id")
+                    self.log_test("Chatbot Message - New Session", True, 
+                                f"Message sent successfully, session_id: {session_id[:8]}..., "
+                                f"response length: {len(data.get('response', ''))}")
+                    
+                    # Test 2: Send follow-up message with same session_id
+                    try:
+                        followup_data = {
+                            "message": "How much is shipping?",
+                            "session_id": session_id
+                        }
+                        
+                        followup_response = self.make_request("POST", "/chatbot/message", followup_data)
+                        
+                        if followup_response.status_code == 200:
+                            followup_data_response = followup_response.json()
+                            if (followup_data_response.get("success") and 
+                                followup_data_response.get("session_id") == session_id and 
+                                followup_data_response.get("response")):
+                                self.log_test("Chatbot Message - Session Continuity", True, 
+                                            f"Follow-up message successful with same session_id, "
+                                            f"response length: {len(followup_data_response.get('response', ''))}")
+                            else:
+                                self.log_test("Chatbot Message - Session Continuity", False, 
+                                            f"Invalid follow-up response: {followup_data_response}")
+                        else:
+                            self.log_test("Chatbot Message - Session Continuity", False, 
+                                        f"HTTP {followup_response.status_code}: {followup_response.text}")
+                    except Exception as e:
+                        self.log_test("Chatbot Message - Session Continuity", False, f"Exception: {str(e)}")
+                    
+                else:
+                    self.log_test("Chatbot Message - New Session", False, f"Invalid message response: {data}")
+            else:
+                self.log_test("Chatbot Message - New Session", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Chatbot Message - New Session", False, f"Exception: {str(e)}")
+    
+    def test_chatbot_quick_replies(self):
+        """Test AfroBot quick replies endpoint"""
+        try:
+            response = self.make_request("GET", "/chatbot/quick-replies")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success") and data.get("quick_replies"):
+                    quick_replies = data.get("quick_replies", [])
+                    if isinstance(quick_replies, list) and len(quick_replies) > 0:
+                        # Check if quick replies have proper structure
+                        first_reply = quick_replies[0]
+                        if isinstance(first_reply, dict) and "id" in first_reply and "text" in first_reply:
+                            self.log_test("Chatbot Quick Replies", True, 
+                                        f"Quick replies endpoint working - {len(quick_replies)} options available")
+                        else:
+                            self.log_test("Chatbot Quick Replies", False, 
+                                        f"Invalid quick reply structure: {first_reply}")
+                    else:
+                        self.log_test("Chatbot Quick Replies", False, "No quick replies returned")
+                else:
+                    self.log_test("Chatbot Quick Replies", False, f"Invalid quick replies response: {data}")
+            else:
+                self.log_test("Chatbot Quick Replies", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Chatbot Quick Replies", False, f"Exception: {str(e)}")
+    
     def test_vendor_approval(self):
         """Test vendor approval endpoint (owner only)"""
         if not self.owner_token:
