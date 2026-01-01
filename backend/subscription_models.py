@@ -168,9 +168,8 @@ SERVICE_FEE_RATE = 0.02  # 2% platform service fee
 DELIVERY_FEES = {
     "standard": {
         "under_30": 5.99,
-        "30_to_50": 3.99,
-        "50_to_80": 1.99,
-        "over_80": 0.00
+        "30_to_70": 3.99,
+        "over_70": 0.00
     },
     "express": {
         "surcharge": 3.00
@@ -191,11 +190,9 @@ def calculate_delivery_fee(order_total: float, is_express: bool = False, is_prem
     if is_premium:
         return 0.00  # Free delivery for premium members
     
-    # Standard delivery based on order total
-    if order_total >= 80:
+    # Standard delivery based on order total - FREE over £70
+    if order_total >= 70:
         base_fee = 0.00
-    elif order_total >= 50:
-        base_fee = 1.99
     elif order_total >= 30:
         base_fee = 3.99
     else:
