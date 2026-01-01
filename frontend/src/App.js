@@ -73,6 +73,7 @@ function App() {
             <AppRouter />
           </BrowserRouter>
           <InstallPrompt />
+          <AfroBot />
           <Toaster />
         </div>
       </CartProvider>
