@@ -22,6 +22,7 @@ import ShippingInformation from './pages/ShippingInformation';
 import ReturnsRefunds from './pages/ReturnsRefunds';
 import AuthCallback from './components/AuthCallback';
 import InstallPrompt from './components/InstallPrompt';
+import AfroBot from './components/AfroBot';
 import AdminDashboard from './pages/AdminDashboard';
 import OwnerDashboard from './pages/OwnerDashboard';
 import { AuthProvider } from './context/AuthContext';
