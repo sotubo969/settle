@@ -158,7 +158,7 @@ const Cart = () => {
                   <div className="flex items-center gap-2">
                     <TruckIcon className="h-5 w-5 text-emerald-600" />
                     <span className="font-medium text-emerald-900">
-                      Add £{(50 - subtotal).toFixed(2)} more for FREE delivery!
+                      Add £{(70 - subtotal).toFixed(2)} more for FREE delivery!
                     </span>
                   </div>
                   <Badge className="bg-emerald-600">Save £{deliveryFee}</Badge>
@@ -166,7 +166,7 @@ const Cart = () => {
                 <div className="w-full bg-emerald-200 rounded-full h-2.5">
                   <div
                     className="bg-emerald-600 h-2.5 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min((subtotal / 50) * 100, 100)}%` }}
+                    style={{ width: `${Math.min((subtotal / 70) * 100, 100)}%` }}
                   ></div>
                 </div>
               </CardContent>
