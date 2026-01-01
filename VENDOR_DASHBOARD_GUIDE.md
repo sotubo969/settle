@@ -16,7 +16,7 @@ The authentication system has been fully integrated with the backend. You can no
 ## 📍 HOW TO ACCESS VENDOR DASHBOARD
 
 ### Method 1: Through Website Navigation
-1. Go to https://afrobasket.preview.emergentagent.com
+1. Go to https://github-afrobasket.preview.emergentagent.com
 2. Click **"Sign in"** (top right corner)
 3. Enter credentials:
    - Email: `info@surulerefoods.com`
@@ -27,7 +27,7 @@ The authentication system has been fully integrated with the backend. You can no
 
 ### Method 2: Direct URL
 1. Login first using credentials above
-2. Go directly to: https://afrobasket.preview.emergentagent.com/vendor/dashboard
+2. Go directly to: https://github-afrobasket.preview.emergentagent.com/vendor/dashboard
 
 ---
 
@@ -179,7 +179,7 @@ If you encounter any issues:
 ## 🎊 YOU'RE ALL SET!
 
 Login now and start managing your products:
-👉 https://afrobasket.preview.emergentagent.com/login
+👉 https://github-afrobasket.preview.emergentagent.com/login
 
 **Email:** info@surulerefoods.com  
 **Password:** changeme123
