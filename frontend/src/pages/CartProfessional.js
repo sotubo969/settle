@@ -105,9 +105,9 @@ const Cart = () => {
   }
 
   const subtotal = getCartTotal();
-  const deliveryFee = subtotal >= 50 ? 0 : subtotal >= 30 ? 3.99 : 5.99;
+  const deliveryFee = subtotal >= 70 ? 0 : subtotal >= 30 ? 3.99 : 5.99;
   const serviceFee = parseFloat((subtotal * 0.02).toFixed(2)); // 2% service fee
-  const savings = subtotal >= 50 ? 5.99 : 0;
+  const savings = subtotal >= 70 ? 5.99 : 0;
   const total = subtotal + deliveryFee + serviceFee;
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -151,14 +151,14 @@ const Cart = () => {
           </div>
           
           {/* Progress Bar for Free Delivery */}
-          {subtotal < 50 && (
+          {subtotal < 70 && (
             <Card className="mt-6 bg-emerald-50 border-emerald-200">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <TruckIcon className="h-5 w-5 text-emerald-600" />
                     <span className="font-medium text-emerald-900">
-                      Add £{(50 - subtotal).toFixed(2)} more for FREE delivery!
+                      Add £{(70 - subtotal).toFixed(2)} more for FREE delivery!
                     </span>
                   </div>
                   <Badge className="bg-emerald-600">Save £{deliveryFee}</Badge>
@@ -166,7 +166,7 @@ const Cart = () => {
                 <div className="w-full bg-emerald-200 rounded-full h-2.5">
                   <div
                     className="bg-emerald-600 h-2.5 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min((subtotal / 50) * 100, 100)}%` }}
+                    style={{ width: `${Math.min((subtotal / 70) * 100, 100)}%` }}
                   ></div>
                 </div>
               </CardContent>
