@@ -2674,6 +2674,46 @@ async def owner_approve_vendor(
     
     return {"success": True, "message": f"Vendor {status}"}
 
+# ============ AFROBOT CHATBOT ROUTES ============
+@api_router.get("/chatbot/welcome")
+async def get_chatbot_welcome():
+    """Get AfroBot welcome message and quick replies"""
+    return {
+        "success": True,
+        "message": AfroBotService.get_welcome_message(),
+        "quick_replies": AfroBotService.get_quick_replies(),
+        "bot_name": "AfroBot"
+    }
+
+@api_router.post("/chatbot/message")
+async def send_chatbot_message(request: ChatMessageRequest):
+    """Send a message to AfroBot and get response"""
+    import uuid
+    
+    # Generate session ID if not provided
+    session_id = request.session_id or str(uuid.uuid4())
+    
+    # Get AI response
+    response = await AfroBotService.get_chat_response(
+        message=request.message,
+        session_id=session_id
+    )
+    
+    return {
+        "success": True,
+        "session_id": session_id,
+        "response": response,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+@api_router.get("/chatbot/quick-replies")
+async def get_quick_replies():
+    """Get available quick reply options"""
+    return {
+        "success": True,
+        "quick_replies": AfroBotService.get_quick_replies()
+    }
+
 app.include_router(api_router)
 
 app.add_middleware(
