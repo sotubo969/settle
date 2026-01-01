@@ -59,7 +59,7 @@ Status: ✅ CONFIGURED & WORKING
 ## 🎯 How to Test
 
 ### Method 1: Through Website
-1. Go to https://github-afrobasket.preview.emergentagent.com/vendor/register
+1. Go to https://afrobasket.preview.emergentagent.com/vendor/register
 2. Fill in vendor registration form
 3. Click "Submit Application"
 4. **Check your email** - notification arrives instantly!

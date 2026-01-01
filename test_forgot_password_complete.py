@@ -10,7 +10,7 @@ import sqlite3
 from datetime import datetime
 
 # Configuration
-BASE_URL = "https://github-afrobasket.preview.emergentagent.com/api"
+BASE_URL = "https://code-fetcher-23.preview.emergentagent.com/api"
 OWNER_EMAIL = "sotubodammy@gmail.com"
 
 class ForgotPasswordTester:
