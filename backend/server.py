@@ -116,6 +116,16 @@ class PaymentMethodRequest(BaseModel):
     expiryDate: Optional[str] = None
     isDefault: bool = False
 
+# Chatbot Request Models
+class ChatMessageRequest(BaseModel):
+    message: str
+    session_id: Optional[str] = None
+
+class ChatMessage(BaseModel):
+    role: str  # 'user' or 'assistant'
+    content: str
+    timestamp: Optional[str] = None
+
 class ProductCreateRequest(BaseModel):
     name: str
     brand: str
