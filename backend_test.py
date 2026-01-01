@@ -1278,6 +1278,13 @@ class BackendTester:
         print("-" * 40)
         self.test_analytics_tracking()
         
+        # Chatbot tests
+        print("\n🤖 AFROBOT CHATBOT TESTS")
+        print("-" * 40)
+        self.test_chatbot_welcome()
+        self.test_chatbot_message()
+        self.test_chatbot_quick_replies()
+        
         # Summary
         self.print_summary()
     
