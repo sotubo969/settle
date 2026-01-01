@@ -105,9 +105,9 @@ const Cart = () => {
   }
 
   const subtotal = getCartTotal();
-  const deliveryFee = subtotal >= 50 ? 0 : subtotal >= 30 ? 3.99 : 5.99;
+  const deliveryFee = subtotal >= 70 ? 0 : subtotal >= 30 ? 3.99 : 5.99;
   const serviceFee = parseFloat((subtotal * 0.02).toFixed(2)); // 2% service fee
-  const savings = subtotal >= 50 ? 5.99 : 0;
+  const savings = subtotal >= 70 ? 5.99 : 0;
   const total = subtotal + deliveryFee + serviceFee;
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
