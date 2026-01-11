@@ -241,7 +241,7 @@ async def seed_database():
             "brand": "Fresh Farms",
             "description": "Fresh okra vegetables, carefully selected. Essential for soups and stews.",
             "price": 2.49,
-            "image": "https://images.unsplash.com/photo-1589621316382-008455f857cd?w=600",
+            "image": "https://images.unsplash.com/photo-1518843875459-f738682238a6?w=600",
             "images": [],
             "category": "Fresh Produce",
             "categoryId": 1,
