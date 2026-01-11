@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { Star, Filter, X, ShoppingCart, Plus } from 'lucide-react';
 import axios from 'axios';
 import Header from '../components/Header';
@@ -15,6 +15,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../c
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { categories } from '../mock';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -22,6 +23,7 @@ const API = `${BACKEND_URL}/api`;
 
 const Products = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [allProducts, setAllProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [selectedCategories, setSelectedCategories] = useState([]);
@@ -30,10 +32,45 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [addingToCart, setAddingToCart] = useState({});
   const { addToCart } = useCart();
+  const { user } = useAuth();
+  
+  // Dynamic page title based on category/search
+  useEffect(() => {
+    const categorySlug = searchParams.get('category');
+    const searchQuery = searchParams.get('search');
+    
+    let pageTitle = 'All Products';
+    if (searchQuery) {
+      pageTitle = `Search: "${searchQuery}"`;
+    } else if (categorySlug) {
+      const category = categories.find(c => c.slug === categorySlug);
+      if (category) {
+        pageTitle = category.name;
+      }
+    }
+    
+    document.title = `${pageTitle} | AfroMarket UK - Authentic African Groceries`;
+    
+    // Cleanup on unmount
+    return () => {
+      document.title = 'AfroMarket UK - Authentic African Groceries';
+    };
+  }, [searchParams]);
   
   const handleAddToCart = async (e, product) => {
     e.preventDefault(); // Prevent navigation
     e.stopPropagation(); // Stop event bubbling
+    
+    // Check if user is logged in
+    if (!user) {
+      toast.info('Please sign in to add items to your cart', {
+        action: {
+          label: 'Sign In',
+          onClick: () => navigate('/login')
+        }
+      });
+      return;
+    }
     
     setAddingToCart(prev => ({ ...prev, [product.id]: true }));
     try {
