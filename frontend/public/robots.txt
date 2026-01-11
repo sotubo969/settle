@@ -1,0 +1,24 @@
+# AfroMarket UK - robots.txt
+# https://www.robotstxt.org/robotstxt.html
+
+User-agent: *
+Allow: /
+Allow: /products
+Allow: /product/
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /owner/
+Disallow: /vendor/dashboard
+Disallow: /profile
+Disallow: /checkout
+Disallow: /cart
+
+# Disallow API endpoints
+Disallow: /api/
+
+# Sitemap location
+Sitemap: https://afromarket.uk/sitemap.xml
+
+# Crawl delay for polite crawling
+Crawl-delay: 1
