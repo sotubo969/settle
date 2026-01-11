@@ -252,7 +252,11 @@ const Products = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-6 gap-2 sm:gap-4">
           <div>
             <h1 className="text-xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
-              {searchParams.get('search') ? `Search results for "${searchParams.get('search')}"` : 'All Products'}
+              {searchParams.get('search') 
+                ? `Search results for "${searchParams.get('search')}"` 
+                : searchParams.get('category')
+                  ? categories.find(c => c.slug === searchParams.get('category'))?.name || 'All Products'
+                  : 'All Products'}
             </h1>
             <p className="text-sm sm:text-base text-gray-600">{filteredProducts.length} products found</p>
           </div>
