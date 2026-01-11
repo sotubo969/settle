@@ -367,7 +367,7 @@ async def seed_database():
             "brand": "Ocean Harvest",
             "description": "Premium dried crayfish, essential for authentic Nigerian soups and stews.",
             "price": 7.99,
-            "image": "https://images.unsplash.com/photo-1599639957043-f4520e1a5586?w=600",
+            "image": "https://images.unsplash.com/photo-1606756790138-261d2b21cd75?w=600",
             "images": [],
             "category": "Dried & Preserved Foods",
             "categoryId": 7,
