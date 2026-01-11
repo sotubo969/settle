@@ -21,6 +21,14 @@ const Home = () => {
   // Check if user is a vendor
   const isVendor = user && (user.role === 'vendor' || user.role === 'Vendor');
 
+  // Set page title
+  useEffect(() => {
+    document.title = 'AfroMarket UK - Authentic African Groceries | Shop Online';
+    return () => {
+      document.title = 'AfroMarket UK - Authentic African Groceries';
+    };
+  }, []);
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
