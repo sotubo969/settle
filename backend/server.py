@@ -3081,10 +3081,10 @@ async def approve_or_reject_ad(
     ad_id: int,
     request: AdApprovalRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Approve or reject an advertisement (Owner only)"""
-    if current_user["email"] != os.environ.get("ADMIN_EMAIL", "sotubodammy@gmail.com"):
+    if current_user.email != os.environ.get("ADMIN_EMAIL", "sotubodammy@gmail.com"):
         raise HTTPException(status_code=403, detail="Owner access required")
     
     result = await db.execute(select(Advertisement).where(Advertisement.id == ad_id))
