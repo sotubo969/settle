@@ -422,10 +422,10 @@ const VendorAds = () => {
                 <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                   <div className="flex justify-between items-center">
                     <span className="font-medium">Total Price:</span>
-                    <span className="text-2xl font-bold text-green-600">£{getPrice().toFixed(2)}</span>
+                    <span className="text-2xl font-bold text-green-600">£{currentPrice.toFixed(2)}</span>
                   </div>
                   <p className="text-sm text-gray-500 mt-1">
-                    {pricing[newAd.ad_type]?.name} for {newAd.duration_days} days
+                    {newAd.ad_type === 'basic' ? 'Basic Ad' : newAd.ad_type === 'featured' ? 'Featured Ad' : 'Premium Banner'} for {newAd.duration_days} days
                   </p>
                 </div>
               </div>
@@ -440,7 +440,7 @@ const VendorAds = () => {
                   className="bg-green-600 hover:bg-green-700"
                 >
                   {creating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                  Create Ad & Pay £{getPrice().toFixed(2)}
+                  Create Ad & Pay £{currentPrice.toFixed(2)}
                 </Button>
               </DialogFooter>
             </DialogContent>
