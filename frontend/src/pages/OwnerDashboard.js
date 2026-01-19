@@ -12,7 +12,7 @@ import {
   Calendar, Filter, Download, MoreVertical, Edit, Trash2, Check, X,
   ChevronLeft, ChevronRight, Bell, Shield, Zap, Award, Target,
   PieChart, Activity, Box, UserCheck, UserX, Banknote, Receipt,
-  Star, ThumbsUp, MessageSquare, FileText, Globe, Percent
+  Star, ThumbsUp, MessageSquare, FileText, Globe, Percent, Megaphone
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
