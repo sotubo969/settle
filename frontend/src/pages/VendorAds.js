@@ -228,11 +228,24 @@ const VendorAds = () => {
 
   const getPrice = () => {
     const { ad_type, duration_days } = newAd;
-    if (pricing[ad_type]) {
-      return pricing[ad_type][`${duration_days}_days`] || 0;
+    
+    // Fallback pricing if API hasn't loaded yet
+    const fallbackPricing = {
+      basic: { '7_days': 9.99, '14_days': 16.99, '30_days': 29.99 },
+      featured: { '7_days': 19.99, '14_days': 34.99, '30_days': 59.99 },
+      premium_banner: { '7_days': 34.99, '14_days': 59.99, '30_days': 99.99 }
+    };
+    
+    const pricingData = pricing && Object.keys(pricing).length > 0 ? pricing : fallbackPricing;
+    
+    if (pricingData[ad_type]) {
+      return pricingData[ad_type][`${duration_days}_days`] || 0;
     }
     return 0;
   };
+
+  // Calculate current price for display
+  const currentPrice = getPrice();
 
   const getStatusBadge = (status, paymentStatus) => {
     if (paymentStatus === 'pending') {
