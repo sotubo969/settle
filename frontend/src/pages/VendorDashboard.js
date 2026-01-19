@@ -256,25 +256,25 @@ const VendorDashboard = () => {
                     setSearchTerm(''); 
                   }
                 }}
-                className={`relative flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all ${
+                className={`relative flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all ${
                   tab.highlight
-                    ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg shadow-orange-500/30 hover:shadow-xl'
+                    ? 'bg-emerald-600 text-white hover:bg-emerald-700'
                     : activeTab === tab.id 
-                      ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/30' 
+                      ? 'bg-gray-900 text-white' 
                       : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <tab.icon className="w-5 h-5" />
-                <span>{tab.label}</span>
+                <tab.icon className="w-4 h-4" />
+                <span className="text-sm">{tab.label}</span>
                 {tab.badge > 0 && (
-                  <span className={`absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center text-xs font-bold rounded-full ${
-                    activeTab === tab.id ? 'bg-white text-purple-600' : 'bg-red-500 text-white'
+                  <span className={`ml-1 px-1.5 py-0.5 text-xs font-medium rounded ${
+                    activeTab === tab.id ? 'bg-white text-gray-900' : 'bg-red-500 text-white'
                   }`}>
                     {tab.badge}
                   </span>
                 )}
                 {tab.highlight && (
-                  <span className="ml-1 px-2 py-0.5 bg-white/20 rounded-full text-xs">NEW</span>
+                  <span className="ml-1 px-1.5 py-0.5 bg-white/20 rounded text-xs">NEW</span>
                 )}
               </button>
             ))}
