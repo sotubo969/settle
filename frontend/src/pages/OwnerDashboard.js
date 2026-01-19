@@ -102,20 +102,24 @@ const OwnerDashboard = () => {
       const token = getToken();
       const headers = { 'Authorization': `Bearer ${token}` };
       
-      const [dashRes, vendorsRes, productsRes, analyticsRes, transRes, salesRes, deliveriesRes] = await Promise.all([
+      const [dashRes, vendorsRes, productsRes, analyticsRes, transRes, salesRes, deliveriesRes, pendingAdsRes, allAdsRes] = await Promise.all([
         fetch(`${API_URL}/api/owner/dashboard`, { headers }),
         fetch(`${API_URL}/api/owner/vendors`, { headers }),
         fetch(`${API_URL}/api/owner/products`, { headers }),
         fetch(`${API_URL}/api/owner/analytics?days=${dateRange}`, { headers }),
         fetch(`${API_URL}/api/owner/transactions`, { headers }),
         fetch(`${API_URL}/api/owner/sales`, { headers }),
-        fetch(`${API_URL}/api/owner/deliveries`, { headers })
+        fetch(`${API_URL}/api/owner/deliveries`, { headers }),
+        fetch(`${API_URL}/api/ads/pending`, { headers }),
+        fetch(`${API_URL}/api/ads/all`, { headers })
       ]);
       
       if (!dashRes.ok) throw new Error('Failed to fetch dashboard data');
       
-      const [dashData, vendorsData, productsData, analyticsData, transData, salesData, deliveriesData] = await Promise.all([
-        dashRes.json(), vendorsRes.json(), productsRes.json(), analyticsRes.json(), transRes.json(), salesRes.json(), deliveriesRes.json()
+      const [dashData, vendorsData, productsData, analyticsData, transData, salesData, deliveriesData, pendingAdsData, allAdsData] = await Promise.all([
+        dashRes.json(), vendorsRes.json(), productsRes.json(), analyticsRes.json(), transRes.json(), salesRes.json(), deliveriesRes.json(),
+        pendingAdsRes.ok ? pendingAdsRes.json() : { ads: [] },
+        allAdsRes.ok ? allAdsRes.json() : { ads: [] }
       ]);
       
       setDashboardData(dashData);
@@ -125,6 +129,8 @@ const OwnerDashboard = () => {
       setTransactions(transData);
       setSales(salesData);
       setDeliveries(deliveriesData);
+      setPendingAds(pendingAdsData.ads || []);
+      setAds(allAdsData.ads || []);
       toast.success('Dashboard data refreshed');
     } catch (err) {
       setError(err.message);
