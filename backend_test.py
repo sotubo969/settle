@@ -1152,43 +1152,50 @@ class BackendTester:
             if response.status_code == 200:
                 data = response.json()
                 
-                # Check if all expected pricing tiers are present
-                expected_tiers = ["basic", "featured", "premium_banner"]
-                expected_durations = ["7_days", "14_days", "30_days"]
-                
-                all_tiers_present = True
-                pricing_details = []
-                
-                for tier in expected_tiers:
-                    if tier in data:
-                        tier_data = data[tier]
-                        tier_name = tier_data.get("name", "")
-                        pricing_details.append(f"{tier_name}")
-                        
-                        # Check if all duration options are present
-                        for duration in expected_durations:
-                            if duration not in tier_data:
-                                all_tiers_present = False
-                                break
-                    else:
-                        all_tiers_present = False
-                        break
-                
-                if all_tiers_present:
-                    # Verify specific pricing values as mentioned in the request
-                    basic_7 = data.get("basic", {}).get("7_days")
-                    featured_7 = data.get("featured", {}).get("7_days") 
-                    premium_7 = data.get("premium_banner", {}).get("7_days")
+                # Check if response has success and pricing structure
+                if data.get("success") and "pricing" in data:
+                    pricing = data["pricing"]
                     
-                    if basic_7 == 9.99 and featured_7 == 19.99 and premium_7 == 34.99:
-                        self.log_test("Advertisement Pricing", True, 
-                                    f"Pricing tiers returned correctly - {', '.join(pricing_details)}")
+                    # Check if all expected pricing tiers are present
+                    expected_tiers = ["basic", "featured", "premium_banner"]
+                    expected_durations = ["7_days", "14_days", "30_days"]
+                    
+                    all_tiers_present = True
+                    pricing_details = []
+                    
+                    for tier in expected_tiers:
+                        if tier in pricing:
+                            tier_data = pricing[tier]
+                            tier_name = tier_data.get("name", "")
+                            pricing_details.append(f"{tier_name}")
+                            
+                            # Check if all duration options are present
+                            for duration in expected_durations:
+                                if duration not in tier_data:
+                                    all_tiers_present = False
+                                    break
+                        else:
+                            all_tiers_present = False
+                            break
+                    
+                    if all_tiers_present:
+                        # Verify specific pricing values as mentioned in the request
+                        basic_7 = pricing.get("basic", {}).get("7_days")
+                        featured_7 = pricing.get("featured", {}).get("7_days") 
+                        premium_7 = pricing.get("premium_banner", {}).get("7_days")
+                        
+                        if basic_7 == 9.99 and featured_7 == 19.99 and premium_7 == 34.99:
+                            self.log_test("Advertisement Pricing", True, 
+                                        f"Pricing tiers returned correctly - {', '.join(pricing_details)}")
+                        else:
+                            self.log_test("Advertisement Pricing", False, 
+                                        f"Pricing values incorrect - Basic 7d: £{basic_7}, Featured 7d: £{featured_7}, Premium 7d: £{premium_7}")
                     else:
                         self.log_test("Advertisement Pricing", False, 
-                                    f"Pricing values incorrect - Basic 7d: £{basic_7}, Featured 7d: £{featured_7}, Premium 7d: £{premium_7}")
+                                    f"Missing pricing tiers or durations: {pricing}")
                 else:
                     self.log_test("Advertisement Pricing", False, 
-                                f"Missing pricing tiers or durations: {data}")
+                                f"Invalid response structure: {data}")
             else:
                 self.log_test("Advertisement Pricing", False, f"HTTP {response.status_code}: {response.text}")
         except Exception as e:
