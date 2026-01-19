@@ -35,17 +35,56 @@ def decode_token(token: str) -> dict:
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-async def get_current_user_from_token(token: str, db: AsyncSession):
-    """Get user from token - requires db session to be passed"""
-    from database import User
-    
+# Simple user info class to mimic User object attributes
+class UserInfo:
+    def __init__(self, id: int, email: str, name: str = None, role: str = None):
+        self.id = id
+        self.email = email
+        self.name = name or email.split('@')[0]  # Default name from email
+        self.role = role
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security)):
+    """
+    Dependency that extracts and validates the JWT token.
+    Returns a UserInfo object with id, email, name attributes.
+    """
+    token = credentials.credentials
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
+        user_id = payload.get("sub")
+        email = payload.get("email")
+        name = payload.get("name")
+        role = payload.get("role")
+        
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid token - missing user ID")
+        
+        if email is None:
+            raise HTTPException(status_code=401, detail="Invalid token - missing email")
+        
+        return UserInfo(id=int(user_id), email=email, name=name, role=role)
+    except JWTError as e:
+        print(f"JWT Decode Error: {e}")
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+async def get_current_user_from_db(credentials: HTTPAuthorizationCredentials = Security(security), db: AsyncSession = None):
+    """Get full user object from database"""
+    from database import User
+    
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
+        
         if user_id is None:
             raise HTTPException(status_code=401, detail="Invalid token")
+            
     except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
+    
+    if db is None:
+        # Return UserInfo if no db provided
+        return UserInfo(id=int(user_id), email=payload.get("email"))
     
     result = await db.execute(select(User).where(User.id == int(user_id)))
     user = result.scalar_one_or_none()
@@ -54,36 +93,6 @@ async def get_current_user_from_token(token: str, db: AsyncSession):
         raise HTTPException(status_code=401, detail="User not found")
     
     return user
-
-# Simple user info class to mimic User object attributes
-class UserInfo:
-    def __init__(self, id: int, email: str):
-        self.id = id
-        self.email = email
-
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security)):
-    """
-    Dependency that extracts and validates the JWT token.
-    Returns a UserInfo object with id and email attributes.
-    """
-    token = credentials.credentials
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload.get("sub")
-        email = payload.get("email")
-        
-        if user_id is None:
-            print(f"Token missing 'sub' field. Payload: {payload}")
-            raise HTTPException(status_code=401, detail="Invalid token - missing user ID")
-        
-        if email is None:
-            print(f"Token missing 'email' field. Payload: {payload}")
-            raise HTTPException(status_code=401, detail="Invalid token - missing email")
-        
-        return UserInfo(id=int(user_id), email=email)
-    except JWTError as e:
-        print(f"JWT Decode Error: {e}")
-        raise HTTPException(status_code=401, detail="Invalid token")
 
 async def get_current_vendor(current_user = Depends(get_current_user)):
     if current_user.role != 'vendor':
