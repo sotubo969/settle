@@ -144,6 +144,53 @@ class VendorApprovalRequest(BaseModel):
     vendorId: int
     status: str  # 'approved' or 'rejected'
 
+# ============ ADVERTISEMENT PRICING ============
+# Reasonable pricing for UK market - not too expensive, not too cheap
+AD_PRICING = {
+    "basic": {
+        "name": "Basic Ad",
+        "description": "Shows in product listings with 'Sponsored' badge",
+        "placement": "products",
+        "7_days": 9.99,
+        "14_days": 16.99,
+        "30_days": 29.99,
+        "boost_multiplier": 1.5  # 50% more visibility
+    },
+    "featured": {
+        "name": "Featured Ad",
+        "description": "Highlighted in Featured Products section on homepage",
+        "placement": "homepage",
+        "7_days": 19.99,
+        "14_days": 34.99,
+        "30_days": 59.99,
+        "boost_multiplier": 2.5  # 150% more visibility
+    },
+    "premium_banner": {
+        "name": "Premium Banner",
+        "description": "Large banner ad on homepage carousel - maximum exposure",
+        "placement": "homepage_banner",
+        "7_days": 34.99,
+        "14_days": 59.99,
+        "30_days": 99.99,
+        "boost_multiplier": 5.0  # 400% more visibility
+    }
+}
+
+# Advertisement Request Models
+class AdCreateRequest(BaseModel):
+    title: str
+    description: Optional[str] = None
+    image: str
+    link_url: Optional[str] = None
+    product_id: Optional[int] = None
+    ad_type: str  # 'basic', 'featured', 'premium_banner'
+    duration_days: int  # 7, 14, or 30
+
+class AdApprovalRequest(BaseModel):
+    ad_id: int
+    action: str  # 'approve' or 'reject'
+    admin_notes: Optional[str] = None
+
 # ============ AUTH ROUTES ============
 @api_router.post("/auth/register")
 async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
