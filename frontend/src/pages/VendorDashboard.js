@@ -319,35 +319,30 @@ const VendorDashboard = () => {
             </div>
 
             {/* Secondary Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatCard title="Items Sold" value={dashboardData.stats.totalItemsSold} icon={Box} color="indigo" />
-              <StatCard title="Platform Fees" value={`£${dashboardData.stats.commission?.toLocaleString()}`} icon={Percent} color="red" />
-              <StatCard title="Product Views" value={dashboardData.stats.totalViews?.toLocaleString()} icon={Eye} color="pink" />
-              <StatCard title="Product Clicks" value={dashboardData.stats.totalClicks?.toLocaleString()} icon={MousePointer} color="blue" />
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard title="Items Sold" value={dashboardData.stats.totalItemsSold} icon={Box} />
+              <StatCard title="Platform Fees" value={`£${dashboardData.stats.commission?.toLocaleString()}`} icon={Percent} />
+              <StatCard title="Product Views" value={dashboardData.stats.totalViews?.toLocaleString()} icon={Eye} />
+              <StatCard title="Product Clicks" value={dashboardData.stats.totalClicks?.toLocaleString()} icon={MousePointer} />
             </div>
 
-            {/* Advertise Banner */}
-            <div className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-600 rounded-2xl p-6 text-white shadow-xl">
+            {/* Advertise Banner - Professional Design */}
+            <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm">
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="p-4 bg-white/20 rounded-2xl">
-                    <Megaphone className="w-10 h-10" />
+                  <div className="p-3 bg-emerald-50 rounded-xl">
+                    <Megaphone className="w-8 h-8 text-emerald-600" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold">🚀 Boost Your Sales!</h3>
-                    <p className="text-white/90 mt-1">Run ads to get up to 5x more visibility for your products</p>
-                    <div className="flex items-center gap-4 mt-2 text-sm text-white/80">
-                      <span>✓ From just £9.99</span>
-                      <span>✓ Target more customers</span>
-                      <span>✓ Track performance</span>
-                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900">Boost Your Sales with Advertising</h3>
+                    <p className="text-gray-500 text-sm mt-1">Get up to 5x more visibility • From £9.99 per week</p>
                   </div>
                 </div>
                 <button
                   onClick={() => navigate('/vendor/ads')}
-                  className="px-8 py-4 bg-white text-purple-600 font-bold rounded-xl hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl whitespace-nowrap"
+                  className="px-6 py-3 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors whitespace-nowrap"
                 >
-                  Create Ad Now →
+                  Create Ad →
                 </button>
               </div>
             </div>
