@@ -16,7 +16,7 @@ TEST_PASSWORD = "changeme123"
 
 # Owner credentials for testing owner dashboard
 OWNER_EMAIL = "sotubodammy@gmail.com"
-OWNER_PASSWORD = "owner2025!"
+OWNER_PASSWORD = "NewPassword123!"
 
 class BackendTester:
     def __init__(self):
