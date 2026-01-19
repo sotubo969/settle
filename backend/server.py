@@ -2895,7 +2895,7 @@ async def confirm_ad_payment(
     ad_id: int,
     payment_intent_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Confirm payment for an advertisement"""
     result = await db.execute(select(Advertisement).where(Advertisement.id == ad_id))
