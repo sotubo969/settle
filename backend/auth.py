@@ -27,32 +27,50 @@ def create_access_token(data: dict) -> str:
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security)):
-    from database import User, get_db
+def decode_token(token: str) -> dict:
+    """Decode JWT token and return payload"""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+async def get_current_user_from_token(token: str, db: AsyncSession):
+    """Get user from token - requires db session to be passed"""
+    from database import User
     
-    token = credentials.credentials
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
         if user_id is None:
             raise HTTPException(status_code=401, detail="Invalid token")
-    except JWTError as e:
+    except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
     
-    # Get database session properly
-    async for db in get_db():
-        try:
-            result = await db.execute(select(User).where(User.id == int(user_id)))
-            user = result.scalar_one_or_none()
-            
-            if user is None:
-                raise HTTPException(status_code=401, detail="User not found")
-            
-            return user
-        finally:
-            pass
+    result = await db.execute(select(User).where(User.id == int(user_id)))
+    user = result.scalar_one_or_none()
     
-    raise HTTPException(status_code=401, detail="Database error")
+    if user is None:
+        raise HTTPException(status_code=401, detail="User not found")
+    
+    return user
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security)):
+    """
+    Dependency that extracts and validates the JWT token.
+    Returns a dict with user info from the token payload.
+    For database queries, use get_current_user_from_token with a db session.
+    """
+    token = credentials.credentials
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        email: str = payload.get("email")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        return {"id": int(user_id), "email": email}
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
 async def get_current_vendor(current_user = Depends(get_current_user)):
     if current_user.role != 'vendor':
