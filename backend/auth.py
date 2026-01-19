@@ -55,21 +55,27 @@ async def get_current_user_from_token(token: str, db: AsyncSession):
     
     return user
 
+# Simple user info class to mimic User object attributes
+class UserInfo:
+    def __init__(self, id: int, email: str):
+        self.id = id
+        self.email = email
+
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security)):
     """
     Dependency that extracts and validates the JWT token.
-    Returns a dict with user info from the token payload.
-    For database queries, use get_current_user_from_token with a db session.
+    Returns a UserInfo object with id and email attributes.
     """
     token = credentials.credentials
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id: str = payload.get("sub")
         email: str = payload.get("email")
-        if user_id is None:
+        if user_id is None or email is None:
             raise HTTPException(status_code=401, detail="Invalid token")
-        return {"id": int(user_id), "email": email}
-    except JWTError:
+        return UserInfo(id=int(user_id), email=email)
+    except JWTError as e:
+        print(f"JWT Error: {e}")
         raise HTTPException(status_code=401, detail="Invalid token")
 
 async def get_current_vendor(current_user = Depends(get_current_user)):
