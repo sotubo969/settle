@@ -27,13 +27,8 @@ def create_access_token(data: dict) -> str:
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security), db: AsyncSession = Depends(lambda: None)):
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security)):
     from database import User, get_db
-    
-    if db is None:
-        async for session in get_db():
-            db = session
-            break
     
     token = credentials.credentials
     try:
@@ -41,16 +36,23 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(
         user_id: str = payload.get("sub")
         if user_id is None:
             raise HTTPException(status_code=401, detail="Invalid token")
-    except JWTError:
+    except JWTError as e:
         raise HTTPException(status_code=401, detail="Invalid token")
     
-    result = await db.execute(select(User).where(User.id == int(user_id)))
-    user = result.scalar_one_or_none()
+    # Get database session properly
+    async for db in get_db():
+        try:
+            result = await db.execute(select(User).where(User.id == int(user_id)))
+            user = result.scalar_one_or_none()
+            
+            if user is None:
+                raise HTTPException(status_code=401, detail="User not found")
+            
+            return user
+        finally:
+            pass
     
-    if user is None:
-        raise HTTPException(status_code=401, detail="User not found")
-    
-    return user
+    raise HTTPException(status_code=401, detail="Database error")
 
 async def get_current_vendor(current_user = Depends(get_current_user)):
     if current_user.role != 'vendor':
