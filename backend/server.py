@@ -2775,12 +2775,12 @@ async def get_ad_pricing():
 async def create_advertisement(
     ad_data: AdCreateRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Create a new advertisement (Vendor only)"""
     # Get vendor
     result = await db.execute(
-        select(Vendor).where(Vendor.email == current_user["email"])
+        select(Vendor).where(Vendor.email == current_user.email)
     )
     vendor = result.scalar_one_or_none()
     
