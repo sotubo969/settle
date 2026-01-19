@@ -69,13 +69,20 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(
     token = credentials.credentials
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        email: str = payload.get("email")
-        if user_id is None or email is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
+        user_id = payload.get("sub")
+        email = payload.get("email")
+        
+        if user_id is None:
+            print(f"Token missing 'sub' field. Payload: {payload}")
+            raise HTTPException(status_code=401, detail="Invalid token - missing user ID")
+        
+        if email is None:
+            print(f"Token missing 'email' field. Payload: {payload}")
+            raise HTTPException(status_code=401, detail="Invalid token - missing email")
+        
         return UserInfo(id=int(user_id), email=email)
     except JWTError as e:
-        print(f"JWT Error: {e}")
+        print(f"JWT Decode Error: {e}")
         raise HTTPException(status_code=401, detail="Invalid token")
 
 async def get_current_vendor(current_user = Depends(get_current_user)):
