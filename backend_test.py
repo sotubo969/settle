@@ -1514,6 +1514,18 @@ class BackendTester:
         self.test_chatbot_message()
         self.test_chatbot_quick_replies()
         
+        # Advertisement tests
+        print("\n📢 ADVERTISEMENT SYSTEM TESTS")
+        print("-" * 40)
+        self.test_advertisement_pricing()
+        self.test_advertisement_active_public()
+        self.test_advertisement_authentication_requirements()
+        self.test_advertisement_owner_access_requirements()
+        
+        # Advertisement owner tests (requires owner login)
+        if owner_login_success:
+            self.test_advertisement_owner_endpoints()
+        
         # Summary
         self.print_summary()
     
