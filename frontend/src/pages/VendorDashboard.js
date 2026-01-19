@@ -283,9 +283,9 @@ const VendorDashboard = () => {
 
         {/* ==================== OVERVIEW TAB ==================== */}
         {activeTab === 'overview' && dashboardData && (
-          <div className="space-y-8">
+          <div className="space-y-6">
             {/* Main Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard 
                 title="Total Revenue" 
                 value={`£${dashboardData.stats.totalRevenue?.toLocaleString()}`}
@@ -293,28 +293,24 @@ const VendorDashboard = () => {
                 icon={DollarSign}
                 trend="up"
                 trendValue="+12.5%"
-                color="emerald"
               />
               <StatCard 
                 title="Net Earnings" 
                 value={`£${dashboardData.stats.netEarnings?.toLocaleString()}`}
                 subtitle="After platform fees"
                 icon={Banknote}
-                color="purple"
               />
               <StatCard 
                 title="Total Orders" 
                 value={dashboardData.stats.totalOrders}
                 subtitle={`${dashboardData.stats.pendingOrders} pending`}
                 icon={ShoppingCart}
-                color="blue"
               />
               <StatCard 
                 title="Products" 
                 value={dashboardData.stats.totalProducts}
                 subtitle="Active listings"
                 icon={Package}
-                color="orange"
               />
             </div>
 
