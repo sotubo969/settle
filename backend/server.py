@@ -3098,7 +3098,7 @@ async def approve_or_reject_ad(
     
     if request.action == "approve":
         ad.status = "active"
-        ad.approved_by = current_user["email"]
+        ad.approved_by = current_user.email
         ad.approved_at = datetime.utcnow()
         ad.start_date = datetime.utcnow()
         ad.end_date = datetime.utcnow() + timedelta(days=ad.duration_days)
