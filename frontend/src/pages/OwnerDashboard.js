@@ -33,11 +33,14 @@ const OwnerDashboard = () => {
   const [transactions, setTransactions] = useState(null);
   const [sales, setSales] = useState(null);
   const [deliveries, setDeliveries] = useState(null);
+  const [ads, setAds] = useState([]);
+  const [pendingAds, setPendingAds] = useState([]);
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [deliveryStatusFilter, setDeliveryStatusFilter] = useState('all');
+  const [adStatusFilter, setAdStatusFilter] = useState('all');
   const [dateRange, setDateRange] = useState('30');
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState('newest');
@@ -47,6 +50,9 @@ const OwnerDashboard = () => {
   const [selectedDelivery, setSelectedDelivery] = useState(null);
   const [showTrackingModal, setShowTrackingModal] = useState(false);
   const [trackingForm, setTrackingForm] = useState({ trackingNumber: '', carrier: '', estimatedDelivery: '' });
+  const [selectedAd, setSelectedAd] = useState(null);
+  const [showAdModal, setShowAdModal] = useState(false);
+  const [adApprovalNotes, setAdApprovalNotes] = useState('');
   
   const OWNER_EMAIL = 'sotubodammy@gmail.com';
   const getToken = () => localStorage.getItem('afroToken');
