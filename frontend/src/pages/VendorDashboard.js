@@ -261,11 +261,21 @@ const VendorDashboard = () => {
             {tabs.map(tab => (
               <button
                 key={tab.id}
-                onClick={() => { setActiveTab(tab.id); setCurrentPage(1); setSearchTerm(''); }}
+                onClick={() => { 
+                  if (tab.id === 'advertise') {
+                    navigate('/vendor/ads');
+                  } else {
+                    setActiveTab(tab.id); 
+                    setCurrentPage(1); 
+                    setSearchTerm(''); 
+                  }
+                }}
                 className={`relative flex items-center gap-2 px-5 py-3 rounded-xl font-medium transition-all ${
-                  activeTab === tab.id 
-                    ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/30' 
-                    : 'text-gray-600 hover:bg-gray-100'
+                  tab.highlight
+                    ? 'bg-gradient-to-r from-orange-500 to-pink-500 text-white shadow-lg shadow-orange-500/30 hover:shadow-xl'
+                    : activeTab === tab.id 
+                      ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/30' 
+                      : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
                 <tab.icon className="w-5 h-5" />
@@ -276,6 +286,9 @@ const VendorDashboard = () => {
                   }`}>
                     {tab.badge}
                   </span>
+                )}
+                {tab.highlight && (
+                  <span className="ml-1 px-2 py-0.5 bg-white/20 rounded-full text-xs">NEW</span>
                 )}
               </button>
             ))}
