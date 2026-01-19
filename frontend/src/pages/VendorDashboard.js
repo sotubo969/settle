@@ -347,71 +347,71 @@ const VendorDashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Earnings Breakdown */}
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-6">💰 Earnings Breakdown</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-xl">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Earnings Breakdown</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-emerald-500 rounded-lg"><DollarSign className="w-5 h-5 text-white" /></div>
+                      <div className="p-2 bg-gray-200 rounded-lg"><DollarSign className="w-4 h-4 text-gray-600" /></div>
                       <div>
-                        <p className="font-semibold text-gray-900">Gross Revenue</p>
-                        <p className="text-sm text-gray-500">Total sales value</p>
+                        <p className="font-medium text-gray-900 text-sm">Gross Revenue</p>
+                        <p className="text-xs text-gray-500">Total sales value</p>
                       </div>
                     </div>
-                    <p className="text-2xl font-bold text-emerald-600">£{dashboardData.stats.totalRevenue?.toLocaleString()}</p>
+                    <p className="text-lg font-bold text-gray-900">£{dashboardData.stats.totalRevenue?.toLocaleString()}</p>
                   </div>
-                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-red-50 to-red-100 rounded-xl">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-red-500 rounded-lg"><Percent className="w-5 h-5 text-white" /></div>
+                      <div className="p-2 bg-gray-200 rounded-lg"><Percent className="w-4 h-4 text-gray-600" /></div>
                       <div>
-                        <p className="font-semibold text-gray-900">Platform Fee (10%)</p>
-                        <p className="text-sm text-gray-500">AfroMarket commission</p>
+                        <p className="font-medium text-gray-900 text-sm">Platform Fee (10%)</p>
+                        <p className="text-xs text-gray-500">AfroMarket commission</p>
                       </div>
                     </div>
-                    <p className="text-2xl font-bold text-red-600">-£{dashboardData.stats.commission?.toLocaleString()}</p>
+                    <p className="text-lg font-bold text-red-600">-£{dashboardData.stats.commission?.toLocaleString()}</p>
                   </div>
-                  <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl border-2 border-purple-200">
+                  <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg border border-emerald-200">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-purple-500 rounded-lg"><Banknote className="w-5 h-5 text-white" /></div>
+                      <div className="p-2 bg-emerald-100 rounded-lg"><Banknote className="w-4 h-4 text-emerald-600" /></div>
                       <div>
-                        <p className="font-semibold text-gray-900">Your Net Earnings</p>
-                        <p className="text-sm text-gray-500">Amount you receive</p>
+                        <p className="font-medium text-gray-900 text-sm">Your Net Earnings</p>
+                        <p className="text-xs text-gray-500">Amount you receive</p>
                       </div>
                     </div>
-                    <p className="text-2xl font-bold text-purple-600">£{dashboardData.stats.netEarnings?.toLocaleString()}</p>
+                    <p className="text-lg font-bold text-emerald-600">£{dashboardData.stats.netEarnings?.toLocaleString()}</p>
                   </div>
                 </div>
               </div>
 
               {/* Order Status */}
-              <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-                <h3 className="text-xl font-bold text-gray-900 mb-6">📦 Order Status</h3>
-                <div className="space-y-4">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Status</h3>
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-amber-100 rounded-lg"><Clock className="w-5 h-5 text-amber-600" /></div>
-                      <span className="font-medium text-gray-700">Pending Orders</span>
+                      <div className="p-2 bg-amber-50 rounded-lg"><Clock className="w-4 h-4 text-amber-600" /></div>
+                      <span className="text-sm text-gray-700">Pending Orders</span>
                     </div>
-                    <span className="text-2xl font-bold text-amber-600">{dashboardData.stats.pendingOrders}</span>
+                    <span className="text-lg font-bold text-gray-900">{dashboardData.stats.pendingOrders}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-100 rounded-lg"><Truck className="w-5 h-5 text-blue-600" /></div>
-                      <span className="font-medium text-gray-700">Processing</span>
+                      <div className="p-2 bg-blue-50 rounded-lg"><Truck className="w-4 h-4 text-blue-600" /></div>
+                      <span className="text-sm text-gray-700">Processing</span>
                     </div>
-                    <span className="text-2xl font-bold text-blue-600">{dashboardData.stats.processingOrders}</span>
+                    <span className="text-lg font-bold text-gray-900">{dashboardData.stats.processingOrders}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 bg-emerald-100 rounded-lg"><CheckCircle className="w-5 h-5 text-emerald-600" /></div>
-                      <span className="font-medium text-gray-700">Completed</span>
+                      <div className="p-2 bg-emerald-50 rounded-lg"><CheckCircle className="w-4 h-4 text-emerald-600" /></div>
+                      <span className="text-sm text-gray-700">Completed</span>
                     </div>
-                    <span className="text-2xl font-bold text-emerald-600">{dashboardData.stats.completedOrders}</span>
+                    <span className="text-lg font-bold text-gray-900">{dashboardData.stats.completedOrders}</span>
                   </div>
                 </div>
                 
                 <button 
                   onClick={() => setActiveTab('orders')}
-                  className="w-full mt-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl font-medium hover:from-purple-600 hover:to-purple-700 transition-all"
+                  className="w-full mt-4 py-2.5 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
                 >
                   View All Orders
                 </button>
