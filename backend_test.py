@@ -1144,6 +1144,235 @@ class BackendTester:
         except Exception as e:
             self.log_test("Chatbot Quick Replies", False, f"Exception: {str(e)}")
     
+    def test_advertisement_pricing(self):
+        """Test GET /api/ads/pricing - Should return pricing tiers"""
+        try:
+            response = self.make_request("GET", "/ads/pricing")
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check if all expected pricing tiers are present
+                expected_tiers = ["basic", "featured", "premium_banner"]
+                expected_durations = ["7_days", "14_days", "30_days"]
+                
+                all_tiers_present = True
+                pricing_details = []
+                
+                for tier in expected_tiers:
+                    if tier in data:
+                        tier_data = data[tier]
+                        tier_name = tier_data.get("name", "")
+                        pricing_details.append(f"{tier_name}")
+                        
+                        # Check if all duration options are present
+                        for duration in expected_durations:
+                            if duration not in tier_data:
+                                all_tiers_present = False
+                                break
+                    else:
+                        all_tiers_present = False
+                        break
+                
+                if all_tiers_present:
+                    # Verify specific pricing values as mentioned in the request
+                    basic_7 = data.get("basic", {}).get("7_days")
+                    featured_7 = data.get("featured", {}).get("7_days") 
+                    premium_7 = data.get("premium_banner", {}).get("7_days")
+                    
+                    if basic_7 == 9.99 and featured_7 == 19.99 and premium_7 == 34.99:
+                        self.log_test("Advertisement Pricing", True, 
+                                    f"Pricing tiers returned correctly - {', '.join(pricing_details)}")
+                    else:
+                        self.log_test("Advertisement Pricing", False, 
+                                    f"Pricing values incorrect - Basic 7d: £{basic_7}, Featured 7d: £{featured_7}, Premium 7d: £{premium_7}")
+                else:
+                    self.log_test("Advertisement Pricing", False, 
+                                f"Missing pricing tiers or durations: {data}")
+            else:
+                self.log_test("Advertisement Pricing", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Advertisement Pricing", False, f"Exception: {str(e)}")
+    
+    def test_advertisement_active_public(self):
+        """Test GET /api/ads/active - Should return active ads (public endpoint)"""
+        try:
+            # Test without authentication (should work as public endpoint)
+            original_token = self.auth_token
+            self.auth_token = None
+            
+            response = self.make_request("GET", "/ads/active")
+            
+            # Restore token
+            self.auth_token = original_token
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "ads" in data and isinstance(data["ads"], list):
+                    ads = data["ads"]
+                    self.log_test("Advertisement Active (Public)", True, 
+                                f"Active ads endpoint accessible without auth - {len(ads)} ads returned")
+                else:
+                    self.log_test("Advertisement Active (Public)", False, 
+                                f"Invalid response structure: {data}")
+            else:
+                self.log_test("Advertisement Active (Public)", False, 
+                            f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Advertisement Active (Public)", False, f"Exception: {str(e)}")
+    
+    def test_advertisement_authentication_requirements(self):
+        """Test authentication requirements for advertisement endpoints"""
+        
+        # Test POST /api/ads/create should require authentication
+        try:
+            # Test without authentication
+            original_token = self.auth_token
+            self.auth_token = None
+            
+            ad_data = {
+                "title": "Test Ad",
+                "description": "Test advertisement",
+                "image": "https://example.com/image.jpg",
+                "ad_type": "basic",
+                "duration_days": 7
+            }
+            
+            response = self.make_request("POST", "/ads/create", ad_data)
+            
+            # Restore token
+            self.auth_token = original_token
+            
+            if response.status_code in [401, 403]:
+                self.log_test("Advertisement Create Auth Required", True, 
+                            f"POST /ads/create properly requires authentication - HTTP {response.status_code}")
+            else:
+                self.log_test("Advertisement Create Auth Required", False, 
+                            f"Expected 401/403, got HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Advertisement Create Auth Required", False, f"Exception: {str(e)}")
+        
+        # Test GET /api/ads/vendor should require authentication
+        try:
+            # Test without authentication
+            original_token = self.auth_token
+            self.auth_token = None
+            
+            response = self.make_request("GET", "/ads/vendor")
+            
+            # Restore token
+            self.auth_token = original_token
+            
+            if response.status_code in [401, 403]:
+                self.log_test("Advertisement Vendor List Auth Required", True, 
+                            f"GET /ads/vendor properly requires authentication - HTTP {response.status_code}")
+            else:
+                self.log_test("Advertisement Vendor List Auth Required", False, 
+                            f"Expected 401/403, got HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Advertisement Vendor List Auth Required", False, f"Exception: {str(e)}")
+    
+    def test_advertisement_owner_access_requirements(self):
+        """Test owner access requirements for advertisement endpoints"""
+        
+        # Test GET /api/ads/pending should require owner access
+        try:
+            # Test with regular user token (should get 403)
+            if self.auth_token:
+                response = self.make_request("GET", "/ads/pending")
+                
+                if response.status_code == 403:
+                    self.log_test("Advertisement Pending Owner Access", True, 
+                                "GET /ads/pending properly requires owner access - denied for regular user")
+                elif response.status_code == 401:
+                    self.log_test("Advertisement Pending Owner Access", True, 
+                                "GET /ads/pending requires authentication (401 acceptable)")
+                else:
+                    self.log_test("Advertisement Pending Owner Access", False, 
+                                f"Expected 403, got HTTP {response.status_code}: {response.text}")
+            else:
+                self.log_test("Advertisement Pending Owner Access", False, "No auth token available for testing")
+        except Exception as e:
+            self.log_test("Advertisement Pending Owner Access", False, f"Exception: {str(e)}")
+        
+        # Test POST /api/ads/{id}/approve should require owner access
+        try:
+            # Test with regular user token (should get 403)
+            if self.auth_token:
+                approval_data = {
+                    "action": "approve",
+                    "admin_notes": "Test approval"
+                }
+                
+                response = self.make_request("POST", "/ads/1/approve", approval_data)
+                
+                if response.status_code == 403:
+                    self.log_test("Advertisement Approve Owner Access", True, 
+                                "POST /ads/{id}/approve properly requires owner access - denied for regular user")
+                elif response.status_code in [401, 404]:
+                    self.log_test("Advertisement Approve Owner Access", True, 
+                                f"POST /ads/{{id}}/approve requires proper access (HTTP {response.status_code} acceptable)")
+                else:
+                    self.log_test("Advertisement Approve Owner Access", False, 
+                                f"Expected 403/401/404, got HTTP {response.status_code}: {response.text}")
+            else:
+                self.log_test("Advertisement Approve Owner Access", False, "No auth token available for testing")
+        except Exception as e:
+            self.log_test("Advertisement Approve Owner Access", False, f"Exception: {str(e)}")
+    
+    def test_advertisement_owner_endpoints(self):
+        """Test advertisement endpoints with owner access"""
+        if not self.owner_token:
+            self.log_test("Advertisement Owner Endpoints", False, "No owner token available")
+            return
+        
+        # Temporarily store current token and set owner token
+        original_token = self.auth_token
+        self.auth_token = self.owner_token
+        
+        try:
+            # Test GET /api/ads/pending with owner access
+            try:
+                response = self.make_request("GET", "/ads/pending")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "ads" in data and isinstance(data["ads"], list):
+                        ads = data["ads"]
+                        self.log_test("Advertisement Pending (Owner)", True, 
+                                    f"Owner can access pending ads - {len(ads)} pending ads found")
+                    else:
+                        self.log_test("Advertisement Pending (Owner)", False, 
+                                    f"Invalid response structure: {data}")
+                else:
+                    self.log_test("Advertisement Pending (Owner)", False, 
+                                f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Advertisement Pending (Owner)", False, f"Exception: {str(e)}")
+            
+            # Test GET /api/ads/all with owner access
+            try:
+                response = self.make_request("GET", "/ads/all")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "ads" in data and isinstance(data["ads"], list):
+                        ads = data["ads"]
+                        self.log_test("Advertisement All (Owner)", True, 
+                                    f"Owner can access all ads - {len(ads)} total ads found")
+                    else:
+                        self.log_test("Advertisement All (Owner)", False, 
+                                    f"Invalid response structure: {data}")
+                else:
+                    self.log_test("Advertisement All (Owner)", False, 
+                                f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Advertisement All (Owner)", False, f"Exception: {str(e)}")
+                
+        finally:
+            # Restore original token
+            self.auth_token = original_token
+    
     def test_vendor_approval(self):
         """Test vendor approval endpoint (owner only)"""
         if not self.owner_token:
