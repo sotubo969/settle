@@ -340,6 +340,32 @@ const VendorDashboard = () => {
               <StatCard title="Product Clicks" value={dashboardData.stats.totalClicks?.toLocaleString()} icon={MousePointer} color="blue" />
             </div>
 
+            {/* Advertise Banner */}
+            <div className="bg-gradient-to-r from-orange-500 via-pink-500 to-purple-600 rounded-2xl p-6 text-white shadow-xl">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="p-4 bg-white/20 rounded-2xl">
+                    <Megaphone className="w-10 h-10" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold">🚀 Boost Your Sales!</h3>
+                    <p className="text-white/90 mt-1">Run ads to get up to 5x more visibility for your products</p>
+                    <div className="flex items-center gap-4 mt-2 text-sm text-white/80">
+                      <span>✓ From just £9.99</span>
+                      <span>✓ Target more customers</span>
+                      <span>✓ Track performance</span>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => navigate('/vendor/ads')}
+                  className="px-8 py-4 bg-white text-purple-600 font-bold rounded-xl hover:bg-gray-100 transition-all shadow-lg hover:shadow-xl whitespace-nowrap"
+                >
+                  Create Ad Now →
+                </button>
+              </div>
+            </div>
+
             {/* Quick Actions & Recent Orders */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Earnings Breakdown */}
