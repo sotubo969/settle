@@ -3032,10 +3032,10 @@ async def get_pending_ads(
 @api_router.get("/ads/all")
 async def get_all_ads_admin(
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get all ads for admin dashboard (Owner only)"""
-    if current_user["email"] != os.environ.get("ADMIN_EMAIL", "sotubodammy@gmail.com"):
+    if current_user.email != os.environ.get("ADMIN_EMAIL", "sotubodammy@gmail.com"):
         raise HTTPException(status_code=403, detail="Owner access required")
     
     result = await db.execute(
