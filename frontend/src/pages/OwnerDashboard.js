@@ -176,6 +176,45 @@ const OwnerDashboard = () => {
     }
   };
 
+  const handleAdApproval = async (adId, action) => {
+    try {
+      const token = getToken();
+      const response = await fetch(`${API_URL}/api/ads/${adId}/approve`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          ad_id: adId,
+          action: action,
+          admin_notes: adApprovalNotes
+        })
+      });
+      
+      if (response.ok) {
+        toast.success(`Ad ${action === 'approve' ? 'approved' : 'rejected'} successfully`);
+        setShowAdModal(false);
+        setSelectedAd(null);
+        setAdApprovalNotes('');
+        fetchDashboardData();
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Failed to update ad');
+      }
+    } catch (err) {
+      toast.error('Failed to update ad');
+    }
+  };
+
+  // Filter ads
+  const filteredAds = ads.filter(ad => {
+    const matchesSearch = ad.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         ad.vendor?.business_name?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = adStatusFilter === 'all' || ad.status === adStatusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
   // Navigation tabs with icons and badges
   const tabs = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard, badge: null },
