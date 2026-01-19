@@ -2761,6 +2761,497 @@ async def get_quick_replies():
         "quick_replies": AfroBotService.get_quick_replies()
     }
 
+# ============ ADVERTISEMENT ROUTES ============
+
+@api_router.get("/ads/pricing")
+async def get_ad_pricing():
+    """Get advertisement pricing options"""
+    return {
+        "success": True,
+        "pricing": AD_PRICING
+    }
+
+@api_router.post("/ads/create")
+async def create_advertisement(
+    ad_data: AdCreateRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a new advertisement (Vendor only)"""
+    # Get vendor
+    result = await db.execute(
+        select(Vendor).where(Vendor.email == current_user["email"])
+    )
+    vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        raise HTTPException(status_code=403, detail="Only vendors can create ads")
+    
+    if vendor.status != "approved":
+        raise HTTPException(status_code=403, detail="Your vendor account must be approved first")
+    
+    # Validate ad type
+    if ad_data.ad_type not in AD_PRICING:
+        raise HTTPException(status_code=400, detail="Invalid ad type")
+    
+    # Validate duration
+    if ad_data.duration_days not in [7, 14, 30]:
+        raise HTTPException(status_code=400, detail="Duration must be 7, 14, or 30 days")
+    
+    # Calculate price
+    pricing_key = f"{ad_data.duration_days}_days"
+    price = AD_PRICING[ad_data.ad_type][pricing_key]
+    
+    # Verify product belongs to vendor if product_id provided
+    if ad_data.product_id:
+        result = await db.execute(
+            select(Product).where(
+                Product.id == ad_data.product_id,
+                Product.vendor_id == vendor.id
+            )
+        )
+        product = result.scalar_one_or_none()
+        if not product:
+            raise HTTPException(status_code=400, detail="Product not found or doesn't belong to you")
+    
+    # Create advertisement
+    new_ad = Advertisement(
+        vendor_id=vendor.id,
+        title=ad_data.title,
+        description=ad_data.description,
+        image=ad_data.image,
+        link_url=ad_data.link_url,
+        product_id=ad_data.product_id,
+        ad_type=ad_data.ad_type,
+        placement=AD_PRICING[ad_data.ad_type]["placement"],
+        duration_days=ad_data.duration_days,
+        price=price,
+        status="pending",
+        payment_status="pending"
+    )
+    
+    db.add(new_ad)
+    await db.flush()
+    
+    return {
+        "success": True,
+        "message": "Advertisement created! Please complete payment and wait for admin approval.",
+        "ad_id": new_ad.id,
+        "price": price,
+        "ad_type": ad_data.ad_type,
+        "duration_days": ad_data.duration_days
+    }
+
+@api_router.post("/ads/{ad_id}/pay")
+async def pay_for_advertisement(
+    ad_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Process payment for an advertisement"""
+    # Get the ad
+    result = await db.execute(select(Advertisement).where(Advertisement.id == ad_id))
+    ad = result.scalar_one_or_none()
+    
+    if not ad:
+        raise HTTPException(status_code=404, detail="Advertisement not found")
+    
+    # Verify ownership
+    result = await db.execute(
+        select(Vendor).where(Vendor.email == current_user["email"])
+    )
+    vendor = result.scalar_one_or_none()
+    
+    if not vendor or ad.vendor_id != vendor.id:
+        raise HTTPException(status_code=403, detail="You don't own this advertisement")
+    
+    if ad.payment_status == "paid":
+        raise HTTPException(status_code=400, detail="Advertisement already paid for")
+    
+    # Create Stripe payment intent
+    try:
+        stripe_service = StripePayment()
+        payment_intent = stripe_service.create_payment_intent(
+            amount=ad.price,
+            currency="gbp",
+            metadata={
+                "ad_id": str(ad.id),
+                "vendor_id": str(vendor.id),
+                "ad_type": ad.ad_type
+            }
+        )
+        
+        return {
+            "success": True,
+            "client_secret": payment_intent.client_secret,
+            "payment_intent_id": payment_intent.id,
+            "amount": ad.price
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Payment error: {str(e)}")
+
+@api_router.post("/ads/{ad_id}/confirm-payment")
+async def confirm_ad_payment(
+    ad_id: int,
+    payment_intent_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Confirm payment for an advertisement"""
+    result = await db.execute(select(Advertisement).where(Advertisement.id == ad_id))
+    ad = result.scalar_one_or_none()
+    
+    if not ad:
+        raise HTTPException(status_code=404, detail="Advertisement not found")
+    
+    # Update payment status
+    ad.payment_status = "paid"
+    ad.payment_intent_id = payment_intent_id
+    await db.flush()
+    
+    # Send notification to admin
+    try:
+        email_service = EmailService()
+        admin_email = os.environ.get("ADMIN_EMAIL", "sotubodammy@gmail.com")
+        
+        result = await db.execute(select(Vendor).where(Vendor.id == ad.vendor_id))
+        vendor = result.scalar_one_or_none()
+        
+        await email_service.send_email(
+            to_email=admin_email,
+            subject=f"🎯 New Ad Pending Approval - {ad.title}",
+            body=f"""
+            <h2>New Advertisement Requires Approval</h2>
+            <p><strong>Vendor:</strong> {vendor.business_name if vendor else 'Unknown'}</p>
+            <p><strong>Ad Title:</strong> {ad.title}</p>
+            <p><strong>Ad Type:</strong> {ad.ad_type}</p>
+            <p><strong>Duration:</strong> {ad.duration_days} days</p>
+            <p><strong>Price Paid:</strong> £{ad.price:.2f}</p>
+            <p><strong>Description:</strong> {ad.description or 'N/A'}</p>
+            <br>
+            <p>Please review and approve/reject this ad in the Owner Dashboard.</p>
+            """
+        )
+    except Exception as e:
+        print(f"Failed to send admin notification: {e}")
+    
+    return {
+        "success": True,
+        "message": "Payment confirmed! Your ad is now pending admin approval."
+    }
+
+@api_router.get("/ads/vendor")
+async def get_vendor_ads(
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all ads for the current vendor"""
+    result = await db.execute(
+        select(Vendor).where(Vendor.email == current_user["email"])
+    )
+    vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        raise HTTPException(status_code=403, detail="Vendor not found")
+    
+    result = await db.execute(
+        select(Advertisement).where(Advertisement.vendor_id == vendor.id).order_by(Advertisement.created_at.desc())
+    )
+    ads = result.scalars().all()
+    
+    return {
+        "success": True,
+        "ads": [{
+            "id": ad.id,
+            "title": ad.title,
+            "description": ad.description,
+            "image": ad.image,
+            "ad_type": ad.ad_type,
+            "placement": ad.placement,
+            "status": ad.status,
+            "payment_status": ad.payment_status,
+            "duration_days": ad.duration_days,
+            "price": ad.price,
+            "impressions": ad.impressions,
+            "clicks": ad.clicks,
+            "ctr": round((ad.clicks / ad.impressions * 100), 2) if ad.impressions > 0 else 0,
+            "start_date": ad.start_date.isoformat() if ad.start_date else None,
+            "end_date": ad.end_date.isoformat() if ad.end_date else None,
+            "admin_notes": ad.admin_notes,
+            "created_at": ad.created_at.isoformat()
+        } for ad in ads]
+    }
+
+@api_router.get("/ads/pending")
+async def get_pending_ads(
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all pending ads for admin approval (Owner only)"""
+    if current_user["email"] != os.environ.get("ADMIN_EMAIL", "sotubodammy@gmail.com"):
+        raise HTTPException(status_code=403, detail="Owner access required")
+    
+    result = await db.execute(
+        select(Advertisement).where(
+            Advertisement.status == "pending",
+            Advertisement.payment_status == "paid"
+        ).order_by(Advertisement.created_at.desc())
+    )
+    ads = result.scalars().all()
+    
+    # Get vendor info for each ad
+    ads_with_vendor = []
+    for ad in ads:
+        result = await db.execute(select(Vendor).where(Vendor.id == ad.vendor_id))
+        vendor = result.scalar_one_or_none()
+        
+        ads_with_vendor.append({
+            "id": ad.id,
+            "title": ad.title,
+            "description": ad.description,
+            "image": ad.image,
+            "link_url": ad.link_url,
+            "ad_type": ad.ad_type,
+            "ad_type_name": AD_PRICING[ad.ad_type]["name"],
+            "placement": ad.placement,
+            "duration_days": ad.duration_days,
+            "price": ad.price,
+            "vendor": {
+                "id": vendor.id if vendor else None,
+                "business_name": vendor.business_name if vendor else "Unknown",
+                "email": vendor.email if vendor else ""
+            },
+            "created_at": ad.created_at.isoformat()
+        })
+    
+    return {
+        "success": True,
+        "ads": ads_with_vendor
+    }
+
+@api_router.get("/ads/all")
+async def get_all_ads_admin(
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all ads for admin dashboard (Owner only)"""
+    if current_user["email"] != os.environ.get("ADMIN_EMAIL", "sotubodammy@gmail.com"):
+        raise HTTPException(status_code=403, detail="Owner access required")
+    
+    result = await db.execute(
+        select(Advertisement).order_by(Advertisement.created_at.desc())
+    )
+    ads = result.scalars().all()
+    
+    ads_with_vendor = []
+    for ad in ads:
+        result = await db.execute(select(Vendor).where(Vendor.id == ad.vendor_id))
+        vendor = result.scalar_one_or_none()
+        
+        ads_with_vendor.append({
+            "id": ad.id,
+            "title": ad.title,
+            "description": ad.description,
+            "image": ad.image,
+            "ad_type": ad.ad_type,
+            "ad_type_name": AD_PRICING[ad.ad_type]["name"],
+            "placement": ad.placement,
+            "status": ad.status,
+            "payment_status": ad.payment_status,
+            "duration_days": ad.duration_days,
+            "price": ad.price,
+            "impressions": ad.impressions,
+            "clicks": ad.clicks,
+            "start_date": ad.start_date.isoformat() if ad.start_date else None,
+            "end_date": ad.end_date.isoformat() if ad.end_date else None,
+            "vendor": {
+                "id": vendor.id if vendor else None,
+                "business_name": vendor.business_name if vendor else "Unknown"
+            },
+            "created_at": ad.created_at.isoformat()
+        })
+    
+    return {
+        "success": True,
+        "ads": ads_with_vendor
+    }
+
+@api_router.post("/ads/{ad_id}/approve")
+async def approve_or_reject_ad(
+    ad_id: int,
+    request: AdApprovalRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Approve or reject an advertisement (Owner only)"""
+    if current_user["email"] != os.environ.get("ADMIN_EMAIL", "sotubodammy@gmail.com"):
+        raise HTTPException(status_code=403, detail="Owner access required")
+    
+    result = await db.execute(select(Advertisement).where(Advertisement.id == ad_id))
+    ad = result.scalar_one_or_none()
+    
+    if not ad:
+        raise HTTPException(status_code=404, detail="Advertisement not found")
+    
+    if ad.payment_status != "paid":
+        raise HTTPException(status_code=400, detail="Ad must be paid before approval")
+    
+    if request.action == "approve":
+        ad.status = "active"
+        ad.approved_by = current_user["email"]
+        ad.approved_at = datetime.utcnow()
+        ad.start_date = datetime.utcnow()
+        ad.end_date = datetime.utcnow() + timedelta(days=ad.duration_days)
+        ad.admin_notes = request.admin_notes
+        message = "Advertisement approved and is now live!"
+    elif request.action == "reject":
+        ad.status = "rejected"
+        ad.admin_notes = request.admin_notes or "Ad rejected by admin"
+        message = "Advertisement rejected"
+        # TODO: Process refund via Stripe
+    else:
+        raise HTTPException(status_code=400, detail="Invalid action")
+    
+    await db.flush()
+    
+    # Notify vendor
+    try:
+        result = await db.execute(select(Vendor).where(Vendor.id == ad.vendor_id))
+        vendor = result.scalar_one_or_none()
+        
+        if vendor:
+            email_service = EmailService()
+            status_text = "approved and is now live" if request.action == "approve" else "rejected"
+            
+            await email_service.send_email(
+                to_email=vendor.email,
+                subject=f"📢 Your Ad '{ad.title}' has been {request.action}d",
+                body=f"""
+                <h2>Advertisement Update</h2>
+                <p>Your advertisement <strong>"{ad.title}"</strong> has been <strong>{status_text}</strong>.</p>
+                {'<p><strong>Admin Notes:</strong> ' + request.admin_notes + '</p>' if request.admin_notes else ''}
+                {f'<p>Your ad will run from <strong>{ad.start_date.strftime("%d %b %Y")}</strong> to <strong>{ad.end_date.strftime("%d %b %Y")}</strong>.</p>' if request.action == "approve" else ''}
+                <p>Thank you for advertising with AfroMarket UK!</p>
+                """
+            )
+    except Exception as e:
+        print(f"Failed to send vendor notification: {e}")
+    
+    return {
+        "success": True,
+        "message": message
+    }
+
+@api_router.get("/ads/active")
+async def get_active_ads(
+    placement: Optional[str] = None,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get active ads for display on the website"""
+    now = datetime.utcnow()
+    
+    query = select(Advertisement).where(
+        Advertisement.status == "active",
+        Advertisement.start_date <= now,
+        Advertisement.end_date >= now
+    )
+    
+    if placement:
+        query = query.where(Advertisement.placement == placement)
+    
+    result = await db.execute(query.order_by(Advertisement.ad_type.desc()))  # Premium first
+    ads = result.scalars().all()
+    
+    # Get product info for ads with product_id
+    active_ads = []
+    for ad in ads:
+        ad_data = {
+            "id": ad.id,
+            "title": ad.title,
+            "description": ad.description,
+            "image": ad.image,
+            "link_url": ad.link_url,
+            "ad_type": ad.ad_type,
+            "placement": ad.placement,
+            "product_id": ad.product_id
+        }
+        
+        if ad.product_id:
+            result = await db.execute(select(Product).where(Product.id == ad.product_id))
+            product = result.scalar_one_or_none()
+            if product:
+                ad_data["product"] = {
+                    "id": product.id,
+                    "name": product.name,
+                    "price": product.price,
+                    "image": product.image
+                }
+        
+        active_ads.append(ad_data)
+    
+    return {
+        "success": True,
+        "ads": active_ads
+    }
+
+@api_router.post("/ads/{ad_id}/impression")
+async def track_ad_impression(ad_id: int, db: AsyncSession = Depends(get_db)):
+    """Track an ad impression"""
+    result = await db.execute(select(Advertisement).where(Advertisement.id == ad_id))
+    ad = result.scalar_one_or_none()
+    
+    if ad and ad.status == "active":
+        ad.impressions += 1
+        await db.flush()
+    
+    return {"success": True}
+
+@api_router.post("/ads/{ad_id}/click")
+async def track_ad_click(ad_id: int, db: AsyncSession = Depends(get_db)):
+    """Track an ad click"""
+    result = await db.execute(select(Advertisement).where(Advertisement.id == ad_id))
+    ad = result.scalar_one_or_none()
+    
+    if ad and ad.status == "active":
+        ad.clicks += 1
+        await db.flush()
+    
+    return {"success": True}
+
+@api_router.post("/ads/{ad_id}/pause")
+async def pause_ad(
+    ad_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Pause an active ad (Vendor can pause their own ads)"""
+    result = await db.execute(select(Advertisement).where(Advertisement.id == ad_id))
+    ad = result.scalar_one_or_none()
+    
+    if not ad:
+        raise HTTPException(status_code=404, detail="Advertisement not found")
+    
+    # Check ownership
+    result = await db.execute(select(Vendor).where(Vendor.email == current_user["email"]))
+    vendor = result.scalar_one_or_none()
+    
+    is_owner = current_user["email"] == os.environ.get("ADMIN_EMAIL", "sotubodammy@gmail.com")
+    is_ad_owner = vendor and ad.vendor_id == vendor.id
+    
+    if not (is_owner or is_ad_owner):
+        raise HTTPException(status_code=403, detail="You don't have permission to pause this ad")
+    
+    if ad.status == "active":
+        ad.status = "paused"
+        await db.flush()
+        return {"success": True, "message": "Ad paused"}
+    elif ad.status == "paused":
+        ad.status = "active"
+        await db.flush()
+        return {"success": True, "message": "Ad resumed"}
+    else:
+        raise HTTPException(status_code=400, detail="Can only pause/resume active ads")
+
 app.include_router(api_router)
 
 # Security Headers Middleware
