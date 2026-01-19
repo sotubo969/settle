@@ -176,6 +176,7 @@ const OwnerDashboard = () => {
     { id: 'vendors', label: 'Vendors', icon: Store, badge: dashboardData?.overview?.pendingVendors },
     { id: 'products', label: 'Products', icon: Package, badge: null },
     { id: 'orders', label: 'Orders', icon: ShoppingCart, badge: dashboardData?.overview?.pendingOrders },
+    { id: 'ads', label: 'Advertisements', icon: Megaphone, badge: pendingAds?.length },
     { id: 'analytics', label: 'Analytics', icon: BarChart3, badge: null },
     { id: 'transactions', label: 'Finance', icon: CreditCard, badge: null },
     { id: 'deliveries', label: 'Deliveries', icon: Truck, badge: deliveries?.statusCounts?.processing },
