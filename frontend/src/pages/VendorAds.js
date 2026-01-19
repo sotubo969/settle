@@ -340,13 +340,13 @@ const VendorAds = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="7">
-                        7 Days - £{pricing[newAd.ad_type]?.['7_days']?.toFixed(2) || '9.99'}
+                        7 Days - £{newAd.ad_type === 'basic' ? '9.99' : newAd.ad_type === 'featured' ? '19.99' : '34.99'}
                       </SelectItem>
                       <SelectItem value="14">
-                        14 Days - £{pricing[newAd.ad_type]?.['14_days']?.toFixed(2) || '16.99'}
+                        14 Days - £{newAd.ad_type === 'basic' ? '16.99' : newAd.ad_type === 'featured' ? '34.99' : '59.99'}
                       </SelectItem>
                       <SelectItem value="30">
-                        30 Days - £{pricing[newAd.ad_type]?.['30_days']?.toFixed(2) || '29.99'}
+                        30 Days - £{newAd.ad_type === 'basic' ? '29.99' : newAd.ad_type === 'featured' ? '59.99' : '99.99'}
                       </SelectItem>
                     </SelectContent>
                   </Select>
