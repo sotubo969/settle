@@ -323,12 +323,18 @@ const VendorAds = () => {
                     onValueChange={(v) => setNewAd(prev => ({ ...prev, duration_days: parseInt(v) }))}
                   >
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Select duration" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="7">7 Days - £{pricing[newAd.ad_type]?.['7_days'] || 0}</SelectItem>
-                      <SelectItem value="14">14 Days - £{pricing[newAd.ad_type]?.['14_days'] || 0}</SelectItem>
-                      <SelectItem value="30">30 Days - £{pricing[newAd.ad_type]?.['30_days'] || 0}</SelectItem>
+                      <SelectItem value="7">
+                        7 Days - £{pricing[newAd.ad_type]?.['7_days']?.toFixed(2) || '9.99'}
+                      </SelectItem>
+                      <SelectItem value="14">
+                        14 Days - £{pricing[newAd.ad_type]?.['14_days']?.toFixed(2) || '16.99'}
+                      </SelectItem>
+                      <SelectItem value="30">
+                        30 Days - £{pricing[newAd.ad_type]?.['30_days']?.toFixed(2) || '29.99'}
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
