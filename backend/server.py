@@ -2943,11 +2943,11 @@ async def confirm_ad_payment(
 @api_router.get("/ads/vendor")
 async def get_vendor_ads(
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Get all ads for the current vendor"""
     result = await db.execute(
-        select(Vendor).where(Vendor.email == current_user["email"])
+        select(Vendor).where(Vendor.email == current_user.email)
     )
     vendor = result.scalar_one_or_none()
     
