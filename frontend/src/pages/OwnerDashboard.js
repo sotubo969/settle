@@ -1167,6 +1167,263 @@ const OwnerDashboard = () => {
         )}
 
         {/* ==================== CUSTOMERS TAB ==================== */}
+        {activeTab === 'ads' && (
+          <div className="space-y-6">
+            {/* Ad Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <StatCard 
+                title="Pending Approval" 
+                value={pendingAds?.length || 0} 
+                icon={Clock} 
+                color="yellow" 
+              />
+              <StatCard 
+                title="Active Ads" 
+                value={ads?.filter(a => a.status === 'active').length || 0} 
+                icon={CheckCircle} 
+                color="emerald" 
+              />
+              <StatCard 
+                title="Total Revenue" 
+                value={`£${ads?.filter(a => a.payment_status === 'paid').reduce((sum, a) => sum + a.price, 0).toFixed(2) || '0.00'}`} 
+                icon={DollarSign} 
+                color="blue" 
+              />
+              <StatCard 
+                title="Total Impressions" 
+                value={ads?.reduce((sum, a) => sum + (a.impressions || 0), 0).toLocaleString() || '0'} 
+                icon={Eye} 
+                color="purple" 
+              />
+            </div>
+
+            {/* Pending Ads Section */}
+            {pendingAds?.length > 0 && (
+              <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-2xl p-6 border border-yellow-200">
+                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-4">
+                  <AlertCircle className="w-5 h-5 text-yellow-600" />
+                  Pending Approval ({pendingAds.length})
+                </h3>
+                <div className="grid gap-4">
+                  {pendingAds.map(ad => (
+                    <div key={ad.id} className="bg-white rounded-xl p-4 shadow-sm flex flex-col md:flex-row gap-4">
+                      <img src={ad.image} alt={ad.title} className="w-full md:w-40 h-32 object-cover rounded-lg" />
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h4 className="font-semibold text-gray-900">{ad.title}</h4>
+                            <p className="text-sm text-gray-500">{ad.vendor?.business_name}</p>
+                          </div>
+                          <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">
+                            {ad.ad_type_name}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-2">{ad.description}</p>
+                        <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
+                          <span>Duration: {ad.duration_days} days</span>
+                          <span>Price: £{ad.price?.toFixed(2)}</span>
+                        </div>
+                        <div className="flex gap-2 mt-4">
+                          <button
+                            onClick={() => handleAdApproval(ad.id, 'approve')}
+                            className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 flex items-center gap-1"
+                          >
+                            <Check className="w-4 h-4" /> Approve
+                          </button>
+                          <button
+                            onClick={() => { setSelectedAd(ad); setShowAdModal(true); }}
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-1"
+                          >
+                            <X className="w-4 h-4" /> Reject
+                          </button>
+                          <a 
+                            href={ad.image} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-1"
+                          >
+                            <Eye className="w-4 h-4" /> View Image
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* All Ads Table */}
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+              <div className="p-6 border-b border-gray-100">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <h3 className="text-lg font-bold text-gray-900">All Advertisements</h3>
+                  <div className="flex gap-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search ads..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg"
+                      />
+                    </div>
+                    <select
+                      value={adStatusFilter}
+                      onChange={(e) => setAdStatusFilter(e.target.value)}
+                      className="px-4 py-2 border border-gray-200 rounded-lg"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="pending">Pending</option>
+                      <option value="active">Active</option>
+                      <option value="paused">Paused</option>
+                      <option value="rejected">Rejected</option>
+                      <option value="expired">Expired</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Ad</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Vendor</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Type</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Price</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Performance</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Dates</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {paginate(filteredAds).map(ad => (
+                      <tr key={ad.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <img src={ad.image} alt={ad.title} className="w-16 h-12 object-cover rounded-lg" />
+                            <div>
+                              <p className="font-medium text-gray-900">{ad.title}</p>
+                              <p className="text-xs text-gray-500 truncate max-w-[200px]">{ad.description}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-600">{ad.vendor?.business_name}</td>
+                        <td className="px-6 py-4">
+                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                            {ad.ad_type_name || ad.ad_type}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            ad.status === 'active' ? 'bg-green-100 text-green-800' :
+                            ad.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            ad.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                            ad.status === 'paused' ? 'bg-gray-100 text-gray-800' :
+                            'bg-orange-100 text-orange-800'
+                          }`}>
+                            {ad.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900">£{ad.price?.toFixed(2)}</td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm">
+                            <div className="flex items-center gap-1 text-gray-600">
+                              <Eye className="w-3 h-3" /> {ad.impressions?.toLocaleString() || 0}
+                            </div>
+                            <div className="flex items-center gap-1 text-gray-600">
+                              <MousePointer className="w-3 h-3" /> {ad.clicks || 0} clicks
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-xs text-gray-500">
+                          {ad.start_date && (
+                            <div>Start: {new Date(ad.start_date).toLocaleDateString()}</div>
+                          )}
+                          {ad.end_date && (
+                            <div>End: {new Date(ad.end_date).toLocaleDateString()}</div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {filteredAds.length === 0 && (
+                <div className="text-center py-12">
+                  <Megaphone className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500">No advertisements found</p>
+                </div>
+              )}
+              
+              {/* Pagination */}
+              {filteredAds.length > ITEMS_PER_PAGE && (
+                <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between">
+                  <p className="text-sm text-gray-500">
+                    Showing {((currentPage - 1) * ITEMS_PER_PAGE) + 1} to {Math.min(currentPage * ITEMS_PER_PAGE, filteredAds.length)} of {filteredAds.length}
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 border rounded-lg disabled:opacity-50"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(totalPages(filteredAds), p + 1))}
+                      disabled={currentPage === totalPages(filteredAds)}
+                      className="px-3 py-1 border rounded-lg disabled:opacity-50"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Ad Rejection Modal */}
+        {showAdModal && selectedAd && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Reject Advertisement</h3>
+              <p className="text-sm text-gray-500 mb-4">Ad: {selectedAd.title}</p>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Reason for rejection (optional)</label>
+                  <textarea
+                    value={adApprovalNotes}
+                    onChange={(e) => setAdApprovalNotes(e.target.value)}
+                    placeholder="Enter reason for rejection..."
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500"
+                  />
+                </div>
+                
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => { setShowAdModal(false); setSelectedAd(null); setAdApprovalNotes(''); }}
+                    className="flex-1 px-4 py-3 border border-gray-200 rounded-xl hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => handleAdApproval(selectedAd.id, 'reject')}
+                    className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700"
+                  >
+                    Reject Ad
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'customers' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
