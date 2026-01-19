@@ -1306,8 +1306,14 @@ class BackendTester:
         try:
             # Test with regular user token (should get 403)
             if self.auth_token:
-                # Use URL parameters instead of request body for the approval endpoint
-                response = self.make_request("POST", "/ads/1/approve?action=approve&admin_notes=Test approval")
+                # Use proper request body format for the approval endpoint
+                approval_data = {
+                    "ad_id": 1,
+                    "action": "approve",
+                    "admin_notes": "Test approval"
+                }
+                
+                response = self.make_request("POST", "/ads/1/approve", approval_data)
                 
                 if response.status_code == 403:
                     self.log_test("Advertisement Approve Owner Access", True, 
