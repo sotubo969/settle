@@ -155,6 +155,52 @@ class PasswordResetToken(Base):
     used = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
+
+class Advertisement(Base):
+    __tablename__ = 'advertisements'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    vendor_id = Column(Integer, ForeignKey('vendors.id'), nullable=False)
+    
+    # Ad Content
+    title = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    image = Column(String(500), nullable=False)
+    link_url = Column(String(500), nullable=True)  # Where the ad links to
+    product_id = Column(Integer, ForeignKey('products.id'), nullable=True)  # Optional: promote specific product
+    
+    # Ad Type & Placement
+    ad_type = Column(String(50), nullable=False)  # 'basic', 'featured', 'premium_banner'
+    placement = Column(String(50), default='products')  # 'homepage', 'products', 'category', 'sidebar'
+    
+    # Status & Approval
+    status = Column(String(50), default='pending')  # 'pending', 'approved', 'rejected', 'active', 'paused', 'expired'
+    admin_notes = Column(Text, nullable=True)  # Notes from admin on approval/rejection
+    approved_by = Column(String(255), nullable=True)
+    approved_at = Column(DateTime, nullable=True)
+    
+    # Duration & Scheduling
+    duration_days = Column(Integer, nullable=False)  # 7, 14, or 30 days
+    start_date = Column(DateTime, nullable=True)  # When ad starts showing (after approval)
+    end_date = Column(DateTime, nullable=True)  # When ad expires
+    
+    # Pricing & Payment
+    price = Column(Float, nullable=False)
+    payment_status = Column(String(50), default='pending')  # 'pending', 'paid', 'refunded'
+    payment_intent_id = Column(String(255), nullable=True)  # Stripe payment ID
+    
+    # Performance Metrics
+    impressions = Column(Integer, default=0)  # Times shown
+    clicks = Column(Integer, default=0)  # Times clicked
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    vendor = relationship('Vendor', backref='advertisements')
+    product = relationship('Product', backref='advertisements')
+
 # Database session dependency
 async def get_db():
     session = AsyncSessionLocal()
