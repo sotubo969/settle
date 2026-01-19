@@ -3222,7 +3222,7 @@ async def track_ad_click(ad_id: int, db: AsyncSession = Depends(get_db)):
 async def pause_ad(
     ad_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """Pause an active ad (Vendor can pause their own ads)"""
     result = await db.execute(select(Advertisement).where(Advertisement.id == ad_id))
@@ -3232,10 +3232,10 @@ async def pause_ad(
         raise HTTPException(status_code=404, detail="Advertisement not found")
     
     # Check ownership
-    result = await db.execute(select(Vendor).where(Vendor.email == current_user["email"]))
+    result = await db.execute(select(Vendor).where(Vendor.email == current_user.email))
     vendor = result.scalar_one_or_none()
     
-    is_owner = current_user["email"] == os.environ.get("ADMIN_EMAIL", "sotubodammy@gmail.com")
+    is_owner = current_user.email == os.environ.get("ADMIN_EMAIL", "sotubodammy@gmail.com")
     is_ad_owner = vendor and ad.vendor_id == vendor.id
     
     if not (is_owner or is_ad_owner):
