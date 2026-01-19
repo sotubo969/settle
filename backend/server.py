@@ -274,7 +274,7 @@ async def google_auth(auth_data: GoogleAuthRequest, db: AsyncSession = Depends(g
         await db.flush()
         await db.refresh(user)
     
-    token = create_access_token({"sub": str(user.id), "email": user.email})
+    token = create_access_token({"sub": str(user.id), "email": user.email, "name": user.name, "role": user.role})
     
     return {
         "success": True,
