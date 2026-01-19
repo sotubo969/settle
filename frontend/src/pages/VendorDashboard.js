@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
@@ -10,7 +10,7 @@ import {
   ChevronLeft, ChevronRight, RefreshCw, Store, Truck, CreditCard,
   ArrowUpRight, ArrowDownRight, Mail, Phone, MapPin, Calendar,
   BarChart3, PieChart, Search, Filter, Download, Plus, XCircle,
-  Banknote, Receipt, Percent, Box, Target, Award
+  Banknote, Receipt, Percent, Box, Target, Award, Megaphone
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
