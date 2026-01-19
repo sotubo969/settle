@@ -317,7 +317,7 @@ async def apple_auth(auth_data: AppleAuthRequest, db: AsyncSession = Depends(get
         await db.flush()
         await db.refresh(user)
     
-    token = create_access_token({"sub": str(user.id), "email": user.email})
+    token = create_access_token({"sub": str(user.id), "email": user.email, "name": user.name, "role": user.role})
     
     return {
         "success": True,
