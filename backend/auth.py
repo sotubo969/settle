@@ -42,6 +42,9 @@ class UserInfo:
         self.email = email
         self.name = name or email.split('@')[0]  # Default name from email
         self.role = role
+        self.avatar = None  # Default avatar
+        self.phone = None
+        self.address = None
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Security(security)):
     """
