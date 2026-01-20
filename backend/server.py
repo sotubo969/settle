@@ -2870,8 +2870,7 @@ async def pay_for_advertisement(
     
     # Create Stripe payment intent
     try:
-        stripe_service = StripePayment()
-        payment_intent = stripe_service.create_payment_intent(
+        payment_result = await StripePayment.create_payment_intent(
             amount=ad.price,
             currency="gbp",
             metadata={
@@ -2883,8 +2882,8 @@ async def pay_for_advertisement(
         
         return {
             "success": True,
-            "client_secret": payment_intent.client_secret,
-            "payment_intent_id": payment_intent.id,
+            "client_secret": payment_result['clientSecret'],
+            "payment_intent_id": payment_result['paymentIntentId'],
             "amount": ad.price
         }
     except Exception as e:
