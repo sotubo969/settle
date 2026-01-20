@@ -2,19 +2,34 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
+from pathlib import Path
 from typing import Optional
 import logging
+from dotenv import load_dotenv
+
+# Load environment variables
+ROOT_DIR = Path(__file__).parent
+load_dotenv(ROOT_DIR / '.env')
 
 logger = logging.getLogger(__name__)
 
 class EmailService:
     def __init__(self):
+        # Reload environment variables to ensure they're loaded
+        load_dotenv(ROOT_DIR / '.env')
+        
         self.smtp_host = os.environ.get('SMTP_HOST', 'smtp.gmail.com')
         self.smtp_port = int(os.environ.get('SMTP_PORT', '587'))
         self.smtp_user = os.environ.get('SMTP_USER', '')
         self.smtp_password = os.environ.get('SMTP_PASSWORD', '')
         self.from_email = os.environ.get('FROM_EMAIL', self.smtp_user)
         self.admin_email = os.environ.get('ADMIN_EMAIL', 'sotubodammy@gmail.com')
+        
+        # Log configuration status
+        if self.smtp_user and self.smtp_password:
+            logger.info(f"Email service initialized with SMTP user: {self.smtp_user}")
+        else:
+            logger.warning("Email service: SMTP credentials not configured")
     
     def send_email(self, to_email: str, subject: str, html_content: str, text_content: Optional[str] = None):
         """Send an email"""
