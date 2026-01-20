@@ -20,7 +20,7 @@ class StripePayment:
                 amount=amount_in_pence,
                 currency=currency,
                 metadata=metadata or {},
-                automatic_payment_methods={'enabled': True},
+                payment_method_types=['card'],  # Explicitly enable card payments
             )
             
             return {
