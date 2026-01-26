@@ -2889,9 +2889,8 @@ async def confirm_wallet_topup(
     current_user: User = Depends(get_current_user)
 ):
     """Confirm wallet top-up after successful Stripe payment"""
-    # Get vendor
-    result = await db.execute(select(Vendor).where(Vendor.email == current_user.email))
-    vendor = result.scalar_one_or_none()
+    # Get vendor using user_id (consistent with dashboard)
+    vendor = await get_vendor_for_user(current_user.id, db)
     
     if not vendor:
         raise HTTPException(status_code=403, detail="Vendor account required")
@@ -2911,7 +2910,7 @@ async def confirm_wallet_topup(
     transaction = WalletTransaction(
         vendor_id=vendor.id,
         wallet_id=wallet.id,
-        type="top_up",
+        type="topup",
         amount=amount,
         balance_after=wallet.balance,
         description=f"Wallet top-up via Stripe",
@@ -2933,9 +2932,8 @@ async def setup_auto_recharge(
     current_user: User = Depends(get_current_user)
 ):
     """Set up automatic wallet recharge"""
-    # Get vendor
-    result = await db.execute(select(Vendor).where(Vendor.email == current_user.email))
-    vendor = result.scalar_one_or_none()
+    # Get vendor using user_id (consistent with dashboard)
+    vendor = await get_vendor_for_user(current_user.id, db)
     
     if not vendor:
         raise HTTPException(status_code=403, detail="Vendor account required")
