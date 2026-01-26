@@ -180,14 +180,24 @@ class Advertisement(Base):
     approved_at = Column(DateTime, nullable=True)
     
     # Duration & Scheduling
-    duration_days = Column(Integer, nullable=False)  # 7, 14, or 30 days
+    duration_days = Column(Integer, nullable=True)  # For fixed duration ads (7, 14, or 30 days)
     start_date = Column(DateTime, nullable=True)  # When ad starts showing (after approval)
     end_date = Column(DateTime, nullable=True)  # When ad expires
     
-    # Pricing & Payment
-    price = Column(Float, nullable=False)
+    # Billing Type
+    billing_type = Column(String(50), default='fixed')  # 'fixed', 'per_impression', 'per_click', 'per_both'
+    
+    # Pricing & Payment (for fixed billing)
+    price = Column(Float, nullable=True)  # Fixed price for duration-based ads
     payment_status = Column(String(50), default='pending')  # 'pending', 'paid', 'refunded'
     payment_intent_id = Column(String(255), nullable=True)  # Stripe payment ID
+    
+    # Pay-per-performance pricing
+    cost_per_impression = Column(Float, default=0.001)  # £0.001 per impression (£1 per 1000)
+    cost_per_click = Column(Float, default=0.05)  # £0.05 per click
+    daily_budget = Column(Float, nullable=True)  # Max daily spend
+    total_budget = Column(Float, nullable=True)  # Max total spend
+    amount_spent = Column(Float, default=0.0)  # Total spent so far
     
     # Performance Metrics
     impressions = Column(Integer, default=0)  # Times shown
