@@ -473,7 +473,15 @@ async def firebase_status():
     }
 
 @api_router.get("/auth/me")
-async def get_me(current_user: User = Depends(get_current_user_from_db), db: AsyncSession = Depends(get_db)):
+async def get_me(
+    credentials: HTTPAuthorizationCredentials = Security(HTTPBearer()),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get current user profile information"""
+    from auth import get_current_user_from_db
+    
+    current_user = await get_current_user_from_db(credentials, db)
+    
     return {
         "id": current_user.id,
         "name": current_user.name,
