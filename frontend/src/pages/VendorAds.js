@@ -260,7 +260,7 @@ const VendorAds = () => {
 
   const handlePauseResume = async (adId, currentStatus) => {
     try {
-      const token = localStorage.getItem('token');
+      const token = getAuthToken();
       await axios.post(
         `${API}/ads/${adId}/pause`,
         {},
@@ -269,7 +269,12 @@ const VendorAds = () => {
       toast.success(currentStatus === 'active' ? 'Ad paused' : 'Ad resumed');
       fetchData();
     } catch (error) {
-      toast.error('Failed to update ad status');
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please log in again.');
+        navigate('/login');
+      } else {
+        toast.error('Failed to update ad status');
+      }
     }
   };
 
