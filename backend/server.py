@@ -176,6 +176,24 @@ AD_PRICING = {
     }
 }
 
+# Pay-per-performance pricing
+AD_PERFORMANCE_PRICING = {
+    "cost_per_impression": 0.001,  # £0.001 per impression (£1 per 1000 impressions / CPM)
+    "cost_per_click": 0.05,  # £0.05 per click (CPC)
+    "min_daily_budget": 1.0,  # Minimum £1 daily budget
+    "min_total_budget": 5.0,  # Minimum £5 total budget
+}
+
+# Wallet top-up options
+WALLET_TOPUP_OPTIONS = [
+    {"amount": 10, "label": "£10"},
+    {"amount": 25, "label": "£25"},
+    {"amount": 50, "label": "£50"},
+    {"amount": 100, "label": "£100"},
+    {"amount": 250, "label": "£250"},
+    {"amount": 500, "label": "£500"},
+]
+
 # Advertisement Request Models
 class AdCreateRequest(BaseModel):
     title: str
@@ -184,12 +202,25 @@ class AdCreateRequest(BaseModel):
     link_url: Optional[str] = None
     product_id: Optional[int] = None
     ad_type: str  # 'basic', 'featured', 'premium_banner'
-    duration_days: int  # 7, 14, or 30
+    billing_type: str = 'fixed'  # 'fixed', 'per_impression', 'per_click', 'per_both'
+    duration_days: Optional[int] = None  # For fixed billing
+    daily_budget: Optional[float] = None  # For pay-per-performance
+    total_budget: Optional[float] = None  # For pay-per-performance
 
 class AdApprovalRequest(BaseModel):
     ad_id: int
     action: str  # 'approve' or 'reject'
     admin_notes: Optional[str] = None
+
+# Wallet Request Models
+class WalletTopUpRequest(BaseModel):
+    amount: float  # Amount in GBP
+
+class AutoRechargeSetupRequest(BaseModel):
+    enabled: bool
+    threshold: float = 5.0  # Recharge when balance falls below this
+    amount: float = 20.0  # Amount to add
+    payment_method_id: Optional[str] = None  # Stripe payment method
 
 # ============ AUTH ROUTES ============
 @api_router.post("/auth/register")
