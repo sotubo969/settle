@@ -178,6 +178,39 @@ class VendorWalletTester:
             self.log_test("Vendor Registration", False, f"Vendor registration failed: {error_msg}")
             return False
 
+    def test_vendor_dashboard_access(self):
+        """Test vendor dashboard access"""
+        print("\n🔍 Testing Vendor Dashboard Access...")
+        
+        if not self.auth_token:
+            self.log_test("Vendor Dashboard Access", False, "No auth token available")
+            return False
+        
+        success, response = self.make_request('GET', '/vendor/dashboard')
+        
+        if success:
+            if response.status_code == 200:
+                try:
+                    response_data = response.json()
+                    vendor_info = response_data.get('vendor', {})
+                    stats = response_data.get('stats', {})
+                    
+                    if vendor_info and stats:
+                        self.log_test("Vendor Dashboard Access", True, f"Dashboard accessible. Vendor: {vendor_info.get('businessName', 'Unknown')}")
+                        return True
+                    else:
+                        self.log_test("Vendor Dashboard Access", False, "Dashboard response missing vendor or stats data")
+                except json.JSONDecodeError:
+                    self.log_test("Vendor Dashboard Access", False, "Invalid JSON response")
+            elif response.status_code == 403:
+                self.log_test("Vendor Dashboard Access", False, "Access forbidden - user may not be a registered vendor")
+            else:
+                self.log_test("Vendor Dashboard Access", False, f"Unexpected status code: {response.status_code}")
+        else:
+            self.log_test("Vendor Dashboard Access", False, f"Request failed: {response}")
+        
+        return False
+
     def test_wallet_get_balance(self):
         """Test GET /api/wallet - Get vendor wallet balance and info"""
         print("\n🔍 Testing GET /api/wallet...")
