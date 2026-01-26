@@ -26,6 +26,9 @@ class User(Base):
     phone = Column(String(50), nullable=True)
     google_id = Column(String(255), unique=True, nullable=True)
     apple_id = Column(String(255), unique=True, nullable=True)
+    firebase_uid = Column(String(255), unique=True, nullable=True)
+    auth_provider = Column(String(50), default='email')  # 'email', 'google', 'apple', 'firebase'
+    email_verified = Column(Boolean, default=False)
     addresses = Column(JSON, default=list)
     payment_methods = Column(JSON, default=list)
     wishlist = Column(JSON, default=list)
