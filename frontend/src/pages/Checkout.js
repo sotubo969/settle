@@ -216,7 +216,7 @@ const PayPalButton = ({ total, onSuccess, onError, shippingInfo }) => {
 const CheckoutContent = () => {
   const navigate = useNavigate();
   const { cart, getCartTotal, clearCart } = useCart();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isVerified } = useAuth();
   const [step, setStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState('stripe');
   const [loading, setLoading] = useState(false);
@@ -236,8 +236,12 @@ const CheckoutContent = () => {
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
+    } else if (!isVerified) {
+      // Redirect unverified users to login with message
+      toast.error('Please verify your email before making purchases');
+      navigate('/login');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isVerified, navigate]);
 
   useEffect(() => {
     if (cart.length === 0 && step !== 3) {
@@ -245,7 +249,7 @@ const CheckoutContent = () => {
     }
   }, [cart, step, navigate]);
 
-  if (!isAuthenticated || (cart.length === 0 && step !== 3)) {
+  if (!isAuthenticated || !isVerified || (cart.length === 0 && step !== 3)) {
     return null;
   }
 
