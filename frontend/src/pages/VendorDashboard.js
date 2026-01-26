@@ -251,6 +251,8 @@ const VendorDashboard = () => {
                 onClick={() => { 
                   if (tab.id === 'advertise') {
                     navigate('/vendor/ads');
+                  } else if (tab.id === 'wallet') {
+                    navigate('/vendor/wallet');
                   } else {
                     setActiveTab(tab.id); 
                     setCurrentPage(1); 
