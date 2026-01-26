@@ -1,77 +1,128 @@
 {
-  "total_tests": 10,
-  "passed_tests": 4,
-  "failed_tests": 6,
+  "total_tests": 11,
+  "passed_tests": 6,
+  "failed_tests": 5,
   "test_details": [
     {
       "test_name": "Backend Health Check",
       "success": true,
       "details": "Backend is accessible (Status: 200)",
       "response_data": null,
-      "timestamp": "2026-01-26T15:45:57.793330"
+      "timestamp": "2026-01-26T15:48:20.661039"
     },
     {
       "test_name": "User Registration",
       "success": true,
-      "details": "User registered successfully (ID: 21)",
+      "details": "User registered successfully (ID: 22)",
       "response_data": null,
-      "timestamp": "2026-01-26T15:45:58.167351"
+      "timestamp": "2026-01-26T15:48:20.983326"
     },
     {
       "test_name": "User Login",
       "success": true,
       "details": "Login successful",
       "response_data": null,
-      "timestamp": "2026-01-26T15:45:58.439363"
+      "timestamp": "2026-01-26T15:48:21.252339"
     },
     {
       "test_name": "Vendor Registration",
       "success": true,
-      "details": "Vendor registered successfully (ID: 18)",
+      "details": "Vendor registered successfully (ID: 19)",
       "response_data": null,
-      "timestamp": "2026-01-26T15:45:58.492359"
+      "timestamp": "2026-01-26T15:48:21.307314"
+    },
+    {
+      "test_name": "Vendor Approval",
+      "success": false,
+      "details": "Unexpected status code: 500",
+      "response_data": null,
+      "timestamp": "2026-01-26T15:48:21.323842"
     },
     {
       "test_name": "Vendor Dashboard Access",
-      "success": false,
-      "details": "Access forbidden - user may not be a registered vendor",
+      "success": true,
+      "details": "Dashboard accessible. Vendor: Test Business 20260126_154821",
       "response_data": null,
-      "timestamp": "2026-01-26T15:45:58.540317"
+      "timestamp": "2026-01-26T15:48:21.333478"
     },
     {
       "test_name": "GET /api/wallet",
-      "success": false,
-      "details": "Access forbidden - user may not be a vendor",
-      "response_data": null,
-      "timestamp": "2026-01-26T15:45:58.585422"
+      "success": true,
+      "details": "Wallet retrieved successfully. Balance: \u00a30.0",
+      "response_data": {
+        "success": true,
+        "wallet": {
+          "id": 1,
+          "balance": 0.0,
+          "total_deposited": 0.0,
+          "total_spent": 0.0,
+          "auto_recharge_enabled": false,
+          "auto_recharge_threshold": 5.0,
+          "auto_recharge_amount": 20.0,
+          "has_payment_method": false
+        },
+        "topup_options": [
+          {
+            "amount": 10,
+            "label": "\u00a310"
+          },
+          {
+            "amount": 25,
+            "label": "\u00a325"
+          },
+          {
+            "amount": 50,
+            "label": "\u00a350"
+          },
+          {
+            "amount": 100,
+            "label": "\u00a3100"
+          },
+          {
+            "amount": 250,
+            "label": "\u00a3250"
+          },
+          {
+            "amount": 500,
+            "label": "\u00a3500"
+          }
+        ],
+        "performance_pricing": {
+          "cost_per_impression": 0.001,
+          "cost_per_click": 0.05,
+          "min_daily_budget": 1.0,
+          "min_total_budget": 5.0
+        }
+      },
+      "timestamp": "2026-01-26T15:48:21.383360"
     },
     {
       "test_name": "POST /api/wallet/topup",
       "success": false,
       "details": "Access forbidden - user may not be a vendor",
       "response_data": null,
-      "timestamp": "2026-01-26T15:45:58.631304"
+      "timestamp": "2026-01-26T15:48:21.428306"
     },
     {
       "test_name": "POST /api/wallet/confirm-topup",
       "success": false,
       "details": "Access forbidden - user may not be a vendor",
       "response_data": null,
-      "timestamp": "2026-01-26T15:45:58.676351"
+      "timestamp": "2026-01-26T15:48:21.472296"
     },
     {
       "test_name": "POST /api/wallet/setup-auto-recharge",
       "success": false,
       "details": "Access forbidden - user may not be a vendor",
       "response_data": null,
-      "timestamp": "2026-01-26T15:45:58.722335"
+      "timestamp": "2026-01-26T15:48:21.516267"
     },
     {
       "test_name": "GET /api/wallet/transactions",
       "success": false,
       "details": "Access forbidden - user may not be a vendor",
       "response_data": null,
-      "timestamp": "2026-01-26T15:45:58.767309"
+      "timestamp": "2026-01-26T15:48:21.560262"
     }
   ]
 }
