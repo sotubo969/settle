@@ -2845,9 +2845,8 @@ async def topup_wallet(
     if request.amount > 1000:
         raise HTTPException(status_code=400, detail="Maximum top-up amount is £1000")
     
-    # Get vendor
-    result = await db.execute(select(Vendor).where(Vendor.email == current_user.email))
-    vendor = result.scalar_one_or_none()
+    # Get vendor using user_id (consistent with dashboard)
+    vendor = await get_vendor_for_user(current_user.id, db)
     
     if not vendor:
         raise HTTPException(status_code=403, detail="Vendor account required")
