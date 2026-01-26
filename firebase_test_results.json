@@ -1,42 +1,42 @@
 {
   "summary": {
-    "passed": 0,
+    "passed": 1,
     "total": 4,
-    "success_rate": "0.0%"
+    "success_rate": "25.0%"
   },
   "tests": [
     {
       "test_name": "Backend Firebase Structure",
-      "status": "FAIL",
-      "details": "Firebase status endpoint not accessible: 404",
+      "status": "PASS",
+      "details": "Firebase endpoints are accessible, imports working",
       "expected_status": 200,
-      "actual_status": 404,
-      "timestamp": "2026-01-26T16:03:18.923258"
+      "actual_status": 200,
+      "timestamp": "2026-01-26T16:03:48.196910"
     },
     {
       "test_name": "Firebase Status Endpoint",
       "status": "FAIL",
-      "details": "Unexpected status code: 404",
+      "details": "Unexpected response: configured=True, message=Firebase is configured",
       "expected_status": 200,
-      "actual_status": 404,
-      "timestamp": "2026-01-26T16:03:18.960739"
+      "actual_status": 200,
+      "timestamp": "2026-01-26T16:03:48.198937"
     },
     {
       "test_name": "Firebase Auth Endpoint Structure",
       "status": "FAIL",
-      "details": "Expected 500 error, got 404",
-      "expected_status": 500,
-      "actual_status": 404,
-      "timestamp": "2026-01-26T16:03:18.996613"
+      "details": "Request failed: HTTPConnectionPool(host='localhost', port=8001): Read timed out. (read timeout=10)",
+      "expected_status": null,
+      "actual_status": null,
+      "timestamp": "2026-01-26T16:03:58.209349"
     },
     {
       "test_name": "Database Schema Compatibility",
       "status": "FAIL",
-      "details": "Registration failed with status 404",
-      "expected_status": 200,
-      "actual_status": 404,
-      "timestamp": "2026-01-26T16:03:19.034798"
+      "details": "Request failed: HTTPConnectionPool(host='localhost', port=8001): Read timed out. (read timeout=10)",
+      "expected_status": null,
+      "actual_status": null,
+      "timestamp": "2026-01-26T16:04:08.220552"
     }
   ],
-  "timestamp": "2026-01-26T16:03:19.035771"
+  "timestamp": "2026-01-26T16:04:08.220702"
 }
