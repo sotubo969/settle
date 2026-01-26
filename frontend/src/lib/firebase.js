@@ -23,12 +23,28 @@ const firebaseConfig = {
   appId: process.env.REACT_APP_FIREBASE_APP_ID
 };
 
-// Initialize Firebase (singleton pattern)
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-const auth = getAuth(app);
+// Check if Firebase is configured
+const isFirebaseConfigured = () => {
+  return !!(firebaseConfig.apiKey && firebaseConfig.projectId);
+};
 
-// Set persistence to local storage (survives browser close)
-setPersistence(auth, browserLocalPersistence);
+// Initialize Firebase only if configured
+let app = null;
+let auth = null;
+
+if (isFirebaseConfigured()) {
+  try {
+    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+    auth = getAuth(app);
+    // Set persistence to local storage (survives browser close)
+    setPersistence(auth, browserLocalPersistence).catch(console.error);
+    console.log('Firebase initialized successfully');
+  } catch (error) {
+    console.warn('Firebase initialization failed:', error.message);
+  }
+} else {
+  console.warn('Firebase not configured - authentication features will be limited');
+}
 
 // Google Auth Provider
 const googleProvider = new GoogleAuthProvider();
@@ -38,6 +54,13 @@ googleProvider.setCustomParameters({
 
 // Auth helper functions
 export const signInWithGoogle = async () => {
+  if (!auth) {
+    return {
+      success: false,
+      error: 'Firebase not configured. Please configure Firebase credentials.'
+    };
+  }
+  
   try {
     const result = await signInWithPopup(auth, googleProvider);
     const user = result.user;
@@ -57,14 +80,33 @@ export const signInWithGoogle = async () => {
     };
   } catch (error) {
     console.error('Google sign-in error:', error);
+    let errorMessage = 'Google sign-in failed';
+    
+    if (error.code === 'auth/popup-closed-by-user') {
+      errorMessage = 'Sign-in cancelled';
+    } else if (error.code === 'auth/popup-blocked') {
+      errorMessage = 'Popup blocked. Please allow popups for this site.';
+    } else if (error.code === 'auth/unauthorized-domain') {
+      errorMessage = 'This domain is not authorized for Google sign-in. Please contact support.';
+    } else {
+      errorMessage = error.message;
+    }
+    
     return {
       success: false,
-      error: error.message
+      error: errorMessage
     };
   }
 };
 
 export const registerWithEmail = async (email, password, displayName) => {
+  if (!auth) {
+    return {
+      success: false,
+      error: 'Firebase not configured. Please configure Firebase credentials.'
+    };
+  }
+  
   try {
     const result = await createUserWithEmailAndPassword(auth, email, password);
     const user = result.user;
@@ -116,6 +158,13 @@ export const registerWithEmail = async (email, password, displayName) => {
 };
 
 export const loginWithEmail = async (email, password) => {
+  if (!auth) {
+    return {
+      success: false,
+      error: 'Firebase not configured. Please configure Firebase credentials.'
+    };
+  }
+  
   try {
     const result = await signInWithEmailAndPassword(auth, email, password);
     const user = result.user;
@@ -180,6 +229,10 @@ export const loginWithEmail = async (email, password) => {
 };
 
 export const resendVerificationEmail = async () => {
+  if (!auth) {
+    return { success: false, error: 'Firebase not configured' };
+  }
+  
   try {
     const user = auth.currentUser;
     if (user && !user.emailVerified) {
@@ -197,6 +250,10 @@ export const resendVerificationEmail = async () => {
 };
 
 export const logoutFirebase = async () => {
+  if (!auth) {
+    return { success: true };
+  }
+  
   try {
     await signOut(auth);
     return { success: true };
@@ -207,11 +264,11 @@ export const logoutFirebase = async () => {
 };
 
 export const getCurrentUser = () => {
-  return auth.currentUser;
+  return auth?.currentUser || null;
 };
 
 export const getIdToken = async () => {
-  const user = auth.currentUser;
+  const user = auth?.currentUser;
   if (user) {
     return await user.getIdToken(true);
   }
@@ -219,6 +276,11 @@ export const getIdToken = async () => {
 };
 
 export const onAuthStateChange = (callback) => {
+  if (!auth) {
+    // If Firebase is not configured, immediately call callback with null
+    callback(null);
+    return () => {}; // Return empty unsubscribe function
+  }
   return onAuthStateChanged(auth, callback);
 };
 
@@ -236,4 +298,4 @@ export const isUserVerified = (user) => {
   return user.emailVerified === true;
 };
 
-export { auth, app };
+export { auth, app, isFirebaseConfigured };
