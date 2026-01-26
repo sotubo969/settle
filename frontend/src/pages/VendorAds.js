@@ -25,19 +25,32 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY);
 
+// Helper to get auth token
+const getAuthToken = () => {
+  return localStorage.getItem('afroToken') || localStorage.getItem('token');
+};
+
 // Ad Payment Form Component
 const AdPaymentForm = ({ ad, onSuccess, onCancel }) => {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handlePayment = async (e) => {
     e.preventDefault();
     if (!stripe || !elements) return;
 
     setLoading(true);
+    setErrorMessage('');
+    
     try {
-      const token = localStorage.getItem('token');
+      const token = getAuthToken();
+      
+      if (!token) {
+        toast.error('Please log in to continue');
+        return;
+      }
       
       // Create payment intent
       const { data: paymentData } = await axios.post(
@@ -45,6 +58,10 @@ const AdPaymentForm = ({ ad, onSuccess, onCancel }) => {
         {},
         { headers: { Authorization: `Bearer ${token}` }}
       );
+
+      if (!paymentData.client_secret) {
+        throw new Error('Failed to create payment session');
+      }
 
       // Confirm payment with Stripe
       const { error, paymentIntent } = await stripe.confirmCardPayment(
@@ -57,6 +74,7 @@ const AdPaymentForm = ({ ad, onSuccess, onCancel }) => {
       );
 
       if (error) {
+        setErrorMessage(error.message);
         toast.error(error.message);
       } else if (paymentIntent.status === 'succeeded') {
         // Confirm payment on backend
@@ -72,7 +90,9 @@ const AdPaymentForm = ({ ad, onSuccess, onCancel }) => {
         onSuccess();
       }
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Payment failed');
+      const errorMsg = error.response?.data?.detail || error.message || 'Payment failed';
+      setErrorMessage(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
