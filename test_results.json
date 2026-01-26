@@ -1,0 +1,70 @@
+{
+  "total_tests": 9,
+  "passed_tests": 0,
+  "failed_tests": 9,
+  "test_details": [
+    {
+      "test_name": "Backend Health Check",
+      "success": false,
+      "details": "Backend not accessible: Status: 404",
+      "response_data": null,
+      "timestamp": "2026-01-26T15:44:51.566766"
+    },
+    {
+      "test_name": "User Registration",
+      "success": false,
+      "details": "Registration failed: 404 page not found\n",
+      "response_data": null,
+      "timestamp": "2026-01-26T15:44:51.574914"
+    },
+    {
+      "test_name": "Vendor Registration",
+      "success": false,
+      "details": "No auth token available",
+      "response_data": null,
+      "timestamp": "2026-01-26T15:44:51.574933"
+    },
+    {
+      "test_name": "Vendor Dashboard Access",
+      "success": false,
+      "details": "No auth token available",
+      "response_data": null,
+      "timestamp": "2026-01-26T15:44:51.574940"
+    },
+    {
+      "test_name": "GET /api/wallet",
+      "success": false,
+      "details": "No auth token available",
+      "response_data": null,
+      "timestamp": "2026-01-26T15:44:51.574948"
+    },
+    {
+      "test_name": "POST /api/wallet/topup",
+      "success": false,
+      "details": "No auth token available",
+      "response_data": null,
+      "timestamp": "2026-01-26T15:44:51.574954"
+    },
+    {
+      "test_name": "POST /api/wallet/confirm-topup",
+      "success": false,
+      "details": "No auth token available",
+      "response_data": null,
+      "timestamp": "2026-01-26T15:44:51.574962"
+    },
+    {
+      "test_name": "POST /api/wallet/setup-auto-recharge",
+      "success": false,
+      "details": "No auth token available",
+      "response_data": null,
+      "timestamp": "2026-01-26T15:44:51.574972"
+    },
+    {
+      "test_name": "GET /api/wallet/transactions",
+      "success": false,
+      "details": "No auth token available",
+      "response_data": null,
+      "timestamp": "2026-01-26T15:44:51.574979"
+    }
+  ]
+}
