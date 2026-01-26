@@ -2792,6 +2792,255 @@ async def get_quick_replies():
         "quick_replies": AfroBotService.get_quick_replies()
     }
 
+# ============ VENDOR WALLET ROUTES ============
+
+@api_router.get("/wallet")
+async def get_wallet(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get vendor wallet balance and info"""
+    # Get vendor
+    result = await db.execute(select(Vendor).where(Vendor.email == current_user.email))
+    vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        raise HTTPException(status_code=403, detail="Vendor account required")
+    
+    # Get or create wallet
+    result = await db.execute(select(VendorWallet).where(VendorWallet.vendor_id == vendor.id))
+    wallet = result.scalar_one_or_none()
+    
+    if not wallet:
+        wallet = VendorWallet(vendor_id=vendor.id, balance=0.0)
+        db.add(wallet)
+        await db.flush()
+    
+    return {
+        "success": True,
+        "wallet": {
+            "id": wallet.id,
+            "balance": wallet.balance,
+            "total_deposited": wallet.total_deposited,
+            "total_spent": wallet.total_spent,
+            "auto_recharge_enabled": wallet.auto_recharge_enabled,
+            "auto_recharge_threshold": wallet.auto_recharge_threshold,
+            "auto_recharge_amount": wallet.auto_recharge_amount,
+            "has_payment_method": bool(wallet.stripe_payment_method_id)
+        },
+        "topup_options": WALLET_TOPUP_OPTIONS,
+        "performance_pricing": AD_PERFORMANCE_PRICING
+    }
+
+@api_router.post("/wallet/topup")
+async def topup_wallet(
+    request: WalletTopUpRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Create a payment intent to top up wallet"""
+    if request.amount < 5:
+        raise HTTPException(status_code=400, detail="Minimum top-up amount is £5")
+    
+    if request.amount > 1000:
+        raise HTTPException(status_code=400, detail="Maximum top-up amount is £1000")
+    
+    # Get vendor
+    result = await db.execute(select(Vendor).where(Vendor.email == current_user.email))
+    vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        raise HTTPException(status_code=403, detail="Vendor account required")
+    
+    # Get or create wallet
+    result = await db.execute(select(VendorWallet).where(VendorWallet.vendor_id == vendor.id))
+    wallet = result.scalar_one_or_none()
+    
+    if not wallet:
+        wallet = VendorWallet(vendor_id=vendor.id, balance=0.0)
+        db.add(wallet)
+        await db.flush()
+    
+    # Create Stripe payment intent
+    try:
+        payment_result = await StripePayment.create_payment_intent(
+            amount=request.amount,
+            currency="gbp",
+            metadata={
+                "type": "wallet_topup",
+                "vendor_id": str(vendor.id),
+                "wallet_id": str(wallet.id)
+            }
+        )
+        
+        return {
+            "success": True,
+            "client_secret": payment_result['clientSecret'],
+            "payment_intent_id": payment_result['paymentIntentId'],
+            "amount": request.amount
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Payment error: {str(e)}")
+
+@api_router.post("/wallet/confirm-topup")
+async def confirm_wallet_topup(
+    payment_intent_id: str,
+    amount: float,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Confirm wallet top-up after successful Stripe payment"""
+    # Get vendor
+    result = await db.execute(select(Vendor).where(Vendor.email == current_user.email))
+    vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        raise HTTPException(status_code=403, detail="Vendor account required")
+    
+    # Get wallet
+    result = await db.execute(select(VendorWallet).where(VendorWallet.vendor_id == vendor.id))
+    wallet = result.scalar_one_or_none()
+    
+    if not wallet:
+        raise HTTPException(status_code=404, detail="Wallet not found")
+    
+    # Update wallet balance
+    wallet.balance += amount
+    wallet.total_deposited += amount
+    
+    # Create transaction record
+    transaction = WalletTransaction(
+        vendor_id=vendor.id,
+        wallet_id=wallet.id,
+        type="top_up",
+        amount=amount,
+        balance_after=wallet.balance,
+        description=f"Wallet top-up via Stripe",
+        stripe_payment_id=payment_intent_id
+    )
+    db.add(transaction)
+    await db.flush()
+    
+    return {
+        "success": True,
+        "message": f"£{amount:.2f} added to your wallet",
+        "new_balance": wallet.balance
+    }
+
+@api_router.post("/wallet/setup-auto-recharge")
+async def setup_auto_recharge(
+    request: AutoRechargeSetupRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Set up automatic wallet recharge"""
+    # Get vendor
+    result = await db.execute(select(Vendor).where(Vendor.email == current_user.email))
+    vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        raise HTTPException(status_code=403, detail="Vendor account required")
+    
+    # Get wallet
+    result = await db.execute(select(VendorWallet).where(VendorWallet.vendor_id == vendor.id))
+    wallet = result.scalar_one_or_none()
+    
+    if not wallet:
+        wallet = VendorWallet(vendor_id=vendor.id, balance=0.0)
+        db.add(wallet)
+        await db.flush()
+    
+    # Update auto-recharge settings
+    wallet.auto_recharge_enabled = request.enabled
+    wallet.auto_recharge_threshold = request.threshold
+    wallet.auto_recharge_amount = request.amount
+    
+    if request.payment_method_id:
+        wallet.stripe_payment_method_id = request.payment_method_id
+    
+    await db.flush()
+    
+    return {
+        "success": True,
+        "message": "Auto-recharge settings updated",
+        "auto_recharge": {
+            "enabled": wallet.auto_recharge_enabled,
+            "threshold": wallet.auto_recharge_threshold,
+            "amount": wallet.auto_recharge_amount
+        }
+    }
+
+@api_router.get("/wallet/transactions")
+async def get_wallet_transactions(
+    limit: int = 50,
+    offset: int = 0,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get wallet transaction history"""
+    # Get vendor
+    result = await db.execute(select(Vendor).where(Vendor.email == current_user.email))
+    vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        raise HTTPException(status_code=403, detail="Vendor account required")
+    
+    # Get transactions
+    result = await db.execute(
+        select(WalletTransaction)
+        .where(WalletTransaction.vendor_id == vendor.id)
+        .order_by(WalletTransaction.created_at.desc())
+        .limit(limit)
+        .offset(offset)
+    )
+    transactions = result.scalars().all()
+    
+    return {
+        "success": True,
+        "transactions": [{
+            "id": t.id,
+            "type": t.type,
+            "amount": t.amount,
+            "balance_after": t.balance_after,
+            "description": t.description,
+            "ad_id": t.ad_id,
+            "created_at": t.created_at.isoformat()
+        } for t in transactions]
+    }
+
+async def deduct_from_wallet(vendor_id: int, amount: float, description: str, ad_id: int, db: AsyncSession):
+    """Internal function to deduct from vendor wallet for ad spend"""
+    # Get wallet
+    result = await db.execute(select(VendorWallet).where(VendorWallet.vendor_id == vendor_id))
+    wallet = result.scalar_one_or_none()
+    
+    if not wallet or wallet.balance < amount:
+        return False, "Insufficient wallet balance"
+    
+    # Deduct from balance
+    wallet.balance -= amount
+    wallet.total_spent += amount
+    
+    # Create transaction record
+    transaction = WalletTransaction(
+        vendor_id=vendor_id,
+        wallet_id=wallet.id,
+        type="ad_spend",
+        amount=-amount,
+        balance_after=wallet.balance,
+        description=description,
+        ad_id=ad_id
+    )
+    db.add(transaction)
+    
+    # Check if auto-recharge needed
+    if wallet.auto_recharge_enabled and wallet.balance < wallet.auto_recharge_threshold:
+        if wallet.stripe_payment_method_id:
+            # TODO: Trigger auto-recharge via Stripe
+            pass
+    
+    return True, wallet.balance
+
 # ============ ADVERTISEMENT ROUTES ============
 
 @api_router.get("/ads/pricing")
@@ -2799,7 +3048,8 @@ async def get_ad_pricing():
     """Get advertisement pricing options"""
     return {
         "success": True,
-        "pricing": AD_PRICING
+        "pricing": AD_PRICING,
+        "performance_pricing": AD_PERFORMANCE_PRICING
     }
 
 @api_router.post("/ads/create")
@@ -2825,9 +3075,34 @@ async def create_advertisement(
     if ad_data.ad_type not in AD_PRICING:
         raise HTTPException(status_code=400, detail="Invalid ad type")
     
-    # Validate duration
-    if ad_data.duration_days not in [7, 14, 30]:
-        raise HTTPException(status_code=400, detail="Duration must be 7, 14, or 30 days")
+    # Handle different billing types
+    price = None
+    if ad_data.billing_type == 'fixed':
+        # Traditional fixed-duration ads
+        if ad_data.duration_days not in [7, 14, 30]:
+            raise HTTPException(status_code=400, detail="Duration must be 7, 14, or 30 days")
+        pricing_key = f"{ad_data.duration_days}_days"
+        price = AD_PRICING[ad_data.ad_type][pricing_key]
+    else:
+        # Pay-per-performance ads - validate budget
+        if not ad_data.total_budget:
+            raise HTTPException(status_code=400, detail="Total budget is required for pay-per-performance ads")
+        
+        if ad_data.total_budget < AD_PERFORMANCE_PRICING["min_total_budget"]:
+            raise HTTPException(status_code=400, detail=f"Minimum total budget is £{AD_PERFORMANCE_PRICING['min_total_budget']}")
+        
+        if ad_data.daily_budget and ad_data.daily_budget < AD_PERFORMANCE_PRICING["min_daily_budget"]:
+            raise HTTPException(status_code=400, detail=f"Minimum daily budget is £{AD_PERFORMANCE_PRICING['min_daily_budget']}")
+        
+        # For pay-per-performance, check wallet balance
+        result = await db.execute(select(VendorWallet).where(VendorWallet.vendor_id == vendor.id))
+        wallet = result.scalar_one_or_none()
+        
+        if not wallet or wallet.balance < ad_data.total_budget:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Insufficient wallet balance. You need £{ad_data.total_budget:.2f} but have £{wallet.balance if wallet else 0:.2f}"
+            )
     
     # Calculate price
     pricing_key = f"{ad_data.duration_days}_days"
