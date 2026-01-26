@@ -1,70 +1,77 @@
 {
-  "total_tests": 9,
-  "passed_tests": 0,
-  "failed_tests": 9,
+  "total_tests": 10,
+  "passed_tests": 4,
+  "failed_tests": 6,
   "test_details": [
     {
       "test_name": "Backend Health Check",
-      "success": false,
-      "details": "Backend not accessible: Status: 404",
+      "success": true,
+      "details": "Backend is accessible (Status: 200)",
       "response_data": null,
-      "timestamp": "2026-01-26T15:44:51.566766"
+      "timestamp": "2026-01-26T15:45:57.793330"
     },
     {
       "test_name": "User Registration",
-      "success": false,
-      "details": "Registration failed: 404 page not found\n",
+      "success": true,
+      "details": "User registered successfully (ID: 21)",
       "response_data": null,
-      "timestamp": "2026-01-26T15:44:51.574914"
+      "timestamp": "2026-01-26T15:45:58.167351"
+    },
+    {
+      "test_name": "User Login",
+      "success": true,
+      "details": "Login successful",
+      "response_data": null,
+      "timestamp": "2026-01-26T15:45:58.439363"
     },
     {
       "test_name": "Vendor Registration",
-      "success": false,
-      "details": "No auth token available",
+      "success": true,
+      "details": "Vendor registered successfully (ID: 18)",
       "response_data": null,
-      "timestamp": "2026-01-26T15:44:51.574933"
+      "timestamp": "2026-01-26T15:45:58.492359"
     },
     {
       "test_name": "Vendor Dashboard Access",
       "success": false,
-      "details": "No auth token available",
+      "details": "Access forbidden - user may not be a registered vendor",
       "response_data": null,
-      "timestamp": "2026-01-26T15:44:51.574940"
+      "timestamp": "2026-01-26T15:45:58.540317"
     },
     {
       "test_name": "GET /api/wallet",
       "success": false,
-      "details": "No auth token available",
+      "details": "Access forbidden - user may not be a vendor",
       "response_data": null,
-      "timestamp": "2026-01-26T15:44:51.574948"
+      "timestamp": "2026-01-26T15:45:58.585422"
     },
     {
       "test_name": "POST /api/wallet/topup",
       "success": false,
-      "details": "No auth token available",
+      "details": "Access forbidden - user may not be a vendor",
       "response_data": null,
-      "timestamp": "2026-01-26T15:44:51.574954"
+      "timestamp": "2026-01-26T15:45:58.631304"
     },
     {
       "test_name": "POST /api/wallet/confirm-topup",
       "success": false,
-      "details": "No auth token available",
+      "details": "Access forbidden - user may not be a vendor",
       "response_data": null,
-      "timestamp": "2026-01-26T15:44:51.574962"
+      "timestamp": "2026-01-26T15:45:58.676351"
     },
     {
       "test_name": "POST /api/wallet/setup-auto-recharge",
       "success": false,
-      "details": "No auth token available",
+      "details": "Access forbidden - user may not be a vendor",
       "response_data": null,
-      "timestamp": "2026-01-26T15:44:51.574972"
+      "timestamp": "2026-01-26T15:45:58.722335"
     },
     {
       "test_name": "GET /api/wallet/transactions",
       "success": false,
-      "details": "No auth token available",
+      "details": "Access forbidden - user may not be a vendor",
       "response_data": null,
-      "timestamp": "2026-01-26T15:44:51.574979"
+      "timestamp": "2026-01-26T15:45:58.767309"
     }
   ]
 }
