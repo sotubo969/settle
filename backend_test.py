@@ -440,6 +440,7 @@ class VendorWalletTester:
             ("Backend Health", self.test_backend_health),
             ("User Auth", self.test_user_registration_and_login),
             ("Vendor Registration", self.test_vendor_registration),
+            ("Vendor Approval", self.test_vendor_approval),
             ("Vendor Dashboard", self.test_vendor_dashboard_access),
             ("Wallet Balance", self.test_wallet_get_balance),
             ("Wallet Top-up Intent", self.test_wallet_topup_create_intent),
