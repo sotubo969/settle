@@ -207,7 +207,14 @@ const VendorAds = () => {
 
     setCreating(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = getAuthToken();
+      
+      if (!token) {
+        toast.error('Please log in to create ads');
+        navigate('/login');
+        return;
+      }
+      
       const { data } = await axios.post(
         `${API}/ads/create`,
         newAd,
@@ -236,8 +243,16 @@ const VendorAds = () => {
         ad_type: 'basic',
         duration_days: 7
       });
+      
+      // Refresh ads list
+      fetchData();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Failed to create ad');
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please log in again.');
+        navigate('/login');
+      } else {
+        toast.error(error.response?.data?.detail || 'Failed to create ad');
+      }
     } finally {
       setCreating(false);
     }
