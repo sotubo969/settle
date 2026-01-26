@@ -10,7 +10,7 @@ import {
   ChevronLeft, ChevronRight, RefreshCw, Store, Truck, CreditCard,
   ArrowUpRight, ArrowDownRight, Mail, Phone, MapPin, Calendar,
   BarChart3, PieChart, Search, Filter, Download, Plus, XCircle,
-  Banknote, Receipt, Percent, Box, Target, Award, Megaphone
+  Banknote, Receipt, Percent, Box, Target, Award, Megaphone, Wallet
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
