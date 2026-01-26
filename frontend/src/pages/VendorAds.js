@@ -120,6 +120,12 @@ const AdPaymentForm = ({ ad, onSuccess, onCancel }) => {
         />
       </div>
 
+      {errorMessage && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          {errorMessage}
+        </div>
+      )}
+
       <div className="flex gap-2">
         <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
           Cancel
