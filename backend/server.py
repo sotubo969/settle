@@ -2975,9 +2975,8 @@ async def get_wallet_transactions(
     current_user: User = Depends(get_current_user)
 ):
     """Get wallet transaction history"""
-    # Get vendor
-    result = await db.execute(select(Vendor).where(Vendor.email == current_user.email))
-    vendor = result.scalar_one_or_none()
+    # Get vendor using user_id (consistent with dashboard)
+    vendor = await get_vendor_for_user(current_user.id, db)
     
     if not vendor:
         raise HTTPException(status_code=403, detail="Vendor account required")
