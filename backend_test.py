@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
 """
-Backend API Testing for AfroMarket UK Vendor Wallet System
-Tests all wallet-related endpoints and core functionality
+Backend API Testing for AfroMarket Authentication System
+Tests Firebase status and legacy authentication fallback
 """
 
 import requests
 import json
 import sys
+import uuid
 from datetime import datetime
 from typing import Dict, Any, Optional
 
 # Configuration
-BACKEND_URL = "http://localhost:8001"
+BACKEND_URL = "https://code-fetcher-23.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
-class VendorWalletTester:
+class AuthenticationTester:
     def __init__(self):
         self.session = requests.Session()
         self.session.headers.update({
