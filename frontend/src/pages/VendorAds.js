@@ -165,7 +165,14 @@ const VendorAds = () => {
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = getAuthToken();
+      
+      if (!token) {
+        toast.error('Please log in to view your ads');
+        navigate('/login');
+        return;
+      }
+      
       const headers = { Authorization: `Bearer ${token}` };
 
       const [adsRes, pricingRes, productsRes] = await Promise.all([
@@ -179,8 +186,13 @@ const VendorAds = () => {
       setProducts(productsRes.data.products || []);
     } catch (error) {
       console.error('Error fetching data:', error);
-      if (error.response?.status === 403) {
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please log in again.');
+        navigate('/login');
+      } else if (error.response?.status === 403) {
         toast.error('Only approved vendors can create ads');
+      } else {
+        toast.error('Failed to load ads data');
       }
     } finally {
       setLoading(false);
