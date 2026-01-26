@@ -473,7 +473,7 @@ async def firebase_status():
     }
 
 @api_router.get("/auth/me")
-async def get_me(current_user: User = Depends(get_current_user)):
+async def get_me(current_user: User = Depends(get_current_user_from_db), db: AsyncSession = Depends(get_db)):
     return {
         "id": current_user.id,
         "name": current_user.name,
@@ -481,9 +481,9 @@ async def get_me(current_user: User = Depends(get_current_user)):
         "role": current_user.role,
         "avatar": current_user.avatar,
         "phone": current_user.phone,
-        "addresses": current_user.addresses,
-        "payment_methods": current_user.payment_methods,
-        "wishlist": current_user.wishlist
+        "addresses": current_user.addresses or [],
+        "payment_methods": current_user.payment_methods or [],
+        "wishlist": current_user.wishlist or []
     }
 
 # ============ EMERGENT AUTH ROUTES (Google OAuth) ============
