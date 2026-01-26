@@ -1435,105 +1435,279 @@ class BackendTester:
             # Restore original token
             self.auth_token = original_token
     
+    def test_ads_system_comprehensive(self):
+        """Test the complete Ads system for AfroMarket UK as requested"""
+        print("\n📢 COMPREHENSIVE ADS SYSTEM TESTING")
+        print("=" * 50)
+        
+        # Test 1: Public Endpoints
+        print("\n🌐 Test 1: Public Endpoints")
+        print("-" * 30)
+        self.test_advertisement_pricing()
+        self.test_advertisement_active_public()
+        
+        # Test 2: Vendor Authentication Flow
+        print("\n🔐 Test 2: Vendor Authentication Flow")
+        print("-" * 30)
+        vendor_login_success = self.test_vendor_login()
+        
+        if vendor_login_success:
+            # Test 3: Ad Creation (requires auth)
+            print("\n📝 Test 3: Ad Creation (requires auth)")
+            print("-" * 30)
+            self.test_ad_creation_with_auth()
+            
+            # Test 4: Payment Intent Creation
+            print("\n💳 Test 4: Payment Intent Creation")
+            print("-" * 30)
+            self.test_ad_payment_intent()
+            
+            # Test 5: Get Vendor Ads
+            print("\n📋 Test 5: Get Vendor Ads")
+            print("-" * 30)
+            self.test_get_vendor_ads()
+        
+        # Test 6: Admin Endpoints (login as owner)
+        print("\n👑 Test 6: Admin Endpoints (login as owner)")
+        print("-" * 30)
+        owner_login_success = self.test_owner_login()
+        if owner_login_success:
+            self.test_admin_ads_endpoints()
+        
+        # Test 7: Error Handling
+        print("\n⚠️ Test 7: Error Handling")
+        print("-" * 30)
+        self.test_ads_error_handling()
+    
+    def test_vendor_login(self):
+        """Test vendor login with specific credentials"""
+        try:
+            login_data = {
+                "email": "info@surulerefoods.com",
+                "password": "Test123!"
+            }
+            
+            response = self.make_request("POST", "/auth/login", login_data)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success") and data.get("token"):
+                    self.auth_token = data["token"]
+                    self.user_data = data.get("user")
+                    self.log_test("Vendor Login", True, 
+                                f"Vendor login successful - User: {self.user_data.get('name')} ({self.user_data.get('email')})")
+                    return True
+                else:
+                    self.log_test("Vendor Login", False, f"Login failed: {data}")
+            elif response.status_code == 401:
+                self.log_test("Vendor Login", False, f"Invalid vendor credentials - HTTP 401: {response.text}")
+            else:
+                self.log_test("Vendor Login", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Vendor Login", False, f"Exception: {str(e)}")
+        
+        return False
+    
+    def test_ad_creation_with_auth(self):
+        """Test POST /api/ads/create with valid token and body"""
+        if not self.auth_token:
+            self.log_test("Ad Creation", False, "No auth token available")
+            return None
+        
+        try:
+            ad_data = {
+                "title": "Test Ad for Review",
+                "description": "Quality African groceries",
+                "image": "https://images.unsplash.com/photo-1542838132-92c53300491e?w=600",
+                "ad_type": "basic",
+                "duration_days": 7
+            }
+            
+            response = self.make_request("POST", "/ads/create", ad_data)
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("success") and data.get("ad_id") and data.get("price"):
+                    ad_id = data.get("ad_id")
+                    price = data.get("price")
+                    self.test_ad_id = ad_id  # Store for later tests
+                    
+                    # Verify price is £9.99 for basic 7-day ad
+                    if price == 9.99:
+                        self.log_test("Ad Creation", True, 
+                                    f"Ad created successfully - ID: {ad_id}, Price: £{price}")
+                        return ad_id
+                    else:
+                        self.log_test("Ad Creation", False, 
+                                    f"Incorrect price - Expected £9.99, got £{price}")
+                else:
+                    self.log_test("Ad Creation", False, f"Ad creation failed: {data}")
+            else:
+                self.log_test("Ad Creation", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Ad Creation", False, f"Exception: {str(e)}")
+        
+        return None
+    
+    def test_ad_payment_intent(self):
+        """Test POST /api/ads/{ad_id}/pay with auth token"""
+        if not self.auth_token:
+            self.log_test("Ad Payment Intent", False, "No auth token available")
+            return
+        
+        if not hasattr(self, 'test_ad_id') or not self.test_ad_id:
+            self.log_test("Ad Payment Intent", False, "No ad_id available from previous test")
+            return
+        
+        try:
+            response = self.make_request("POST", f"/ads/{self.test_ad_id}/pay")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if data.get("client_secret") and data.get("payment_intent_id"):
+                    client_secret = data.get("client_secret")
+                    payment_intent_id = data.get("payment_intent_id")
+                    self.log_test("Ad Payment Intent", True, 
+                                f"Payment intent created - ID: {payment_intent_id[:20]}..., "
+                                f"Client secret: {client_secret[:20]}...")
+                else:
+                    self.log_test("Ad Payment Intent", False, f"Invalid payment intent response: {data}")
+            else:
+                self.log_test("Ad Payment Intent", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Ad Payment Intent", False, f"Exception: {str(e)}")
+    
+    def test_get_vendor_ads(self):
+        """Test GET /api/ads/vendor with auth token"""
+        if not self.auth_token:
+            self.log_test("Get Vendor Ads", False, "No auth token available")
+            return
+        
+        try:
+            response = self.make_request("GET", "/ads/vendor")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "ads" in data and isinstance(data["ads"], list):
+                    ads = data["ads"]
+                    self.log_test("Get Vendor Ads", True, 
+                                f"Vendor ads retrieved - {len(ads)} ads found")
+                else:
+                    self.log_test("Get Vendor Ads", False, f"Invalid vendor ads response: {data}")
+            else:
+                self.log_test("Get Vendor Ads", False, f"HTTP {response.status_code}: {response.text}")
+        except Exception as e:
+            self.log_test("Get Vendor Ads", False, f"Exception: {str(e)}")
+    
+    def test_admin_ads_endpoints(self):
+        """Test admin endpoints with owner credentials"""
+        if not self.owner_token:
+            self.log_test("Admin Ads Endpoints", False, "No owner token available")
+            return
+        
+        # Temporarily store current token and set owner token
+        original_token = self.auth_token
+        self.auth_token = self.owner_token
+        
+        try:
+            # Test GET /api/ads/pending
+            try:
+                response = self.make_request("GET", "/ads/pending")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "ads" in data and isinstance(data["ads"], list):
+                        pending_ads = data["ads"]
+                        self.log_test("Admin Get Pending Ads", True, 
+                                    f"Pending ads retrieved - {len(pending_ads)} ads found")
+                    else:
+                        self.log_test("Admin Get Pending Ads", False, f"Invalid pending ads response: {data}")
+                else:
+                    self.log_test("Admin Get Pending Ads", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Admin Get Pending Ads", False, f"Exception: {str(e)}")
+            
+            # Test GET /api/ads/all
+            try:
+                response = self.make_request("GET", "/ads/all")
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    if "ads" in data and isinstance(data["ads"], list):
+                        all_ads = data["ads"]
+                        self.log_test("Admin Get All Ads", True, 
+                                    f"All ads retrieved - {len(all_ads)} ads found")
+                    else:
+                        self.log_test("Admin Get All Ads", False, f"Invalid all ads response: {data}")
+                else:
+                    self.log_test("Admin Get All Ads", False, f"HTTP {response.status_code}: {response.text}")
+            except Exception as e:
+                self.log_test("Admin Get All Ads", False, f"Exception: {str(e)}")
+        
+        finally:
+            # Restore original token
+            self.auth_token = original_token
+    
+    def test_ads_error_handling(self):
+        """Test error handling for ads endpoints"""
+        
+        # Test with invalid token
+        try:
+            original_token = self.auth_token
+            self.auth_token = "invalid_token_12345"
+            
+            ad_data = {
+                "title": "Test Ad",
+                "description": "Test",
+                "image": "https://example.com/image.jpg",
+                "ad_type": "basic",
+                "duration_days": 7
+            }
+            
+            response = self.make_request("POST", "/ads/create", ad_data)
+            
+            if response.status_code == 401:
+                self.log_test("Invalid Token Error", True, "Invalid token properly returns 401")
+            else:
+                self.log_test("Invalid Token Error", False, 
+                            f"Expected 401, got HTTP {response.status_code}: {response.text}")
+            
+            # Restore token
+            self.auth_token = original_token
+        except Exception as e:
+            self.log_test("Invalid Token Error", False, f"Exception: {str(e)}")
+        
+        # Test without token
+        try:
+            original_token = self.auth_token
+            self.auth_token = None
+            
+            response = self.make_request("GET", "/ads/vendor")
+            
+            if response.status_code in [401, 403]:
+                self.log_test("No Token Error", True, 
+                            f"No token properly returns {response.status_code} - Not authenticated")
+            else:
+                self.log_test("No Token Error", False, 
+                            f"Expected 401/403, got HTTP {response.status_code}: {response.text}")
+            
+            # Restore token
+            self.auth_token = original_token
+        except Exception as e:
+            self.log_test("No Token Error", False, f"Exception: {str(e)}")
+
     def run_all_tests(self):
         """Run all backend tests"""
         print("=" * 80)
-        print("AFROMARKET UK - COMPREHENSIVE BACKEND API TESTING")
+        print("AFROMARKET UK - ADS SYSTEM COMPREHENSIVE TESTING")
         print("=" * 80)
         print(f"Base URL: {BASE_URL}")
-        print(f"Test Credentials: {TEST_EMAIL}")
+        print(f"Vendor Credentials: info@surulerefoods.com / Test123!")
+        print(f"Owner Credentials: {OWNER_EMAIL} / {OWNER_PASSWORD}")
         print("=" * 80)
         
-        # Health check first
-        self.test_health_check()
-        
-        # Authentication tests
-        print("\n🔐 AUTHENTICATION TESTS")
-        print("-" * 40)
-        self.test_user_registration()
-        login_success = self.test_user_login()
-        
-        if login_success:
-            self.test_get_current_user()
-        
-        # OAuth tests
-        print("\n🔐 OAUTH TESTS")
-        print("-" * 40)
-        self.test_oauth_endpoints()
-        
-        # Forgot Password tests
-        self.test_forgot_password_flow()
-        
-        # Product tests
-        print("\n📦 PRODUCT TESTS")
-        print("-" * 40)
-        self.test_products_endpoints()
-        
-        # Cart tests (requires authentication)
-        if login_success:
-            print("\n🛒 CART TESTS")
-            print("-" * 40)
-            self.test_cart_operations()
-        
-        # Order tests (requires authentication)
-        if login_success:
-            print("\n📋 ORDER TESTS")
-            print("-" * 40)
-            self.test_orders()
-        
-        # Profile tests (requires authentication)
-        if login_success:
-            print("\n👤 PROFILE TESTS")
-            print("-" * 40)
-            self.test_profile_operations()
-        
-        # Wishlist tests (requires authentication)
-        if login_success:
-            print("\n❤️ WISHLIST TESTS")
-            print("-" * 40)
-            self.test_wishlist_operations()
-        
-        # Vendor tests
-        print("\n🏪 VENDOR TESTS")
-        print("-" * 40)
-        self.test_vendor_registration()
-        
-        # Owner Dashboard tests
-        print("\n👑 OWNER DASHBOARD TESTS")
-        print("-" * 40)
-        owner_login_success = self.test_owner_login()
-        
-        if owner_login_success:
-            self.test_owner_dashboard_endpoints()
-            self.test_vendor_approval()
-        
-        # Test access control with regular user
-        if login_success:
-            self.test_owner_access_control()
-        
-        # Analytics tracking test
-        print("\n📊 ANALYTICS TESTS")
-        print("-" * 40)
-        self.test_analytics_tracking()
-        
-        # Chatbot tests
-        print("\n🤖 AFROBOT CHATBOT TESTS")
-        print("-" * 40)
-        self.test_chatbot_welcome()
-        self.test_chatbot_message()
-        self.test_chatbot_quick_replies()
-        
-        # Advertisement tests
-        print("\n📢 ADVERTISEMENT SYSTEM TESTS")
-        print("-" * 40)
-        self.test_advertisement_pricing()
-        self.test_advertisement_active_public()
-        self.test_advertisement_authentication_requirements()
-        self.test_advertisement_owner_access_requirements()
-        
-        # Advertisement owner tests (requires owner login)
-        if owner_login_success:
-            self.test_advertisement_owner_endpoints()
+        # Run the comprehensive Ads system test as requested
+        self.test_ads_system_comprehensive()
         
         # Summary
         self.print_summary()
