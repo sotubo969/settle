@@ -356,7 +356,48 @@ class VendorWalletTester:
         
         return False
 
-    def test_vendor_dashboard_access(self):
+    def test_vendor_approval(self):
+        """Test vendor approval (simulate admin approval)"""
+        print("\n🔍 Testing Vendor Approval...")
+        
+        if not self.auth_token or not self.test_vendor_id:
+            self.log_test("Vendor Approval", False, "No auth token or vendor ID available")
+            return False
+        
+        # Simulate admin approval by directly updating vendor status
+        approval_data = {
+            "vendorId": self.test_vendor_id,
+            "status": "approved"
+        }
+        
+        success, response = self.make_request('POST', '/admin/vendors/approve', data=approval_data)
+        
+        if success:
+            if response.status_code == 200:
+                try:
+                    response_data = response.json()
+                    if response_data.get('success'):
+                        self.log_test("Vendor Approval", True, f"Vendor approved successfully")
+                        return True
+                    else:
+                        self.log_test("Vendor Approval", False, "Approval response missing success flag", response_data)
+                except json.JSONDecodeError:
+                    self.log_test("Vendor Approval", False, "Invalid JSON response")
+            elif response.status_code == 403:
+                # Try owner approval endpoint instead
+                success, response = self.make_request('PUT', f'/owner/vendors/{self.test_vendor_id}/approve?status=approved')
+                
+                if success and response.status_code == 200:
+                    self.log_test("Vendor Approval", True, "Vendor approved via owner endpoint")
+                    return True
+                else:
+                    self.log_test("Vendor Approval", False, "Access forbidden - admin/owner privileges required")
+            else:
+                self.log_test("Vendor Approval", False, f"Unexpected status code: {response.status_code}")
+        else:
+            self.log_test("Vendor Approval", False, f"Request failed: {response}")
+        
+        return False
         """Test vendor dashboard access"""
         print("\n🔍 Testing Vendor Dashboard Access...")
         
