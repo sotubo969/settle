@@ -368,6 +368,110 @@ async def apple_auth(auth_data: AppleAuthRequest, db: AsyncSession = Depends(get
         }
     }
 
+# ============ FIREBASE AUTH ROUTES ============
+@api_router.post("/auth/firebase")
+async def firebase_auth(auth_data: FirebaseAuthRequest, db: AsyncSession = Depends(get_db)):
+    """
+    Authenticate user via Firebase ID token.
+    Creates or updates user in database and returns JWT token.
+    
+    - Google Sign-In: Users are automatically verified
+    - Email/Password: Users must verify email before this endpoint accepts them
+    """
+    try:
+        # Verify Firebase token
+        firebase_user = await verify_firebase_token(auth_data.idToken)
+        
+        # Check if email is verified (Google users are always verified)
+        if not firebase_user['email_verified']:
+            raise HTTPException(
+                status_code=403, 
+                detail="Email not verified. Please verify your email before logging in."
+            )
+        
+        email = firebase_user['email']
+        firebase_uid = firebase_user['uid']
+        auth_provider = firebase_user['auth_provider']
+        
+        # Check if user exists by firebase_uid or email
+        result = await db.execute(select(User).where(User.firebase_uid == firebase_uid))
+        user = result.scalar_one_or_none()
+        
+        if not user:
+            # Check by email
+            result = await db.execute(select(User).where(User.email == email))
+            user = result.scalar_one_or_none()
+        
+        if user:
+            # Update existing user with Firebase info
+            user.firebase_uid = firebase_uid
+            user.auth_provider = auth_provider
+            user.email_verified = True
+            
+            if auth_data.displayName and not user.name:
+                user.name = auth_data.displayName
+            if auth_data.photoURL:
+                user.avatar = auth_data.photoURL
+            
+            user.updated_at = datetime.utcnow()
+            await db.flush()
+        else:
+            # Create new user
+            name = auth_data.displayName or firebase_user.get('name') or email.split('@')[0]
+            avatar = auth_data.photoURL or firebase_user.get('picture') or f"https://ui-avatars.com/api/?name={name.replace(' ', '+')}"
+            
+            user = User(
+                name=name,
+                email=email,
+                firebase_uid=firebase_uid,
+                auth_provider=auth_provider,
+                email_verified=True,
+                avatar=avatar,
+                role="customer"
+            )
+            
+            db.add(user)
+            await db.flush()
+            await db.refresh(user)
+        
+        # Create JWT token
+        token = create_access_token({
+            "sub": str(user.id), 
+            "email": user.email, 
+            "name": user.name, 
+            "role": user.role,
+            "auth_provider": auth_provider,
+            "email_verified": True
+        })
+        
+        return {
+            "success": True,
+            "token": token,
+            "user": {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "role": user.role,
+                "avatar": user.avatar,
+                "emailVerified": True,
+                "authProvider": auth_provider
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Firebase auth error: {e}")
+        raise HTTPException(status_code=500, detail=f"Authentication failed: {str(e)}")
+
+@api_router.get("/auth/firebase/status")
+async def firebase_status():
+    """Check if Firebase is configured"""
+    return {
+        "configured": is_firebase_configured(),
+        "message": "Firebase is configured" if is_firebase_configured() else "Firebase not configured - please set FIREBASE_SERVICE_ACCOUNT"
+    }
+
 @api_router.get("/auth/me")
 async def get_me(current_user: User = Depends(get_current_user)):
     return {
