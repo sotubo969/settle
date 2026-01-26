@@ -13,7 +13,7 @@ from pydantic import BaseModel, EmailStr
 
 from database import get_db, init_db, User, Vendor, Product, Cart, Order, Analytics, PageVisit, PasswordResetToken, Advertisement, VendorWallet, WalletTransaction
 import secrets
-from auth import hash_password, verify_password, create_access_token, get_current_user
+from auth import hash_password, verify_password, create_access_token, get_current_user, get_current_user_from_db
 from payments import StripePayment, PayPalPaymentService
 from oauth import GoogleOAuth, AppleOAuth
 from utils import generate_order_id
