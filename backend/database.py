@@ -201,6 +201,63 @@ class Advertisement(Base):
     vendor = relationship('Vendor', backref='advertisements')
     product = relationship('Product', backref='advertisements')
 
+
+class VendorWallet(Base):
+    """Vendor advertising wallet for prepaid balance"""
+    __tablename__ = 'vendor_wallets'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    vendor_id = Column(Integer, ForeignKey('vendors.id'), unique=True, nullable=False)
+    
+    # Balance
+    balance = Column(Float, default=0.0)  # Current balance in GBP
+    total_deposited = Column(Float, default=0.0)  # Total ever deposited
+    total_spent = Column(Float, default=0.0)  # Total ever spent on ads
+    
+    # Auto-recharge settings
+    auto_recharge_enabled = Column(Boolean, default=False)
+    auto_recharge_threshold = Column(Float, default=5.0)  # Recharge when balance falls below this
+    auto_recharge_amount = Column(Float, default=20.0)  # Amount to add when recharging
+    
+    # Stripe customer info
+    stripe_customer_id = Column(String(255), nullable=True)
+    stripe_payment_method_id = Column(String(255), nullable=True)  # Default payment method for auto-recharge
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    vendor = relationship('Vendor', backref='wallet')
+
+
+class WalletTransaction(Base):
+    """Transaction history for vendor wallets"""
+    __tablename__ = 'wallet_transactions'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    vendor_id = Column(Integer, ForeignKey('vendors.id'), nullable=False)
+    wallet_id = Column(Integer, ForeignKey('vendor_wallets.id'), nullable=False)
+    
+    # Transaction details
+    type = Column(String(50), nullable=False)  # 'top_up', 'ad_impression', 'ad_click', 'ad_spend', 'refund', 'auto_recharge'
+    amount = Column(Float, nullable=False)  # Positive for credits, negative for debits
+    balance_after = Column(Float, nullable=False)  # Balance after this transaction
+    
+    # Reference
+    description = Column(String(500), nullable=True)
+    ad_id = Column(Integer, ForeignKey('advertisements.id'), nullable=True)  # If related to an ad
+    stripe_payment_id = Column(String(255), nullable=True)  # Stripe payment intent ID
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    vendor = relationship('Vendor', backref='wallet_transactions')
+    wallet = relationship('VendorWallet', backref='transactions')
+    advertisement = relationship('Advertisement', backref='transactions')
+
+
 # Database session dependency
 async def get_db():
     session = AsyncSessionLocal()
