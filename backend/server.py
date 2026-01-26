@@ -696,11 +696,12 @@ async def get_product(product_id: int, db: AsyncSession = Depends(get_db)):
 
 # ============ VENDOR ROUTES ============
 @api_router.post("/vendors/register")
-async def register_vendor(vendor_data: VendorRegisterRequest, db: AsyncSession = Depends(get_db)):
+async def register_vendor(vendor_data: VendorRegisterRequest, current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
     from email_service import email_service
     from datetime import datetime
     
     new_vendor = Vendor(
+        user_id=current_user.id,  # Link vendor to current user
         business_name=vendor_data.businessName,
         description=vendor_data.description,
         email=vendor_data.email,
