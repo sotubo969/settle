@@ -113,6 +113,7 @@ const VendorDashboard = () => {
     { id: 'products', label: 'Products', icon: Package },
     { id: 'sales', label: 'Sales Analytics', icon: BarChart3 },
     { id: 'transactions', label: 'Transactions', icon: CreditCard },
+    { id: 'wallet', label: 'Ad Wallet', icon: Wallet },
     { id: 'advertise', label: 'Advertise', icon: Megaphone, highlight: true },
   ];
 
