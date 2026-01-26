@@ -1,5 +1,5 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Query, Cookie, Header
-from fastapi.security import HTTPBearer
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Query, Cookie, Header, Security
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
