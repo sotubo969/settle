@@ -68,6 +68,11 @@ class AppleAuthRequest(BaseModel):
     id_token: str
     user_data: Optional[dict] = None
 
+class FirebaseAuthRequest(BaseModel):
+    idToken: str
+    displayName: Optional[str] = None
+    photoURL: Optional[str] = None
+
 class VendorRegisterRequest(BaseModel):
     businessName: str
     description: str
