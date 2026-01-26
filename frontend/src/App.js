@@ -13,6 +13,7 @@ import ResetPassword from './pages/ResetPassword';
 import VendorRegister from './pages/VendorRegister';
 import VendorDashboard from './pages/VendorDashboard';
 import VendorAds from './pages/VendorAds';
+import VendorWallet from './pages/VendorWallet';
 import VendorSubscription from './pages/VendorSubscription';
 import PremiumMembership from './pages/PremiumMembership';
 import Profile from './pages/Profile';
