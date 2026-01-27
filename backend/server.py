@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Query, Cookie, Header, Security, Request
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Query, Cookie, Header, Security, Request, WebSocket, WebSocketDisconnect
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -8,13 +8,14 @@ from sqlalchemy import select, or_, update
 import os
 import logging
 import time
+import json
 from pathlib import Path
 from typing import List, Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel, EmailStr
 from collections import defaultdict
 
-from database import get_db, init_db, User, Vendor, Product, Cart, Order, Analytics, PageVisit, PasswordResetToken, Advertisement, VendorWallet, WalletTransaction, ProductReview, VendorReview, ProductQuestion, Message, PromoCode, RefundRequest, Wishlist, VendorNotification
+from database import get_db, init_db, User, Vendor, Product, Cart, Order, Analytics, PageVisit, PasswordResetToken, Advertisement, VendorWallet, WalletTransaction, ProductReview, VendorReview, ProductQuestion, Message, PromoCode, RefundRequest, Wishlist, VendorNotification, VendorNotificationPreferences, PushSubscription
 import secrets
 from auth import hash_password, verify_password, create_access_token, get_current_user, get_current_user_from_db
 from payments import StripePayment, PayPalPaymentService
