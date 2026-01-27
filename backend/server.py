@@ -120,6 +120,16 @@ class VendorRegisterRequest(BaseModel):
     city: str
     postcode: str
 
+class VendorRegisterPublicRequest(BaseModel):
+    businessName: str
+    description: str
+    email: EmailStr
+    phone: str
+    address: str
+    city: str
+    postcode: str
+    ownerName: Optional[str] = None
+
 class CartAddRequest(BaseModel):
     productId: int
     quantity: int = 1
