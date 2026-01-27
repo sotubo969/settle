@@ -222,7 +222,7 @@ const VendorDashboard = () => {
           
           <div className="flex items-center gap-3">
             {/* Notification Bell */}
-            <VendorNotifications />
+            <VendorNotifications vendorId={dashboardData?.vendor?.id} />
             
             <select
               value={dateRange}
