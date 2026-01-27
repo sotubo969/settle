@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-AfroMarket UK Backend API Testing - Vendor Notification System
-Tests vendor registration, approval notifications, and notification management
+AfroMarket UK Backend API Testing - WebSocket & Push Notification System
+Tests WebSocket status, VAPID keys, notification preferences, push subscriptions, and real-time notifications
 """
 
 import requests
