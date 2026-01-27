@@ -1,24 +1,8 @@
 {
-  "timestamp": "2026-01-27T14:56:35.309130",
-  "total_tests": 19,
-  "passed_tests": 9,
+  "timestamp": "2026-01-27T14:58:43.025145",
+  "total_tests": 22,
+  "passed_tests": 16,
   "failed_tests": [
-    {
-      "test": "WebSocket Status - Available",
-      "error": "WebSocket not available: {'detail': 'Not Found'}"
-    },
-    {
-      "test": "Notification Preferences GET - Returns Structure",
-      "error": "{'detail': 'Vendor not found'}"
-    },
-    {
-      "test": "Notification Preferences PUT - Updates Successfully",
-      "error": "{'detail': 'Vendor not found'}"
-    },
-    {
-      "test": "Push Subscription - Creates Subscription",
-      "error": "{'detail': 'Vendor not found'}"
-    },
     {
       "test": "Admin Vendor Approval - Creates Notification",
       "error": "{'status_code': 520, 'text': 'Internal Server Error'}"
@@ -36,110 +20,125 @@
       "error": "{'status_code': 520, 'text': 'Internal Server Error'}"
     },
     {
-      "test": "Mark Notification as Read - No Notifications",
-      "error": "No notifications to mark as read"
+      "test": "Authenticated Vendor Notifications - Returns Notifications List",
+      "error": "{'status_code': 520, 'text': 'Internal Server Error'}"
     },
     {
-      "test": "Mark All Notifications as Read - Works",
-      "error": "{'detail': 'Vendor not found'}"
+      "test": "Mark Notification as Read - No Notifications",
+      "error": "No notifications to mark as read"
     }
   ],
-  "success_rate": 47.368421052631575,
+  "success_rate": 72.72727272727273,
   "detailed_results": {
     "Products API": {
       "success": true,
       "details": "Found 32 products",
-      "timestamp": "2026-01-27T14:56:29.002660"
+      "timestamp": "2026-01-27T14:58:33.993423"
     },
     "Vendors API": {
       "success": true,
       "details": "Found 5 vendors",
-      "timestamp": "2026-01-27T14:56:29.052597"
+      "timestamp": "2026-01-27T14:58:34.078228"
     },
     "Email/Password Registration": {
       "success": true,
       "details": "",
-      "timestamp": "2026-01-27T14:56:29.375504"
+      "timestamp": "2026-01-27T14:58:34.347715"
     },
     "Email/Password Login": {
       "success": true,
       "details": "",
-      "timestamp": "2026-01-27T14:56:29.653200"
+      "timestamp": "2026-01-27T14:58:34.622535"
     },
     "WebSocket Status - Available": {
-      "success": false,
-      "details": "WebSocket not available: {'detail': 'Not Found'}",
-      "timestamp": "2026-01-27T14:56:29.701652"
+      "success": true,
+      "details": "Connected vendors: 0, Total connections: 0",
+      "timestamp": "2026-01-27T14:58:34.661887"
     },
     "VAPID Key - Configured": {
       "success": true,
       "details": "Public key length: 87",
-      "timestamp": "2026-01-27T14:56:29.748421"
+      "timestamp": "2026-01-27T14:58:34.705712"
+    },
+    "Authenticated Vendor Registration - Creates Vendor": {
+      "success": true,
+      "details": "Vendor ID: 11",
+      "timestamp": "2026-01-27T14:58:35.578852"
     },
     "Notification Preferences GET - Returns Structure": {
-      "success": false,
-      "details": "{'detail': 'Vendor not found'}",
-      "timestamp": "2026-01-27T14:56:29.807616"
+      "success": true,
+      "details": "Preferences keys: ['email', 'inapp', 'push']",
+      "timestamp": "2026-01-27T14:58:35.621298"
+    },
+    "Notification Preferences GET - Email Preferences": {
+      "success": true,
+      "details": "Email preferences: ['orders', 'messages', 'reviews', 'adminAlerts', 'marketing']",
+      "timestamp": "2026-01-27T14:58:35.621313"
     },
     "Notification Preferences PUT - Updates Successfully": {
-      "success": false,
-      "details": "{'detail': 'Vendor not found'}",
-      "timestamp": "2026-01-27T14:56:29.853953"
+      "success": true,
+      "details": "Preferences updated",
+      "timestamp": "2026-01-27T14:58:35.671912"
+    },
+    "Notification Preferences PUT - Verification": {
+      "success": true,
+      "details": "Email reviews preference: False",
+      "timestamp": "2026-01-27T14:58:36.712027"
     },
     "Push Subscription - Creates Subscription": {
-      "success": false,
-      "details": "{'detail': 'Vendor not found'}",
-      "timestamp": "2026-01-27T14:56:29.899880"
+      "success": true,
+      "details": "Push subscription created",
+      "timestamp": "2026-01-27T14:58:36.761713"
     },
     "Vendor Registration - Creates Vendor in Database": {
       "success": true,
-      "details": "Vendor ID: 9",
-      "timestamp": "2026-01-27T14:56:30.938467"
+      "details": "Vendor ID: 12",
+      "timestamp": "2026-01-27T14:58:37.553927"
     },
     "Vendor Registration - Email Notification": {
       "success": true,
       "details": "Email sent status: True",
-      "timestamp": "2026-01-27T14:56:30.938479"
+      "timestamp": "2026-01-27T14:58:37.553940"
     },
     "Vendor Registration - Response Message": {
       "success": true,
       "details": "Message: Application submitted successfully! We will review and contact you within 2-3 business days.",
-      "timestamp": "2026-01-27T14:56:30.938488"
+      "timestamp": "2026-01-27T14:58:37.553948"
     },
     "Admin Vendor Approval - Creates Notification": {
       "success": false,
       "details": "{'status_code': 520, 'text': 'Internal Server Error'}",
-      "timestamp": "2026-01-27T14:56:30.990173"
+      "timestamp": "2026-01-27T14:58:37.597455"
     },
     "Admin Vendor Approval - Sends Email": {
       "success": false,
       "details": "{'status_code': 520, 'text': 'Internal Server Error'}",
-      "timestamp": "2026-01-27T14:56:30.990185"
+      "timestamp": "2026-01-27T14:58:37.597466"
     },
     "Vendor Notifications by Email - Returns Notifications List": {
       "success": false,
       "details": "{'status_code': 520, 'text': 'Internal Server Error'}",
-      "timestamp": "2026-01-27T14:56:33.043175"
+      "timestamp": "2026-01-27T14:58:39.709608"
     },
     "Order Notification - Order Created": {
       "success": false,
       "details": "{'status_code': 520, 'text': 'Internal Server Error'}",
-      "timestamp": "2026-01-27T14:56:35.187642"
+      "timestamp": "2026-01-27T14:58:41.898443"
     },
     "Authenticated Vendor Notifications - Returns Notifications List": {
-      "success": true,
-      "details": "Found 0 notifications, 0 unread",
-      "timestamp": "2026-01-27T14:56:35.268332"
+      "success": false,
+      "details": "{'status_code': 520, 'text': 'Internal Server Error'}",
+      "timestamp": "2026-01-27T14:58:41.941326"
     },
     "Mark Notification as Read - No Notifications": {
       "success": false,
       "details": "No notifications to mark as read",
-      "timestamp": "2026-01-27T14:56:35.268345"
+      "timestamp": "2026-01-27T14:58:41.941336"
     },
     "Mark All Notifications as Read - Works": {
-      "success": false,
-      "details": "{'detail': 'Vendor not found'}",
-      "timestamp": "2026-01-27T14:56:35.308839"
+      "success": true,
+      "details": "All notifications marked as read",
+      "timestamp": "2026-01-27T14:58:41.982725"
     }
   }
 }
