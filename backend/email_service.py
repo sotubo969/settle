@@ -1045,5 +1045,137 @@ class EmailService:
             html_content=html_content
         )
 
+    def send_vendor_notification_email(self, to_email: str, vendor_name: str, 
+                                       notification_type: str, title: str, 
+                                       message: str, link: str = None):
+        """Send a generic notification email to vendor"""
+        
+        # Choose icon and color based on type
+        type_config = {
+            'order': {'icon': '🛒', 'color': '#2563eb', 'bg': '#eff6ff'},
+            'message': {'icon': '💬', 'color': '#7c3aed', 'bg': '#f5f3ff'},
+            'review': {'icon': '⭐', 'color': '#f59e0b', 'bg': '#fffbeb'},
+            'approval': {'icon': '✅', 'color': '#10b981', 'bg': '#f0fdf4'},
+            'rejection': {'icon': '⚠️', 'color': '#ef4444', 'bg': '#fef2f2'},
+            'system': {'icon': '📢', 'color': '#6b7280', 'bg': '#f9fafb'},
+        }
+        
+        config = type_config.get(notification_type, type_config['system'])
+        
+        button_html = ""
+        if link:
+            full_link = f"https://github-code-pull.preview.emergentagent.com{link}"
+            button_html = f'''
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{full_link}" style="display: inline-block; padding: 14px 32px; 
+                   background: linear-gradient(135deg, {config['color']}, {config['color']}dd); 
+                   color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                    View Details
+                </a>
+            </div>
+            '''
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    line-height: 1.6;
+                    color: #333;
+                    margin: 0;
+                    padding: 0;
+                    background-color: #f4f4f4;
+                }}
+                .container {{
+                    max-width: 600px;
+                    margin: 0 auto;
+                    padding: 20px;
+                }}
+                .header {{
+                    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                    color: white;
+                    padding: 30px;
+                    text-align: center;
+                    border-radius: 12px 12px 0 0;
+                }}
+                .content {{
+                    background: white;
+                    padding: 30px;
+                    border-radius: 0 0 12px 12px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                }}
+                .notification-box {{
+                    background: {config['bg']};
+                    border-left: 4px solid {config['color']};
+                    border-radius: 8px;
+                    padding: 20px;
+                    margin: 20px 0;
+                }}
+                .notification-title {{
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: {config['color']};
+                    margin: 0 0 10px;
+                }}
+                .notification-message {{
+                    color: #4b5563;
+                    margin: 0;
+                }}
+                .footer {{
+                    text-align: center;
+                    padding: 20px;
+                    color: #9ca3af;
+                    font-size: 12px;
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>{config['icon']} Notification</h1>
+                    <p>AfroMarket UK</p>
+                </div>
+                <div class="content">
+                    <p>Hello <strong>{vendor_name}</strong>,</p>
+                    
+                    <div class="notification-box">
+                        <p class="notification-title">{title}</p>
+                        <p class="notification-message">{message}</p>
+                    </div>
+                    
+                    {button_html}
+                    
+                    <p style="color: #6b7280; font-size: 14px;">
+                        This is an automated notification from AfroMarket UK. 
+                        You can manage your notification preferences in your vendor dashboard.
+                    </p>
+                    
+                    <p style="margin-top: 20px;">
+                        Best regards,<br>
+                        <strong>The AfroMarket UK Team</strong>
+                    </p>
+                </div>
+                <div class="footer">
+                    <p>&copy; 2025 AfroMarket UK. All rights reserved.</p>
+                    <p>
+                        <a href="https://github-code-pull.preview.emergentagent.com/vendor/notifications/settings" 
+                           style="color: #10b981; text-decoration: none;">
+                            Manage notification preferences
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        return self.send_email(
+            to_email=to_email,
+            subject=f"{config['icon']} {title}",
+            html_content=html_content
+        )
+
 # Singleton instance
 email_service = EmailService()
