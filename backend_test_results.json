@@ -1,104 +1,54 @@
 {
-  "timestamp": "2026-01-27T13:43:32.206320",
-  "total_tests": 19,
-  "passed_tests": 19,
+  "timestamp": "2026-01-27T14:20:44.316875",
+  "total_tests": 9,
+  "passed_tests": 9,
   "failed_tests": [],
   "success_rate": 100.0,
   "detailed_results": {
-    "User Registration": {
+    "Firebase Status - Configured": {
+      "success": true,
+      "details": "Firebase is properly configured",
+      "timestamp": "2026-01-27T14:20:39.457180"
+    },
+    "Products API": {
+      "success": true,
+      "details": "Found 32 products",
+      "timestamp": "2026-01-27T14:20:39.531775"
+    },
+    "Vendors API": {
+      "success": true,
+      "details": "Found 3 vendors",
+      "timestamp": "2026-01-27T14:20:39.602348"
+    },
+    "Email/Password Registration": {
       "success": true,
       "details": "",
-      "timestamp": "2026-01-27T13:43:30.717806"
+      "timestamp": "2026-01-27T14:20:40.014010"
     },
-    "User Login": {
+    "Email/Password Login": {
       "success": true,
       "details": "",
-      "timestamp": "2026-01-27T13:43:30.980565"
+      "timestamp": "2026-01-27T14:20:40.378868"
     },
-    "Get Products (Found 32)": {
+    "Public Vendor Registration - Success": {
       "success": true,
-      "details": "Expected 32 products, got 32",
-      "timestamp": "2026-01-27T13:43:31.025312"
+      "details": "Vendor ID: 5",
+      "timestamp": "2026-01-27T14:20:43.035236"
     },
-    "Get Single Product": {
+    "Public Vendor Registration - Email Sent": {
       "success": true,
-      "details": "",
-      "timestamp": "2026-01-27T13:43:31.075384"
+      "details": "Email sent status: True",
+      "timestamp": "2026-01-27T14:20:43.035250"
     },
-    "Promo Code WELCOME10": {
+    "Public Vendor Registration - Message": {
       "success": true,
-      "details": "",
-      "timestamp": "2026-01-27T13:43:31.120971"
+      "details": "Message: Application submitted successfully! We will review and contact you within 2-3 business days.",
+      "timestamp": "2026-01-27T14:20:43.035260"
     },
-    "Promo Code AFRO20": {
+    "Authenticated Vendor Registration": {
       "success": true,
-      "details": "",
-      "timestamp": "2026-01-27T13:43:31.166338"
-    },
-    "Promo Code FREEDELIVERY": {
-      "success": true,
-      "details": "",
-      "timestamp": "2026-01-27T13:43:31.211353"
-    },
-    "Promo Code NEWCUSTOMER": {
-      "success": true,
-      "details": "",
-      "timestamp": "2026-01-27T13:43:31.257801"
-    },
-    "Add to Wishlist": {
-      "success": true,
-      "details": "",
-      "timestamp": "2026-01-27T13:43:31.304843"
-    },
-    "Get Wishlist": {
-      "success": true,
-      "details": "Found 1 items",
-      "timestamp": "2026-01-27T13:43:31.347174"
-    },
-    "Remove from Wishlist": {
-      "success": true,
-      "details": "",
-      "timestamp": "2026-01-27T13:43:31.432615"
-    },
-    "Create Product Review": {
-      "success": true,
-      "details": "",
-      "timestamp": "2026-01-27T13:43:31.481863"
-    },
-    "Get Product Reviews": {
-      "success": true,
-      "details": "Found 2 reviews",
-      "timestamp": "2026-01-27T13:43:31.531943"
-    },
-    "Ask Product Question": {
-      "success": true,
-      "details": "",
-      "timestamp": "2026-01-27T13:43:31.579468"
-    },
-    "Get Product Questions": {
-      "success": true,
-      "details": "Found 2 questions",
-      "timestamp": "2026-01-27T13:43:31.624519"
-    },
-    "Get Conversations": {
-      "success": true,
-      "details": "Found 0 conversations",
-      "timestamp": "2026-01-27T13:43:31.704743"
-    },
-    "Get Order History": {
-      "success": true,
-      "details": "Found 0 orders",
-      "timestamp": "2026-01-27T13:43:31.751698"
-    },
-    "Get Refund Requests": {
-      "success": true,
-      "details": "Found 0 refunds",
-      "timestamp": "2026-01-27T13:43:31.794899"
-    },
-    "Rate Limiting Check": {
-      "success": true,
-      "details": "Made 10/10 requests successfully",
-      "timestamp": "2026-01-27T13:43:32.205833"
+      "details": "Vendor ID: 6",
+      "timestamp": "2026-01-27T14:20:44.316616"
     }
   }
 }
