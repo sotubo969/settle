@@ -11,8 +11,8 @@ import uuid
 from datetime import datetime
 from typing import Dict, Any, Optional
 
-# Configuration
-BACKEND_URL = "http://localhost:8001"
+# Configuration - Use public URL for testing
+BACKEND_URL = "https://mine-pull.preview.emergentagent.com"
 API_BASE = f"{BACKEND_URL}/api"
 
 class AuthenticationTester:
