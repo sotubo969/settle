@@ -1,8 +1,40 @@
 {
-  "timestamp": "2026-01-27T14:40:20.992299",
-  "total_tests": 17,
-  "passed_tests": 15,
+  "timestamp": "2026-01-27T14:56:35.309130",
+  "total_tests": 19,
+  "passed_tests": 9,
   "failed_tests": [
+    {
+      "test": "WebSocket Status - Available",
+      "error": "WebSocket not available: {'detail': 'Not Found'}"
+    },
+    {
+      "test": "Notification Preferences GET - Returns Structure",
+      "error": "{'detail': 'Vendor not found'}"
+    },
+    {
+      "test": "Notification Preferences PUT - Updates Successfully",
+      "error": "{'detail': 'Vendor not found'}"
+    },
+    {
+      "test": "Push Subscription - Creates Subscription",
+      "error": "{'detail': 'Vendor not found'}"
+    },
+    {
+      "test": "Admin Vendor Approval - Creates Notification",
+      "error": "{'status_code': 520, 'text': 'Internal Server Error'}"
+    },
+    {
+      "test": "Admin Vendor Approval - Sends Email",
+      "error": "{'status_code': 520, 'text': 'Internal Server Error'}"
+    },
+    {
+      "test": "Vendor Notifications by Email - Returns Notifications List",
+      "error": "{'status_code': 520, 'text': 'Internal Server Error'}"
+    },
+    {
+      "test": "Order Notification - Order Created",
+      "error": "{'status_code': 520, 'text': 'Internal Server Error'}"
+    },
     {
       "test": "Mark Notification as Read - No Notifications",
       "error": "No notifications to mark as read"
@@ -12,92 +44,102 @@
       "error": "{'detail': 'Vendor not found'}"
     }
   ],
-  "success_rate": 88.23529411764706,
+  "success_rate": 47.368421052631575,
   "detailed_results": {
-    "Firebase Status - Configured": {
-      "success": true,
-      "details": "Firebase is properly configured",
-      "timestamp": "2026-01-27T14:40:16.183832"
-    },
     "Products API": {
       "success": true,
       "details": "Found 32 products",
-      "timestamp": "2026-01-27T14:40:16.229810"
+      "timestamp": "2026-01-27T14:56:29.002660"
     },
     "Vendors API": {
       "success": true,
-      "details": "Found 4 vendors",
-      "timestamp": "2026-01-27T14:40:16.275068"
+      "details": "Found 5 vendors",
+      "timestamp": "2026-01-27T14:56:29.052597"
     },
     "Email/Password Registration": {
       "success": true,
       "details": "",
-      "timestamp": "2026-01-27T14:40:16.584188"
+      "timestamp": "2026-01-27T14:56:29.375504"
     },
     "Email/Password Login": {
       "success": true,
       "details": "",
-      "timestamp": "2026-01-27T14:40:16.887828"
+      "timestamp": "2026-01-27T14:56:29.653200"
+    },
+    "WebSocket Status - Available": {
+      "success": false,
+      "details": "WebSocket not available: {'detail': 'Not Found'}",
+      "timestamp": "2026-01-27T14:56:29.701652"
+    },
+    "VAPID Key - Configured": {
+      "success": true,
+      "details": "Public key length: 87",
+      "timestamp": "2026-01-27T14:56:29.748421"
+    },
+    "Notification Preferences GET - Returns Structure": {
+      "success": false,
+      "details": "{'detail': 'Vendor not found'}",
+      "timestamp": "2026-01-27T14:56:29.807616"
+    },
+    "Notification Preferences PUT - Updates Successfully": {
+      "success": false,
+      "details": "{'detail': 'Vendor not found'}",
+      "timestamp": "2026-01-27T14:56:29.853953"
+    },
+    "Push Subscription - Creates Subscription": {
+      "success": false,
+      "details": "{'detail': 'Vendor not found'}",
+      "timestamp": "2026-01-27T14:56:29.899880"
     },
     "Vendor Registration - Creates Vendor in Database": {
       "success": true,
-      "details": "Vendor ID: 8",
-      "timestamp": "2026-01-27T14:40:17.840292"
+      "details": "Vendor ID: 9",
+      "timestamp": "2026-01-27T14:56:30.938467"
     },
     "Vendor Registration - Email Notification": {
       "success": true,
       "details": "Email sent status: True",
-      "timestamp": "2026-01-27T14:40:17.840305"
+      "timestamp": "2026-01-27T14:56:30.938479"
     },
     "Vendor Registration - Response Message": {
       "success": true,
       "details": "Message: Application submitted successfully! We will review and contact you within 2-3 business days.",
-      "timestamp": "2026-01-27T14:40:17.840315"
+      "timestamp": "2026-01-27T14:56:30.938488"
     },
     "Admin Vendor Approval - Creates Notification": {
-      "success": true,
-      "details": "Notification created: True",
-      "timestamp": "2026-01-27T14:40:18.863107"
+      "success": false,
+      "details": "{'status_code': 520, 'text': 'Internal Server Error'}",
+      "timestamp": "2026-01-27T14:56:30.990173"
     },
     "Admin Vendor Approval - Sends Email": {
-      "success": true,
-      "details": "Email sent: True",
-      "timestamp": "2026-01-27T14:40:18.863117"
+      "success": false,
+      "details": "{'status_code': 520, 'text': 'Internal Server Error'}",
+      "timestamp": "2026-01-27T14:56:30.990185"
     },
     "Vendor Notifications by Email - Returns Notifications List": {
-      "success": true,
-      "details": "Found 1 notifications, 1 unread",
-      "timestamp": "2026-01-27T14:40:20.907985"
+      "success": false,
+      "details": "{'status_code': 520, 'text': 'Internal Server Error'}",
+      "timestamp": "2026-01-27T14:56:33.043175"
     },
-    "Vendor Notifications by Email - Vendor Status": {
-      "success": true,
-      "details": "Vendor status: approved",
-      "timestamp": "2026-01-27T14:40:20.907995"
-    },
-    "Vendor Notifications by Email - Approval Notification": {
-      "success": true,
-      "details": "Approval notification found: True",
-      "timestamp": "2026-01-27T14:40:20.908004"
-    },
-    "Full Workflow - Complete": {
-      "success": true,
-      "details": "Register -> Approve -> Notification workflow successful",
-      "timestamp": "2026-01-27T14:40:20.908009"
+    "Order Notification - Order Created": {
+      "success": false,
+      "details": "{'status_code': 520, 'text': 'Internal Server Error'}",
+      "timestamp": "2026-01-27T14:56:35.187642"
     },
     "Authenticated Vendor Notifications - Returns Notifications List": {
       "success": true,
       "details": "Found 0 notifications, 0 unread",
-      "timestamp": "2026-01-27T14:40:20.949729"
+      "timestamp": "2026-01-27T14:56:35.268332"
     },
     "Mark Notification as Read - No Notifications": {
       "success": false,
       "details": "No notifications to mark as read",
-      "timestamp": "2026-01-27T14:40:20.949742"
+      "timestamp": "2026-01-27T14:56:35.268345"
     },
     "Mark All Notifications as Read - Works": {
       "success": false,
       "details": "{'detail': 'Vendor not found'}",
-      "timestamp": "2026-01-27T14:40:20.992032"
+      "timestamp": "2026-01-27T14:56:35.308839"
     }
   }
 }
