@@ -1,0 +1,49 @@
+{
+  "total_tests": 6,
+  "passed_tests": 6,
+  "failed_tests": 0,
+  "test_details": [
+    {
+      "name": "Backend Health Check",
+      "success": true,
+      "details": "Backend is responding",
+      "response_data": null,
+      "timestamp": "2026-01-27T11:39:48.632391"
+    },
+    {
+      "name": "Firebase Status Check",
+      "success": true,
+      "details": "Firebase is configured: Firebase is configured",
+      "response_data": null,
+      "timestamp": "2026-01-27T11:39:48.642915"
+    },
+    {
+      "name": "Firebase Auth Endpoint Structure",
+      "success": true,
+      "details": "Correctly rejects invalid token: Invalid Firebase token",
+      "response_data": null,
+      "timestamp": "2026-01-27T11:39:48.660141"
+    },
+    {
+      "name": "Legacy Registration (alongside Firebase)",
+      "success": true,
+      "details": "User created: testuserf0517216@test.com",
+      "response_data": null,
+      "timestamp": "2026-01-27T11:39:48.961346"
+    },
+    {
+      "name": "Legacy Login (alongside Firebase)",
+      "success": true,
+      "details": "Legacy auth works with Firebase enabled",
+      "response_data": null,
+      "timestamp": "2026-01-27T11:39:49.239667"
+    },
+    {
+      "name": "Protected Endpoint Access",
+      "success": true,
+      "details": "Successfully accessed /auth/me: testuserf0517216@test.com",
+      "response_data": null,
+      "timestamp": "2026-01-27T11:39:49.256962"
+    }
+  ]
+}
