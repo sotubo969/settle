@@ -87,7 +87,13 @@ export const signInWithGoogle = async () => {
     } else if (error.code === 'auth/popup-blocked') {
       errorMessage = 'Popup blocked. Please allow popups for this site.';
     } else if (error.code === 'auth/unauthorized-domain') {
-      errorMessage = 'This domain is not authorized for Google sign-in. Please contact support.';
+      errorMessage = 'This domain is not authorized for Google sign-in. Please add this domain to Firebase Console → Authentication → Settings → Authorized domains.';
+    } else if (error.code === 'auth/network-request-failed') {
+      errorMessage = 'Network error. Please check: 1) Your internet connection, 2) Domain is authorized in Firebase Console → Authentication → Settings → Authorized domains, 3) Google Sign-In is enabled in Firebase Console.';
+    } else if (error.code === 'auth/operation-not-allowed') {
+      errorMessage = 'Google sign-in is not enabled. Please enable it in Firebase Console → Authentication → Sign-in method.';
+    } else if (error.code === 'auth/internal-error') {
+      errorMessage = 'Authentication service error. Please ensure Google Sign-In provider is enabled in Firebase Console.';
     } else {
       errorMessage = error.message;
     }
