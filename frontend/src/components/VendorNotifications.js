@@ -1,19 +1,51 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Bell, Check, CheckCheck, X, ExternalLink, AlertCircle, CheckCircle, Info, Package, MessageSquare } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Bell, Check, CheckCheck, X, ExternalLink, AlertCircle, CheckCircle, Info, Package, MessageSquare, Star, Settings, Wifi, WifiOff } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
+import { toast } from 'sonner';
+import { useWebSocket } from '../hooks/useWebSocket';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-const VendorNotifications = ({ onClose }) => {
+const VendorNotifications = ({ vendorId }) => {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
 
   const getToken = () => localStorage.getItem('afroToken');
+
+  // Handle new notification from WebSocket
+  const handleNewNotification = useCallback((notification) => {
+    console.log('New notification received via WebSocket:', notification);
+    
+    // Add to notifications list
+    setNotifications(prev => [notification, ...prev]);
+    setUnreadCount(prev => prev + 1);
+    
+    // Show toast
+    toast.success(notification.title, {
+      description: notification.message,
+      action: notification.link ? {
+        label: 'View',
+        onClick: () => navigate(notification.link)
+      } : undefined
+    });
+    
+    // Play notification sound (optional)
+    try {
+      const audio = new Audio('/notification.mp3');
+      audio.volume = 0.3;
+      audio.play().catch(() => {});
+    } catch (e) {}
+  }, [navigate]);
+
+  // WebSocket connection
+  const { isConnected } = useWebSocket(vendorId, handleNewNotification);
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -37,8 +69,8 @@ const VendorNotifications = ({ onClose }) => {
 
   useEffect(() => {
     fetchNotifications();
-    // Poll for new notifications every 30 seconds
-    const interval = setInterval(fetchNotifications, 30000);
+    // Fallback polling (less frequent since we have WebSocket)
+    const interval = setInterval(fetchNotifications, 60000);
     return () => clearInterval(interval);
   }, [fetchNotifications]);
 
@@ -86,6 +118,8 @@ const VendorNotifications = ({ onClose }) => {
         return <Package className="h-5 w-5 text-blue-500" />;
       case 'message':
         return <MessageSquare className="h-5 w-5 text-purple-500" />;
+      case 'review':
+        return <Star className="h-5 w-5 text-yellow-500" />;
       default:
         return <Info className="h-5 w-5 text-gray-500" />;
     }
@@ -100,6 +134,8 @@ const VendorNotifications = ({ onClose }) => {
         return 'bg-red-50';
       case 'order':
         return 'bg-blue-50';
+      case 'review':
+        return 'bg-yellow-50';
       default:
         return 'bg-gray-50';
     }
@@ -124,6 +160,9 @@ const VendorNotifications = ({ onClose }) => {
             {unreadCount > 9 ? '9+' : unreadCount}
           </Badge>
         )}
+        {/* WebSocket connection indicator */}
+        <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400' : 'bg-gray-300'}`} 
+              title={isConnected ? 'Real-time connected' : 'Connecting...'} />
       </Button>
 
       {/* Notification Dropdown */}
@@ -146,6 +185,12 @@ const VendorNotifications = ({ onClose }) => {
                   <Badge variant="secondary" className="bg-emerald-100 text-emerald-700">
                     {unreadCount} new
                   </Badge>
+                )}
+                {/* Connection status */}
+                {isConnected ? (
+                  <Wifi className="h-4 w-4 text-emerald-500" title="Real-time connected" />
+                ) : (
+                  <WifiOff className="h-4 w-4 text-gray-400" title="Connecting..." />
                 )}
               </div>
               <div className="flex items-center gap-2">
@@ -187,7 +232,7 @@ const VendorNotifications = ({ onClose }) => {
                   </p>
                 </div>
               ) : (
-                notifications.map((notification) => (
+                notifications.slice(0, 10).map((notification) => (
                   <div
                     key={notification.id}
                     className={`p-4 border-b hover:bg-gray-50 transition-colors cursor-pointer ${getNotificationBgColor(notification.type, notification.isRead)}`}
@@ -196,7 +241,8 @@ const VendorNotifications = ({ onClose }) => {
                         markAsRead(notification.id);
                       }
                       if (notification.link) {
-                        window.location.href = notification.link;
+                        setIsOpen(false);
+                        navigate(notification.link);
                       }
                     }}
                     data-testid={`notification-item-${notification.id}`}
@@ -236,20 +282,32 @@ const VendorNotifications = ({ onClose }) => {
             </div>
 
             {/* Footer */}
-            {notifications.length > 0 && (
-              <div className="p-3 border-t bg-gray-50 rounded-b-lg">
+            <div className="p-3 border-t bg-gray-50 rounded-b-lg flex justify-between">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-sm text-gray-600 hover:text-gray-700"
+                onClick={() => {
+                  setIsOpen(false);
+                  navigate('/vendor/notifications/settings');
+                }}
+              >
+                <Settings className="h-4 w-4 mr-1" />
+                Settings
+              </Button>
+              {notifications.length > 0 && (
                 <Button
                   variant="ghost"
-                  className="w-full text-sm text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                  className="text-sm text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
                   onClick={() => {
                     setIsOpen(false);
-                    window.location.href = '/vendor/notifications';
+                    navigate('/vendor/notifications');
                   }}
                 >
                   View all notifications
                 </Button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </>
       )}
