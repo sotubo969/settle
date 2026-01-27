@@ -2173,7 +2173,8 @@ async def approve_vendor(
     approval_data: VendorApprovalRequest,
     db: AsyncSession = Depends(get_db)
 ):
-    # TODO: Add admin authentication check
+    """Approve or reject a vendor with email and in-app notifications"""
+    from email_service import email_service
     
     result = await db.execute(select(Vendor).where(Vendor.id == approval_data.vendorId))
     vendor = result.scalar_one_or_none()
@@ -2187,10 +2188,39 @@ async def approve_vendor(
     
     await db.flush()
     
+    # Create in-app notification
     if approval_data.status == "approved":
-        await EmailService.send_vendor_approval_notification(vendor.email, vendor.business_name)
+        notification_title = "🎉 Your Vendor Application has been Approved!"
+        notification_message = f"Congratulations {vendor.business_name}! Your vendor application has been approved. You can now start adding products and reaching customers."
+        notification_link = "/vendor/dashboard"
+    else:
+        notification_title = "Vendor Application Update"
+        notification_message = f"We're sorry, but your vendor application for {vendor.business_name} was not approved at this time. Please contact support if you have questions."
+        notification_link = "/help"
     
-    return {"success": True, "message": f"Vendor {approval_data.status}"}
+    await create_vendor_notification(
+        db=db,
+        vendor_id=vendor.id,
+        notification_type="approval" if approval_data.status == "approved" else "rejection",
+        title=notification_title,
+        message=notification_message,
+        link=notification_link
+    )
+    
+    # Send email notification
+    email_sent = False
+    try:
+        email_sent = email_service.send_vendor_approval_email(vendor.email, vendor.business_name, approval_data.status == "approved")
+        logger.info(f"Vendor {approval_data.status} email sent to {vendor.email}")
+    except Exception as e:
+        logger.error(f"Failed to send vendor {approval_data.status} email: {str(e)}")
+    
+    return {
+        "success": True, 
+        "message": f"Vendor {approval_data.status}",
+        "emailSent": email_sent,
+        "notificationCreated": True
+    }
 
 @api_router.get("/admin/vendors/pending")
 async def get_pending_vendors(db: AsyncSession = Depends(get_db)):
