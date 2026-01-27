@@ -156,6 +156,51 @@ const VendorRegister = () => {
             <CardDescription>Fill in your business details to get started</CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Google Sign-In Option */}
+            {firebaseEnabled && !isAuthenticated && (
+              <>
+                <div className="mb-6">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full h-12 text-base"
+                    onClick={handleGoogleSignIn}
+                    disabled={googleLoading}
+                    data-testid="vendor-google-signin"
+                  >
+                    {googleLoading ? (
+                      <span className="flex items-center gap-2">
+                        <div className="animate-spin h-5 w-5 border-2 border-gray-300 border-t-emerald-600 rounded-full" />
+                        Signing in...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        <Chrome className="h-5 w-5" />
+                        Continue with Google
+                      </span>
+                    )}
+                  </Button>
+                  <p className="text-xs text-gray-500 text-center mt-2">
+                    Sign in with Google to pre-fill your details
+                  </p>
+                </div>
+                <div className="relative mb-6">
+                  <Separator />
+                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white px-4 text-sm text-gray-500">
+                    or fill manually
+                  </span>
+                </div>
+              </>
+            )}
+            
+            {isAuthenticated && (
+              <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+                <p className="text-emerald-800 text-sm">
+                  ✓ Signed in as <strong>{user?.email}</strong>
+                </p>
+              </div>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
