@@ -221,6 +221,9 @@ const VendorDashboard = () => {
           </div>
           
           <div className="flex items-center gap-3">
+            {/* Notification Bell */}
+            <VendorNotifications />
+            
             <select
               value={dateRange}
               onChange={(e) => setDateRange(e.target.value)}
