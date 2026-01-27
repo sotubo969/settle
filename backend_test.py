@@ -72,18 +72,208 @@ class AfroMarketAPITester:
         except requests.exceptions.RequestException as e:
             return False, f"Request failed: {str(e)}"
 
-    def test_firebase_status(self):
-        """Test Firebase configuration status"""
-        print("\n🔥 Testing Firebase Status...")
+    def test_websocket_status(self):
+        """Test WebSocket status endpoint"""
+        print("\n🔌 Testing WebSocket Status...")
         
-        success, response = self.make_request('GET', 'auth/firebase/status', auth_required=False)
+        success, response = self.make_request('GET', 'websocket/status', auth_required=False)
+        
+        if success and response.get('status') == 'available':
+            self.log_test("WebSocket Status - Available", True, "WebSocket service is available")
+            return True
+        else:
+            self.log_test("WebSocket Status - Available", False, f"WebSocket not available: {response}")
+            return False
+
+    def test_vapid_key_endpoint(self):
+        """Test VAPID key endpoint for push notifications"""
+        print("\n🔑 Testing VAPID Key Endpoint...")
+        
+        success, response = self.make_request('GET', 'push/vapid-key', auth_required=False)
         
         if success and response.get('configured') == True:
-            self.log_test("Firebase Status - Configured", True, "Firebase is properly configured")
+            public_key = response.get('publicKey')
+            if public_key and len(public_key) > 50:  # VAPID keys are long
+                self.log_test("VAPID Key - Configured", True, f"Public key length: {len(public_key)}")
+                return True
+            else:
+                self.log_test("VAPID Key - Configured", False, "Public key missing or invalid")
+                return False
         else:
-            self.log_test("Firebase Status - Configured", False, f"Firebase not configured: {response}")
+            self.log_test("VAPID Key - Configured", False, f"VAPID not configured: {response}")
+            return False
+
+    def test_notification_preferences_get(self):
+        """Test GET notification preferences endpoint"""
+        print("\n⚙️ Testing Notification Preferences GET...")
         
-        return success
+        if not self.token:
+            self.log_test("Notification Preferences GET - No Token", False, "No auth token available")
+            return False
+        
+        success, response = self.make_request('GET', 'vendor/notifications/preferences', auth_required=True)
+        
+        if success and response.get('success'):
+            preferences = response.get('preferences', {})
+            
+            # Check if preferences have expected structure
+            expected_keys = ['email', 'inapp', 'push']
+            has_structure = all(key in preferences for key in expected_keys)
+            
+            self.log_test("Notification Preferences GET - Returns Structure", has_structure, 
+                         f"Preferences keys: {list(preferences.keys())}")
+            
+            # Check email preferences
+            email_prefs = preferences.get('email', {})
+            email_keys = ['orders', 'messages', 'reviews', 'adminAlerts']
+            has_email_prefs = all(key in email_prefs for key in email_keys)
+            
+            self.log_test("Notification Preferences GET - Email Preferences", has_email_prefs,
+                         f"Email preferences: {list(email_prefs.keys())}")
+            
+            return has_structure and has_email_prefs
+        else:
+            self.log_test("Notification Preferences GET - Returns Structure", False, str(response))
+            return False
+
+    def test_notification_preferences_put(self):
+        """Test PUT notification preferences endpoint"""
+        print("\n⚙️ Testing Notification Preferences PUT...")
+        
+        if not self.token:
+            self.log_test("Notification Preferences PUT - No Token", False, "No auth token available")
+            return False
+        
+        # Test updating preferences
+        preferences_data = {
+            "email_orders": True,
+            "email_messages": True,
+            "email_reviews": False,
+            "email_admin_alerts": True,
+            "email_marketing": False,
+            "inapp_orders": True,
+            "inapp_messages": True,
+            "inapp_reviews": True,
+            "inapp_admin_alerts": True,
+            "inapp_marketing": True,
+            "push_enabled": True,
+            "push_orders": True,
+            "push_messages": True,
+            "push_reviews": False,
+            "push_admin_alerts": True
+        }
+        
+        success, response = self.make_request('PUT', 'vendor/notifications/preferences', 
+                                            preferences_data, auth_required=True)
+        
+        if success and response.get('success'):
+            self.log_test("Notification Preferences PUT - Updates Successfully", True, "Preferences updated")
+            
+            # Verify the update by getting preferences again
+            time.sleep(1)
+            success2, response2 = self.make_request('GET', 'vendor/notifications/preferences', auth_required=True)
+            
+            if success2 and response2.get('success'):
+                updated_prefs = response2.get('preferences', {})
+                email_prefs = updated_prefs.get('email', {})
+                
+                # Check if our update was saved
+                reviews_disabled = not email_prefs.get('reviews', True)
+                self.log_test("Notification Preferences PUT - Verification", reviews_disabled,
+                             f"Email reviews preference: {email_prefs.get('reviews')}")
+            
+            return True
+        else:
+            self.log_test("Notification Preferences PUT - Updates Successfully", False, str(response))
+            return False
+
+    def test_push_subscription_endpoint(self):
+        """Test push subscription endpoint"""
+        print("\n📱 Testing Push Subscription Endpoint...")
+        
+        if not self.token:
+            self.log_test("Push Subscription - No Token", False, "No auth token available")
+            return False
+        
+        # Mock push subscription data
+        subscription_data = {
+            "endpoint": "https://fcm.googleapis.com/fcm/send/test-endpoint-123",
+            "p256dh_key": "test-p256dh-key-" + datetime.now().strftime('%H%M%S'),
+            "auth_key": "test-auth-key-" + datetime.now().strftime('%H%M%S'),
+            "device_name": "Test Device"
+        }
+        
+        success, response = self.make_request('POST', 'vendor/push/subscribe', 
+                                            subscription_data, auth_required=True)
+        
+        if success and response.get('success'):
+            self.log_test("Push Subscription - Creates Subscription", True, "Push subscription created")
+            return True
+        else:
+            self.log_test("Push Subscription - Creates Subscription", False, str(response))
+            return False
+
+    def test_order_notification_creation(self):
+        """Test that order creation triggers vendor notification"""
+        print("\n📦 Testing Order Notification Creation...")
+        
+        if not self.token or not self.vendor_id:
+            self.log_test("Order Notification - Missing Requirements", False, "No token or vendor ID")
+            return False
+        
+        # Create a mock order with vendor items
+        order_data = {
+            "items": [
+                {
+                    "productId": 1,
+                    "name": "Test Product",
+                    "price": 10.99,
+                    "quantity": 2,
+                    "vendorId": self.vendor_id
+                }
+            ],
+            "shippingInfo": {
+                "fullName": "Test Customer",
+                "address": "123 Test Street",
+                "city": "London",
+                "postcode": "SW1A 1AA",
+                "phone": "+44 20 1234 5678"
+            },
+            "paymentInfo": {
+                "method": "test",
+                "status": "completed"
+            },
+            "subtotal": 21.98,
+            "deliveryFee": 3.99,
+            "total": 25.97
+        }
+        
+        success, response = self.make_request('POST', 'orders', order_data, auth_required=True)
+        
+        if success and response.get('id'):
+            order_id = response.get('orderId')
+            self.log_test("Order Notification - Order Created", True, f"Order ID: {order_id}")
+            
+            # Wait for notification to be processed
+            time.sleep(3)
+            
+            # Check if notification was created for vendor
+            success2, response2 = self.make_request('GET', f'vendor/notifications/by-email/{self.vendor_email}', 
+                                                  auth_required=False)
+            
+            if success2 and response2.get('success'):
+                notifications = response2.get('notifications', [])
+                order_notifications = [n for n in notifications if n.get('type') == 'order']
+                
+                self.log_test("Order Notification - Vendor Notified", len(order_notifications) > 0,
+                             f"Found {len(order_notifications)} order notifications")
+                return len(order_notifications) > 0
+            else:
+                self.log_test("Order Notification - Vendor Notified", False, "Could not check notifications")
+                return False
+        else:
+            self.log_test("Order Notification - Order Created", False, str(response))
+            return False
 
     def test_authentication(self):
         """Test user authentication (email/password)"""
