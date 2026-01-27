@@ -1,54 +1,103 @@
 {
-  "timestamp": "2026-01-27T14:20:44.316875",
-  "total_tests": 9,
-  "passed_tests": 9,
-  "failed_tests": [],
-  "success_rate": 100.0,
+  "timestamp": "2026-01-27T14:40:20.992299",
+  "total_tests": 17,
+  "passed_tests": 15,
+  "failed_tests": [
+    {
+      "test": "Mark Notification as Read - No Notifications",
+      "error": "No notifications to mark as read"
+    },
+    {
+      "test": "Mark All Notifications as Read - Works",
+      "error": "{'detail': 'Vendor not found'}"
+    }
+  ],
+  "success_rate": 88.23529411764706,
   "detailed_results": {
     "Firebase Status - Configured": {
       "success": true,
       "details": "Firebase is properly configured",
-      "timestamp": "2026-01-27T14:20:39.457180"
+      "timestamp": "2026-01-27T14:40:16.183832"
     },
     "Products API": {
       "success": true,
       "details": "Found 32 products",
-      "timestamp": "2026-01-27T14:20:39.531775"
+      "timestamp": "2026-01-27T14:40:16.229810"
     },
     "Vendors API": {
       "success": true,
-      "details": "Found 3 vendors",
-      "timestamp": "2026-01-27T14:20:39.602348"
+      "details": "Found 4 vendors",
+      "timestamp": "2026-01-27T14:40:16.275068"
     },
     "Email/Password Registration": {
       "success": true,
       "details": "",
-      "timestamp": "2026-01-27T14:20:40.014010"
+      "timestamp": "2026-01-27T14:40:16.584188"
     },
     "Email/Password Login": {
       "success": true,
       "details": "",
-      "timestamp": "2026-01-27T14:20:40.378868"
+      "timestamp": "2026-01-27T14:40:16.887828"
     },
-    "Public Vendor Registration - Success": {
+    "Vendor Registration - Creates Vendor in Database": {
       "success": true,
-      "details": "Vendor ID: 5",
-      "timestamp": "2026-01-27T14:20:43.035236"
+      "details": "Vendor ID: 8",
+      "timestamp": "2026-01-27T14:40:17.840292"
     },
-    "Public Vendor Registration - Email Sent": {
+    "Vendor Registration - Email Notification": {
       "success": true,
       "details": "Email sent status: True",
-      "timestamp": "2026-01-27T14:20:43.035250"
+      "timestamp": "2026-01-27T14:40:17.840305"
     },
-    "Public Vendor Registration - Message": {
+    "Vendor Registration - Response Message": {
       "success": true,
       "details": "Message: Application submitted successfully! We will review and contact you within 2-3 business days.",
-      "timestamp": "2026-01-27T14:20:43.035260"
+      "timestamp": "2026-01-27T14:40:17.840315"
     },
-    "Authenticated Vendor Registration": {
+    "Admin Vendor Approval - Creates Notification": {
       "success": true,
-      "details": "Vendor ID: 6",
-      "timestamp": "2026-01-27T14:20:44.316616"
+      "details": "Notification created: True",
+      "timestamp": "2026-01-27T14:40:18.863107"
+    },
+    "Admin Vendor Approval - Sends Email": {
+      "success": true,
+      "details": "Email sent: True",
+      "timestamp": "2026-01-27T14:40:18.863117"
+    },
+    "Vendor Notifications by Email - Returns Notifications List": {
+      "success": true,
+      "details": "Found 1 notifications, 1 unread",
+      "timestamp": "2026-01-27T14:40:20.907985"
+    },
+    "Vendor Notifications by Email - Vendor Status": {
+      "success": true,
+      "details": "Vendor status: approved",
+      "timestamp": "2026-01-27T14:40:20.907995"
+    },
+    "Vendor Notifications by Email - Approval Notification": {
+      "success": true,
+      "details": "Approval notification found: True",
+      "timestamp": "2026-01-27T14:40:20.908004"
+    },
+    "Full Workflow - Complete": {
+      "success": true,
+      "details": "Register -> Approve -> Notification workflow successful",
+      "timestamp": "2026-01-27T14:40:20.908009"
+    },
+    "Authenticated Vendor Notifications - Returns Notifications List": {
+      "success": true,
+      "details": "Found 0 notifications, 0 unread",
+      "timestamp": "2026-01-27T14:40:20.949729"
+    },
+    "Mark Notification as Read - No Notifications": {
+      "success": false,
+      "details": "No notifications to mark as read",
+      "timestamp": "2026-01-27T14:40:20.949742"
+    },
+    "Mark All Notifications as Read - Works": {
+      "success": false,
+      "details": "{'detail': 'Vendor not found'}",
+      "timestamp": "2026-01-27T14:40:20.992032"
     }
   }
 }
