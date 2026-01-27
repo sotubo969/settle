@@ -406,6 +406,45 @@ class AfroMarketAPITester:
             self.log_test("Vendor Registration - Creates Vendor in Database", False, str(response))
             return None
 
+    def test_vendor_registration_public(self):
+        """Test public vendor registration endpoint with email notification"""
+        print("\n🏪 Testing Public Vendor Registration...")
+        
+        # Test public vendor registration (no auth required)
+        timestamp = datetime.now().strftime('%H%M%S')
+        self.vendor_email = f"testvendor{timestamp}@example.com"
+        vendor_data = {
+            "businessName": f"Test African Store {timestamp}",
+            "description": "A test store selling authentic African products and groceries",
+            "email": self.vendor_email,
+            "phone": "+44 20 1234 5678",
+            "address": "123 Test Street",
+            "city": "London",
+            "postcode": "SW1A 1AA",
+            "ownerName": "Test Owner"
+        }
+        
+        success, response = self.make_request('POST', 'vendors/register/public', vendor_data, auth_required=False)
+        
+        if success and response.get('success'):
+            email_sent = response.get('emailSent', False)
+            self.vendor_id = response.get('vendor', {}).get('id')
+            
+            self.log_test("Vendor Registration - Creates Vendor in Database", True, f"Vendor ID: {self.vendor_id}")
+            self.log_test("Vendor Registration - Email Notification", email_sent, 
+                         f"Email sent status: {email_sent}")
+            
+            # Check if response includes proper message
+            message = response.get('message', '')
+            expected_message_parts = ['submitted successfully', 'review', 'contact']
+            message_ok = any(part in message.lower() for part in expected_message_parts)
+            self.log_test("Vendor Registration - Response Message", message_ok, f"Message: {message}")
+            
+            return self.vendor_id
+        else:
+            self.log_test("Vendor Registration - Creates Vendor in Database", False, str(response))
+            return None
+
     def test_admin_vendor_approval(self):
         """Test admin vendor approval endpoint creates notification and sends email"""
         print("\n👑 Testing Admin Vendor Approval...")
