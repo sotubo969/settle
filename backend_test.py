@@ -76,10 +76,13 @@ class AfroMarketAPITester:
         """Test WebSocket status endpoint"""
         print("\n🔌 Testing WebSocket Status...")
         
-        success, response = self.make_request('GET', 'websocket/status', auth_required=False)
+        success, response = self.make_request('GET', 'ws/status', auth_required=False)
         
-        if success and response.get('status') == 'available':
-            self.log_test("WebSocket Status - Available", True, "WebSocket service is available")
+        if success and response.get('success') == True:
+            connected_vendors = response.get('connected_vendors', [])
+            total_connections = response.get('total_connections', 0)
+            self.log_test("WebSocket Status - Available", True, 
+                         f"Connected vendors: {len(connected_vendors)}, Total connections: {total_connections}")
             return True
         else:
             self.log_test("WebSocket Status - Available", False, f"WebSocket not available: {response}")
