@@ -590,11 +590,14 @@ class AfroMarketAPITester:
         # Test VAPID key configuration
         self.test_vapid_key_endpoint()
         
-        # Test notification preferences (requires auth)
+        # Test notification preferences (requires auth and vendor)
         if auth_success and self.token:
-            self.test_notification_preferences_get()
-            self.test_notification_preferences_put()
-            self.test_push_subscription_endpoint()
+            # First register user as vendor to enable vendor-specific endpoints
+            auth_vendor_id = self.test_vendor_registration_authenticated()
+            if auth_vendor_id:
+                self.test_notification_preferences_get()
+                self.test_notification_preferences_put()
+                self.test_push_subscription_endpoint()
         
         # Test vendor registration and approval workflow
         vendor_id = self.test_vendor_registration_public()
