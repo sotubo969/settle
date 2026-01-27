@@ -106,6 +106,35 @@ class AfroMarketAPITester:
             self.log_test("VAPID Key - Configured", False, f"VAPID not configured: {response}")
             return False
 
+    def test_vendor_registration_authenticated(self):
+        """Test authenticated vendor registration to link user with vendor"""
+        print("\n🏪 Testing Authenticated Vendor Registration...")
+        
+        if not self.token:
+            self.log_test("Authenticated Vendor Registration - No Token", False, "No auth token available")
+            return False
+        
+        timestamp = datetime.now().strftime('%H%M%S')
+        vendor_data = {
+            "businessName": f"Test Authenticated Store {timestamp}",
+            "description": "A test store for authenticated user",
+            "email": f"authvendor{timestamp}@example.com",
+            "phone": "+44 20 1234 5678",
+            "address": "123 Auth Street",
+            "city": "London",
+            "postcode": "SW1A 1AA"
+        }
+        
+        success, response = self.make_request('POST', 'vendors/register', vendor_data, auth_required=True)
+        
+        if success and response.get('success'):
+            auth_vendor_id = response.get('vendor', {}).get('id')
+            self.log_test("Authenticated Vendor Registration - Creates Vendor", True, f"Vendor ID: {auth_vendor_id}")
+            return auth_vendor_id
+        else:
+            self.log_test("Authenticated Vendor Registration - Creates Vendor", False, str(response))
+            return None
+
     def test_notification_preferences_get(self):
         """Test GET notification preferences endpoint"""
         print("\n⚙️ Testing Notification Preferences GET...")
