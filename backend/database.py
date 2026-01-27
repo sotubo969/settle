@@ -450,6 +450,32 @@ class Wishlist(Base):
     product = relationship('Product', backref='wishlisted_by')
 
 
+class VendorNotification(Base):
+    """Real-time notifications for vendors"""
+    __tablename__ = 'vendor_notifications'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    vendor_id = Column(Integer, ForeignKey('vendors.id'), nullable=False)
+    
+    # Notification content
+    type = Column(String(50), nullable=False)  # 'approval', 'rejection', 'order', 'message', 'system'
+    title = Column(String(255), nullable=False)
+    message = Column(Text, nullable=False)
+    
+    # Status
+    is_read = Column(Boolean, default=False)
+    
+    # Link to related content (optional)
+    link = Column(String(500), nullable=True)
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    read_at = Column(DateTime, nullable=True)
+    
+    # Relationships
+    vendor = relationship('Vendor', backref='notifications')
+
+
 # Database session dependency
 async def get_db():
     session = AsyncSessionLocal()
