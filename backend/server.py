@@ -899,6 +899,7 @@ async def register_vendor(vendor_data: VendorRegisterRequest, current_user: User
     # Send notification email (will work in background)
     try:
         email_service.send_vendor_registration_notification(vendor_email_data)
+        logger.info(f"Vendor registration email sent for {new_vendor.business_name}")
     except Exception as e:
         logger.warning(f"Failed to send email notification: {str(e)}")
         # Don't fail the registration if email fails
@@ -910,6 +911,76 @@ async def register_vendor(vendor_data: VendorRegisterRequest, current_user: User
             "businessName": new_vendor.business_name,
             "status": new_vendor.status
         }
+    }
+
+@api_router.post("/vendors/register/public")
+async def register_vendor_public(vendor_data: VendorRegisterPublicRequest, db: AsyncSession = Depends(get_db)):
+    """
+    Public vendor registration - no authentication required.
+    Sends email notification to admin for approval.
+    """
+    from email_service import email_service
+    from datetime import datetime
+    
+    # Check if vendor with this email already exists
+    result = await db.execute(select(Vendor).where(Vendor.email == vendor_data.email))
+    existing_vendor = result.scalar_one_or_none()
+    
+    if existing_vendor:
+        raise HTTPException(status_code=400, detail="A vendor with this email already exists")
+    
+    new_vendor = Vendor(
+        user_id=None,  # No user linked for public registration
+        business_name=vendor_data.businessName,
+        description=vendor_data.description,
+        email=vendor_data.email,
+        phone=vendor_data.phone,
+        address=vendor_data.address,
+        city=vendor_data.city,
+        postcode=vendor_data.postcode,
+        location=vendor_data.city,
+        verified=False,
+        status="pending"
+    )
+    
+    db.add(new_vendor)
+    await db.flush()
+    await db.refresh(new_vendor)
+    
+    # Send email notification to admin
+    vendor_email_data = {
+        'business_name': new_vendor.business_name,
+        'owner_name': vendor_data.ownerName or 'Not provided',
+        'email': new_vendor.email,
+        'phone': new_vendor.phone,
+        'address': new_vendor.address,
+        'city': new_vendor.city,
+        'postcode': new_vendor.postcode,
+        'description': new_vendor.description,
+        'created_at': datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
+        'vendor_id': new_vendor.id
+    }
+    
+    # Send notification email
+    email_sent = False
+    try:
+        email_sent = email_service.send_vendor_registration_notification(vendor_email_data)
+        if email_sent:
+            logger.info(f"Vendor registration email sent for {new_vendor.business_name}")
+        else:
+            logger.warning(f"Email not sent (SMTP not configured) for vendor {new_vendor.business_name}")
+    except Exception as e:
+        logger.error(f"Failed to send email notification: {str(e)}")
+    
+    return {
+        "success": True,
+        "vendor": {
+            "id": new_vendor.id,
+            "businessName": new_vendor.business_name,
+            "status": new_vendor.status
+        },
+        "emailSent": email_sent,
+        "message": "Application submitted successfully! We will review and contact you within 2-3 business days."
     }
 
 @api_router.get("/vendors")
