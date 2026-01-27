@@ -38,6 +38,9 @@ class EmailService:
     
     def send_email(self, to_email: str, subject: str, html_content: str, text_content: Optional[str] = None):
         """Send an email"""
+        # Reload credentials in case they were updated
+        self._load_credentials()
+        
         try:
             # Create message
             msg = MIMEMultipart('alternative')
