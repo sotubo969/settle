@@ -69,9 +69,22 @@ class AfroMarketAPITester:
         except requests.exceptions.RequestException as e:
             return False, f"Request failed: {str(e)}"
 
+    def test_firebase_status(self):
+        """Test Firebase configuration status"""
+        print("\n🔥 Testing Firebase Status...")
+        
+        success, response = self.make_request('GET', 'auth/firebase/status', auth_required=False)
+        
+        if success and response.get('configured') == True:
+            self.log_test("Firebase Status - Configured", True, "Firebase is properly configured")
+        else:
+            self.log_test("Firebase Status - Configured", False, f"Firebase not configured: {response}")
+        
+        return success
+
     def test_authentication(self):
-        """Test user authentication"""
-        print("\n🔐 Testing Authentication...")
+        """Test user authentication (email/password)"""
+        print("\n🔐 Testing Email/Password Authentication...")
         
         # Test registration
         test_email = f"test_{datetime.now().strftime('%H%M%S')}@example.com"
@@ -84,9 +97,9 @@ class AfroMarketAPITester:
         if success and response.get('token'):
             self.token = response['token']
             self.user_id = response['user']['id']
-            self.log_test("User Registration", True)
+            self.log_test("Email/Password Registration", True)
         else:
-            self.log_test("User Registration", False, str(response))
+            self.log_test("Email/Password Registration", False, str(response))
             return False
 
         # Test login
@@ -96,9 +109,9 @@ class AfroMarketAPITester:
         }, auth_required=False)
         
         if success and response.get('token'):
-            self.log_test("User Login", True)
+            self.log_test("Email/Password Login", True)
         else:
-            self.log_test("User Login", False, str(response))
+            self.log_test("Email/Password Login", False, str(response))
         
         return True
 
