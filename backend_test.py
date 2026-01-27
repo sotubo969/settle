@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """
-AfroMarket UK Backend API Testing - Vendor Registration & Firebase Auth
-Tests vendor registration email notifications and Firebase authentication setup
+AfroMarket UK Backend API Testing - Vendor Notification System
+Tests vendor registration, approval notifications, and notification management
 """
 
 import requests
 import sys
 import json
+import time
 from datetime import datetime
 from typing import Dict, Any, Optional
 
@@ -16,6 +17,8 @@ class AfroMarketAPITester:
         self.api_url = f"{base_url}/api"
         self.token = None
         self.user_id = None
+        self.vendor_id = None
+        self.vendor_email = None
         self.tests_run = 0
         self.tests_passed = 0
         self.failed_tests = []
