@@ -11,7 +11,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 class AfroMarketAPITester:
-    def __init__(self, base_url: str = "https://mine-pull.preview.emergentagent.com"):
+    def __init__(self, base_url: str = "https://github-code-pull.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.token = None
