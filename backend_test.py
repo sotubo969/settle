@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-AfroMarket UK Marketplace Backend API Testing
-Tests all marketplace features: products, reviews, messaging, promo codes, wishlists, refunds, Q&A
+AfroMarket UK Backend API Testing - Vendor Registration & Firebase Auth
+Tests vendor registration email notifications and Firebase authentication setup
 """
 
 import requests
