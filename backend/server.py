@@ -49,6 +49,7 @@ from subscription_models import (
 from chatbot_service import AfroBotService
 from firebase_auth import verify_firebase_token, is_firebase_configured
 from marketplace_features import marketplace_router
+from notification_service import ws_manager, NotificationService, PushNotificationService
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
