@@ -348,8 +348,8 @@ class AfroMarketAPITester:
             self.log_test("Vendors API", False, str(response))
 
     def run_all_tests(self):
-        """Run comprehensive test suite for vendor registration and Firebase"""
-        print("🧪 Starting AfroMarket UK Backend Tests - Vendor Registration & Firebase")
+        """Run comprehensive test suite for vendor notification system"""
+        print("🧪 Starting AfroMarket UK Backend Tests - Vendor Notification System")
         print(f"🌐 Testing against: {self.base_url}")
         print("=" * 70)
         
@@ -362,11 +362,18 @@ class AfroMarketAPITester:
         # Test authentication
         auth_success = self.test_authentication()
         
-        # Test vendor registration (both public and authenticated)
-        self.test_vendor_registration_public()
+        # Test notification system workflow
+        print("\n" + "="*50)
+        print("🔔 VENDOR NOTIFICATION SYSTEM TESTS")
+        print("="*50)
         
-        if auth_success:
-            self.test_vendor_registration_authenticated()
+        # Test full workflow
+        self.test_notification_system_workflow()
+        
+        # Test individual notification endpoints if we have auth
+        if auth_success and self.token:
+            self.test_mark_notification_as_read()
+            self.test_mark_all_notifications_as_read()
         
         # Print summary
         print("\n" + "=" * 70)
