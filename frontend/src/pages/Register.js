@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User as UserIcon, ArrowLeft, Loader2, CheckCircle, AlertCircle, MailCheck } from 'lucide-react';
+import { Mail, Lock, User as UserIcon, ArrowLeft, Loader2, CheckCircle, AlertCircle, MailCheck, AlertTriangle } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -13,15 +13,19 @@ const Register = () => {
   const navigate = useNavigate();
   const { 
     loginWithGoogle, 
-    registerWithEmail, 
+    registerWithEmail,
+    legacyRegister,
     isAuthenticated, 
     isVerified, 
     resendVerification,
-    firebaseEnabled 
+    firebaseEnabled,
+    disableFirebaseAuth
   } = useAuth();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showVerificationSent, setShowVerificationSent] = useState(false);
+  const [showNetworkError, setShowNetworkError] = useState(false);
+  const [useLegacyMode, setUseLegacyMode] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [resendingEmail, setResendingEmail] = useState(false);
   const [formData, setFormData] = useState({
@@ -52,12 +56,20 @@ const Register = () => {
     }
 
     setLoading(true);
+    setShowNetworkError(false);
 
     try {
-      const result = await registerWithEmail(formData.email, formData.password, formData.name);
+      let result;
+      
+      // Use legacy registration if in legacy mode
+      if (useLegacyMode) {
+        result = await legacyRegister(formData.email, formData.password, formData.name);
+      } else {
+        result = await registerWithEmail(formData.email, formData.password, formData.name);
+      }
       
       if (result.success) {
-        if (result.verificationSent && firebaseEnabled) {
+        if (result.verificationSent && !useLegacyMode) {
           setShowVerificationSent(true);
           setRegisteredEmail(formData.email);
           toast.success('Account created! Please check your email to verify.');
@@ -66,6 +78,9 @@ const Register = () => {
           toast.success('Account created! Welcome to AfroMarket!');
           navigate('/');
         }
+      } else if (result.error?.includes('network') || result.error?.includes('Network')) {
+        setShowNetworkError(true);
+        toast.error('Network error - try using standard registration');
       } else {
         toast.error(result.error || 'Registration failed');
       }
@@ -78,11 +93,12 @@ const Register = () => {
 
   const handleGoogleSignup = async () => {
     if (!firebaseEnabled) {
-      toast.error('Google sign-up is not available. Please use email/password.');
+      toast.error('Google sign-up requires Firebase configuration');
       return;
     }
     
     setGoogleLoading(true);
+    setShowNetworkError(false);
     
     try {
       const result = await loginWithGoogle();
@@ -90,14 +106,25 @@ const Register = () => {
       if (result.success) {
         toast.success('Welcome to AfroMarket!');
         navigate('/');
+      } else if (result.error?.includes('network') || result.error?.includes('Network') || result.fallbackAvailable) {
+        setShowNetworkError(true);
+        toast.error('Network error - please use email registration');
       } else {
         toast.error(result.error || 'Google sign-up failed');
       }
     } catch (error) {
-      toast.error(error.message || 'Google sign-up failed');
+      setShowNetworkError(true);
+      toast.error('Google sign-up unavailable - please use email registration');
     } finally {
       setGoogleLoading(false);
     }
+  };
+
+  const handleUseLegacyMode = () => {
+    setUseLegacyMode(true);
+    setShowNetworkError(false);
+    disableFirebaseAuth();
+    toast.success('Switched to standard registration mode');
   };
 
   const handleResendVerification = async () => {
@@ -117,7 +144,7 @@ const Register = () => {
   };
 
   // Show verification sent screen (Firebase only)
-  if (showVerificationSent && firebaseEnabled) {
+  if (showVerificationSent && !useLegacyMode) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-orange-50 flex items-center justify-center px-4">
         <div className="w-full max-w-md">
@@ -199,11 +226,37 @@ const Register = () => {
         <Card className="shadow-2xl">
           <CardHeader className="space-y-2 text-center">
             <CardTitle className="text-3xl font-bold">Create Account</CardTitle>
-            <CardDescription className="text-base">Join AfroMarket UK today</CardDescription>
+            <CardDescription className="text-base">
+              Join AfroMarket UK today
+              {useLegacyMode && (
+                <span className="block text-xs text-emerald-600 mt-1">
+                  (Using standard registration)
+                </span>
+              )}
+            </CardDescription>
           </CardHeader>
           <CardContent>
+            {showNetworkError && (
+              <Alert className="mb-4 border-orange-200 bg-orange-50">
+                <AlertTriangle className="h-4 w-4 text-orange-600" />
+                <AlertDescription className="text-orange-800">
+                  <p className="font-medium mb-2">Connection issue detected</p>
+                  <p className="text-sm mb-3">
+                    Having trouble connecting. You can use standard registration instead.
+                  </p>
+                  <Button 
+                    size="sm" 
+                    onClick={handleUseLegacyMode}
+                    className="bg-orange-600 hover:bg-orange-700 text-white"
+                  >
+                    Use Standard Registration
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+
             {/* Google Sign-up - Recommended (Firebase only) */}
-            {firebaseEnabled && (
+            {firebaseEnabled && !useLegacyMode && (
               <div className="mb-6">
                 <Button
                   type="button"
@@ -237,7 +290,6 @@ const Register = () => {
                     </svg>
                   )}
                   Sign up with Google
-                  <CheckCircle className="h-4 w-4 ml-2 text-green-500" />
                 </Button>
                 <p className="text-xs text-center text-gray-500 mt-2">
                   <CheckCircle className="h-3 w-3 inline mr-1 text-green-500" />
@@ -246,7 +298,7 @@ const Register = () => {
               </div>
             )}
 
-            {firebaseEnabled && (
+            {firebaseEnabled && !useLegacyMode && (
               <div className="relative my-6">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t" />
@@ -257,7 +309,7 @@ const Register = () => {
               </div>
             )}
 
-            {firebaseEnabled && (
+            {firebaseEnabled && !useLegacyMode && (
               <Alert className="mb-4 border-blue-200 bg-blue-50">
                 <AlertCircle className="h-4 w-4 text-blue-600" />
                 <AlertDescription className="text-blue-800 text-sm">
@@ -355,6 +407,18 @@ const Register = () => {
                   Sign in
                 </Link>
               </div>
+
+              {!useLegacyMode && (
+                <div className="text-center mt-4">
+                  <button
+                    type="button"
+                    onClick={handleUseLegacyMode}
+                    className="text-xs text-gray-500 hover:text-gray-700 underline"
+                  >
+                    Having trouble? Use standard registration
+                  </button>
+                </div>
+              )}
             </form>
           </CardContent>
         </Card>

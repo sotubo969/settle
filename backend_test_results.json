@@ -1,0 +1,104 @@
+{
+  "timestamp": "2026-01-27T13:12:01.194019",
+  "total_tests": 19,
+  "passed_tests": 19,
+  "failed_tests": [],
+  "success_rate": 100.0,
+  "detailed_results": {
+    "User Registration": {
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T13:11:59.886237"
+    },
+    "User Login": {
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T13:12:00.147562"
+    },
+    "Get Products (Found 32)": {
+      "success": true,
+      "details": "Expected 32 products, got 32",
+      "timestamp": "2026-01-27T13:12:00.191011"
+    },
+    "Get Single Product": {
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T13:12:00.229535"
+    },
+    "Promo Code WELCOME10": {
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T13:12:00.271998"
+    },
+    "Promo Code AFRO20": {
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T13:12:00.311725"
+    },
+    "Promo Code FREEDELIVERY": {
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T13:12:00.347793"
+    },
+    "Promo Code NEWCUSTOMER": {
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T13:12:00.384550"
+    },
+    "Add to Wishlist": {
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T13:12:00.430078"
+    },
+    "Get Wishlist": {
+      "success": true,
+      "details": "Found 1 items",
+      "timestamp": "2026-01-27T13:12:00.469299"
+    },
+    "Remove from Wishlist": {
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T13:12:00.509396"
+    },
+    "Create Product Review": {
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T13:12:00.559448"
+    },
+    "Get Product Reviews": {
+      "success": true,
+      "details": "Found 1 reviews",
+      "timestamp": "2026-01-27T13:12:00.606716"
+    },
+    "Ask Product Question": {
+      "success": true,
+      "details": "",
+      "timestamp": "2026-01-27T13:12:00.648376"
+    },
+    "Get Product Questions": {
+      "success": true,
+      "details": "Found 1 questions",
+      "timestamp": "2026-01-27T13:12:00.685653"
+    },
+    "Get Conversations": {
+      "success": true,
+      "details": "Found 0 conversations",
+      "timestamp": "2026-01-27T13:12:00.728033"
+    },
+    "Get Order History": {
+      "success": true,
+      "details": "Found 0 orders",
+      "timestamp": "2026-01-27T13:12:00.769406"
+    },
+    "Get Refund Requests": {
+      "success": true,
+      "details": "Found 0 refunds",
+      "timestamp": "2026-01-27T13:12:00.807320"
+    },
+    "Rate Limiting Check": {
+      "success": true,
+      "details": "Made 10/10 requests successfully",
+      "timestamp": "2026-01-27T13:12:01.193737"
+    }
+  }
+}

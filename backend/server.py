@@ -1,17 +1,20 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Query, Cookie, Header, Security
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, Query, Cookie, Header, Security, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_, update
 import os
 import logging
+import time
 from pathlib import Path
 from typing import List, Optional
 from datetime import datetime, timedelta
 from pydantic import BaseModel, EmailStr
+from collections import defaultdict
 
-from database import get_db, init_db, User, Vendor, Product, Cart, Order, Analytics, PageVisit, PasswordResetToken, Advertisement, VendorWallet, WalletTransaction
+from database import get_db, init_db, User, Vendor, Product, Cart, Order, Analytics, PageVisit, PasswordResetToken, Advertisement, VendorWallet, WalletTransaction, ProductReview, VendorReview, ProductQuestion, Message, PromoCode, RefundRequest, Wishlist
 import secrets
 from auth import hash_password, verify_password, create_access_token, get_current_user, get_current_user_from_db
 from payments import StripePayment, PayPalPaymentService
@@ -44,12 +47,47 @@ from subscription_models import (
 )
 from chatbot_service import AfroBotService
 from firebase_auth import verify_firebase_token, is_firebase_configured
+from marketplace_features import marketplace_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
 app = FastAPI(title="AfroMarket UK API")
 api_router = APIRouter(prefix="/api")
+
+# Include marketplace features router
+api_router.include_router(marketplace_router, tags=["Marketplace"])
+
+# ============ RATE LIMITING ============
+class RateLimitMiddleware(BaseHTTPMiddleware):
+    """Simple in-memory rate limiting middleware"""
+    def __init__(self, app, requests_per_minute: int = 60):
+        super().__init__(app)
+        self.requests_per_minute = requests_per_minute
+        self.requests = defaultdict(list)
+    
+    async def dispatch(self, request: Request, call_next):
+        client_ip = request.client.host if request.client else "unknown"
+        now = time.time()
+        
+        # Clean old requests
+        self.requests[client_ip] = [
+            req_time for req_time in self.requests[client_ip]
+            if now - req_time < 60
+        ]
+        
+        # Check rate limit
+        if len(self.requests[client_ip]) >= self.requests_per_minute:
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "Too many requests. Please try again later."}
+            )
+        
+        self.requests[client_ip].append(now)
+        response = await call_next(request)
+        return response
+
+from starlette.responses import JSONResponse
 
 # Pydantic Models for requests
 class UserRegister(BaseModel):
@@ -3691,6 +3729,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RateLimitMiddleware, requests_per_minute=120)  # Rate limiting
 
 app.add_middleware(
     CORSMiddleware,
@@ -3713,6 +3752,13 @@ async def startup():
     # Initialize MongoDB indexes for Emergent Auth
     await init_mongo_indexes()
     logger.info("MongoDB indexes initialized")
+    # Seed database if empty
+    try:
+        from seed_database import seed_database
+        await seed_database()
+        logger.info("Database seeding completed")
+    except Exception as e:
+        logger.warning(f"Database seeding skipped or failed: {e}")
 
 @app.on_event("shutdown")
 async def shutdown():

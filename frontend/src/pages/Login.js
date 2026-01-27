@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Mail, Lock, ArrowLeft, Loader2, AlertCircle, CheckCircle, RefreshCw } from 'lucide-react';
+import { Mail, Lock, ArrowLeft, Loader2, AlertCircle, CheckCircle, RefreshCw, AlertTriangle } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
@@ -15,15 +15,19 @@ const Login = () => {
   const { 
     loginWithGoogle, 
     loginWithEmail, 
+    legacyLogin,
     isAuthenticated, 
     isVerified, 
     resendVerification, 
     refreshVerificationStatus,
-    firebaseEnabled 
+    firebaseEnabled,
+    disableFirebaseAuth
   } = useAuth();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showVerificationAlert, setShowVerificationAlert] = useState(false);
+  const [showNetworkError, setShowNetworkError] = useState(false);
+  const [useLegacyMode, setUseLegacyMode] = useState(false);
   const [resendingEmail, setResendingEmail] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -48,9 +52,17 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     setShowVerificationAlert(false);
+    setShowNetworkError(false);
 
     try {
-      const result = await loginWithEmail(formData.email, formData.password);
+      let result;
+      
+      // Use legacy login if in legacy mode
+      if (useLegacyMode) {
+        result = await legacyLogin(formData.email, formData.password);
+      } else {
+        result = await loginWithEmail(formData.email, formData.password);
+      }
       
       if (result.success) {
         toast.success('Welcome back!');
@@ -58,6 +70,9 @@ const Login = () => {
       } else if (result.needsVerification) {
         setShowVerificationAlert(true);
         toast.error('Please verify your email before logging in');
+      } else if (result.error?.includes('network') || result.error?.includes('Network') || result.fallbackAvailable) {
+        setShowNetworkError(true);
+        toast.error('Network error - try using standard login');
       } else {
         toast.error(result.error || 'Login failed');
       }
@@ -70,11 +85,12 @@ const Login = () => {
 
   const handleGoogleLogin = async () => {
     if (!firebaseEnabled) {
-      toast.error('Google sign-in is not available. Please configure Firebase.');
+      toast.error('Google sign-in requires Firebase configuration');
       return;
     }
     
     setGoogleLoading(true);
+    setShowNetworkError(false);
     
     try {
       const result = await loginWithGoogle();
@@ -82,14 +98,28 @@ const Login = () => {
       if (result.success) {
         toast.success('Welcome back!');
         navigate('/');
+      } else if (result.error?.includes('network') || result.error?.includes('Network') || result.fallbackAvailable) {
+        setShowNetworkError(true);
+        toast.error('Network error - please use email/password login');
+      } else if (result.error?.includes('domain') || result.error?.includes('authorized')) {
+        setShowNetworkError(true);
+        toast.error('Domain not authorized - please use email/password login');
       } else {
         toast.error(result.error || 'Google sign-in failed');
       }
     } catch (error) {
-      toast.error(error.message || 'Google sign-in failed');
+      setShowNetworkError(true);
+      toast.error('Google sign-in unavailable - please use email/password');
     } finally {
       setGoogleLoading(false);
     }
+  };
+
+  const handleUseLegacyMode = () => {
+    setUseLegacyMode(true);
+    setShowNetworkError(false);
+    disableFirebaseAuth();
+    toast.success('Switched to standard login mode');
   };
 
   const handleResendVerification = async () => {
@@ -131,10 +161,36 @@ const Login = () => {
         <Card className="shadow-2xl">
           <CardHeader className="space-y-2 text-center">
             <CardTitle className="text-3xl font-bold">Welcome Back</CardTitle>
-            <CardDescription className="text-base">Sign in to your AfroMarket account</CardDescription>
+            <CardDescription className="text-base">
+              Sign in to your AfroMarket account
+              {useLegacyMode && (
+                <span className="block text-xs text-emerald-600 mt-1">
+                  (Using standard login)
+                </span>
+              )}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            {showVerificationAlert && firebaseEnabled && (
+            {showNetworkError && (
+              <Alert className="mb-4 border-orange-200 bg-orange-50">
+                <AlertTriangle className="h-4 w-4 text-orange-600" />
+                <AlertDescription className="text-orange-800">
+                  <p className="font-medium mb-2">Connection issue detected</p>
+                  <p className="text-sm mb-3">
+                    Having trouble connecting to Google. You can use standard email/password login instead.
+                  </p>
+                  <Button 
+                    size="sm" 
+                    onClick={handleUseLegacyMode}
+                    className="bg-orange-600 hover:bg-orange-700 text-white"
+                  >
+                    Use Standard Login
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {showVerificationAlert && !useLegacyMode && (
               <Alert className="mb-4 border-yellow-200 bg-yellow-50">
                 <AlertCircle className="h-4 w-4 text-yellow-600" />
                 <AlertDescription className="text-yellow-800">
@@ -224,7 +280,7 @@ const Login = () => {
                 )}
               </Button>
 
-              {firebaseEnabled && (
+              {firebaseEnabled && !useLegacyMode && (
                 <>
                   <div className="relative my-6">
                     <div className="absolute inset-0 flex items-center">
@@ -267,7 +323,6 @@ const Login = () => {
                       </svg>
                     )}
                     Continue with Google
-                    <CheckCircle className="h-4 w-4 ml-2 text-green-500" />
                   </Button>
 
                   <p className="text-xs text-center text-gray-500 mt-2">
@@ -282,6 +337,18 @@ const Login = () => {
                   Sign up
                 </Link>
               </div>
+
+              {!useLegacyMode && (
+                <div className="text-center mt-4">
+                  <button
+                    type="button"
+                    onClick={handleUseLegacyMode}
+                    className="text-xs text-gray-500 hover:text-gray-700 underline"
+                  >
+                    Having trouble? Use standard login
+                  </button>
+                </div>
+              )}
             </form>
           </CardContent>
         </Card>

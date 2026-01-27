@@ -271,6 +271,185 @@ class WalletTransaction(Base):
     advertisement = relationship('Advertisement', backref='transactions')
 
 
+class ProductReview(Base):
+    """Product reviews and ratings"""
+    __tablename__ = 'product_reviews'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    order_id = Column(Integer, ForeignKey('orders.id'), nullable=True)
+    
+    rating = Column(Integer, nullable=False)  # 1-5 stars
+    title = Column(String(255), nullable=True)
+    comment = Column(Text, nullable=True)
+    images = Column(JSON, default=list)  # Review images
+    
+    helpful_count = Column(Integer, default=0)
+    verified_purchase = Column(Boolean, default=False)
+    status = Column(String(50), default='approved')  # pending, approved, rejected
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    product = relationship('Product', backref='product_reviews')
+    user = relationship('User', backref='reviews')
+
+
+class VendorReview(Base):
+    """Vendor/Seller reviews"""
+    __tablename__ = 'vendor_reviews'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    vendor_id = Column(Integer, ForeignKey('vendors.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    order_id = Column(Integer, ForeignKey('orders.id'), nullable=True)
+    
+    rating = Column(Integer, nullable=False)  # 1-5 stars
+    comment = Column(Text, nullable=True)
+    
+    # Review categories
+    communication_rating = Column(Integer, nullable=True)
+    shipping_rating = Column(Integer, nullable=True)
+    product_quality_rating = Column(Integer, nullable=True)
+    
+    helpful_count = Column(Integer, default=0)
+    status = Column(String(50), default='approved')
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    vendor = relationship('Vendor', backref='vendor_reviews')
+    user = relationship('User', backref='vendor_reviews')
+
+
+class ProductQuestion(Base):
+    """Product Q&A"""
+    __tablename__ = 'product_questions'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    
+    question = Column(Text, nullable=False)
+    answer = Column(Text, nullable=True)
+    answered_by = Column(Integer, ForeignKey('users.id'), nullable=True)  # Vendor or admin
+    answered_at = Column(DateTime, nullable=True)
+    
+    helpful_count = Column(Integer, default=0)
+    status = Column(String(50), default='pending')  # pending, answered
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    product = relationship('Product', backref='questions')
+    user = relationship('User', foreign_keys=[user_id], backref='asked_questions')
+
+
+class Message(Base):
+    """Buyer-Seller messaging"""
+    __tablename__ = 'messages'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    conversation_id = Column(String(100), nullable=False, index=True)
+    sender_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    receiver_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    
+    # Context
+    order_id = Column(Integer, ForeignKey('orders.id'), nullable=True)
+    product_id = Column(Integer, ForeignKey('products.id'), nullable=True)
+    
+    message = Column(Text, nullable=False)
+    attachments = Column(JSON, default=list)
+    
+    read = Column(Boolean, default=False)
+    read_at = Column(DateTime, nullable=True)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    sender = relationship('User', foreign_keys=[sender_id], backref='sent_messages')
+    receiver = relationship('User', foreign_keys=[receiver_id], backref='received_messages')
+
+
+class PromoCode(Base):
+    """Discount/Promo codes"""
+    __tablename__ = 'promo_codes'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    code = Column(String(50), unique=True, nullable=False, index=True)
+    
+    discount_type = Column(String(20), nullable=False)  # 'percentage', 'fixed'
+    discount_value = Column(Float, nullable=False)  # Percentage or fixed amount
+    
+    min_order_amount = Column(Float, default=0.0)
+    max_discount = Column(Float, nullable=True)  # Max discount for percentage codes
+    
+    # Limits
+    usage_limit = Column(Integer, nullable=True)  # Total uses allowed
+    per_user_limit = Column(Integer, default=1)  # Uses per user
+    times_used = Column(Integer, default=0)
+    
+    # Validity
+    valid_from = Column(DateTime, default=datetime.utcnow)
+    valid_until = Column(DateTime, nullable=True)
+    is_active = Column(Boolean, default=True)
+    
+    # Restrictions
+    vendor_id = Column(Integer, ForeignKey('vendors.id'), nullable=True)  # Vendor-specific
+    category = Column(String(100), nullable=True)  # Category-specific
+    product_ids = Column(JSON, default=list)  # Specific products
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    vendor = relationship('Vendor', backref='promo_codes')
+
+
+class RefundRequest(Base):
+    """Refund/Return requests"""
+    __tablename__ = 'refund_requests'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    order_id = Column(Integer, ForeignKey('orders.id'), nullable=False)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    
+    reason = Column(String(100), nullable=False)  # damaged, wrong_item, not_as_described, changed_mind
+    description = Column(Text, nullable=True)
+    images = Column(JSON, default=list)  # Evidence images
+    
+    # Items to refund
+    items = Column(JSON, nullable=False)  # List of item IDs and quantities
+    refund_amount = Column(Float, nullable=False)
+    
+    status = Column(String(50), default='pending')  # pending, approved, rejected, completed
+    admin_notes = Column(Text, nullable=True)
+    processed_by = Column(Integer, ForeignKey('users.id'), nullable=True)
+    processed_at = Column(DateTime, nullable=True)
+    
+    # Stripe refund
+    stripe_refund_id = Column(String(255), nullable=True)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    order = relationship('Order', backref='refund_requests')
+    user = relationship('User', foreign_keys=[user_id], backref='refund_requests')
+
+
+class Wishlist(Base):
+    """User wishlists"""
+    __tablename__ = 'wishlists'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
+    
+    notify_on_sale = Column(Boolean, default=False)
+    notify_on_stock = Column(Boolean, default=False)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    user = relationship('User', backref='wishlist_items')
+    product = relationship('Product', backref='wishlisted_by')
+
+
 # Database session dependency
 async def get_db():
     session = AsyncSessionLocal()

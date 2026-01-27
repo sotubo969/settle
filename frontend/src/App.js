@@ -22,6 +22,9 @@ import TermsOfService from './pages/TermsOfService';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import ShippingInformation from './pages/ShippingInformation';
 import ReturnsRefunds from './pages/ReturnsRefunds';
+import OrderHistory from './pages/OrderHistory';
+import Wishlist from './pages/Wishlist';
+import Messages from './pages/Messages';
 import AuthCallback from './components/AuthCallback';
 import InstallPrompt from './components/InstallPrompt';
 import AfroBot from './components/AfroBot';
@@ -57,6 +60,9 @@ function AppRouter() {
       <Route path="/vendor/subscription" element={<VendorSubscription />} />
       <Route path="/premium" element={<PremiumMembership />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/orders" element={<OrderHistory />} />
+      <Route path="/wishlist" element={<Wishlist />} />
+      <Route path="/messages" element={<Messages />} />
       <Route path="/help" element={<HelpSupport />} />
       <Route path="/terms" element={<TermsOfService />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />

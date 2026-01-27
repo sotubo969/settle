@@ -31,10 +31,11 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isVerified, setIsVerified] = useState(false);
   const [firebaseEnabled] = useState(isFirebaseConfigured());
+  const [useFirebaseAuth, setUseFirebaseAuth] = useState(true); // Can be disabled on network errors
 
   // Listen to Firebase auth state changes (if configured)
   useEffect(() => {
-    if (firebaseEnabled) {
+    if (firebaseEnabled && useFirebaseAuth) {
       const unsubscribe = onAuthStateChange(async (fbUser) => {
         setFirebaseUser(fbUser);
         
@@ -95,11 +96,11 @@ export const AuthProvider = ({ children }) => {
 
       return () => unsubscribe();
     } else {
-      // Firebase not configured, use legacy auth only
+      // Firebase not configured or disabled, use legacy auth only
       checkLegacyAuth();
       setLoading(false);
     }
-  }, [firebaseEnabled]);
+  }, [firebaseEnabled, useFirebaseAuth]);
 
   // Check for legacy authentication
   const checkLegacyAuth = () => {
@@ -124,12 +125,54 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Legacy login function (direct API call)
+  const legacyLogin = async (email, password) => {
+    try {
+      const response = await axios.post(`${API}/auth/login`, { email, password });
+      if (response.data.success) {
+        const userData = response.data.user;
+        setUser(userData);
+        setIsVerified(true);
+        localStorage.setItem('afroToken', response.data.token);
+        localStorage.setItem('afroUser', JSON.stringify(userData));
+        return { success: true, user: userData };
+      }
+      return { success: false, error: 'Login failed' };
+    } catch (error) {
+      const errorMsg = error.response?.data?.detail || 'Invalid email or password';
+      return { success: false, error: errorMsg };
+    }
+  };
+
+  // Legacy registration function (direct API call)
+  const legacyRegister = async (email, password, name) => {
+    try {
+      const response = await axios.post(`${API}/auth/register`, { 
+        name, 
+        email, 
+        password 
+      });
+      if (response.data.success) {
+        const userData = response.data.user;
+        setUser(userData);
+        setIsVerified(true);
+        localStorage.setItem('afroToken', response.data.token);
+        localStorage.setItem('afroUser', JSON.stringify(userData));
+        return { success: true, user: userData };
+      }
+      return { success: false, error: 'Registration failed' };
+    } catch (error) {
+      const errorMsg = error.response?.data?.detail || 'Registration failed';
+      return { success: false, error: errorMsg };
+    }
+  };
+
   // Google Sign-In (Firebase)
   const loginWithGoogleProvider = async () => {
-    if (!firebaseEnabled) {
+    if (!firebaseEnabled || !useFirebaseAuth) {
       return {
         success: false,
-        error: 'Firebase not configured. Please use email/password login.'
+        error: 'Google sign-in is not available. Please use email/password login.'
       };
     }
     
@@ -162,16 +205,31 @@ export const AuthProvider = ({ children }) => {
         }
       }
       
+      // Check if it's a network error - offer fallback
+      if (result.error?.includes('network') || result.error?.includes('Network')) {
+        return {
+          ...result,
+          fallbackAvailable: true,
+          fallbackMessage: 'Try using email/password login instead'
+        };
+      }
+      
       return result;
     } catch (error) {
       console.error('Google login error:', error);
-      return { success: false, error: error.message };
+      return { 
+        success: false, 
+        error: error.message,
+        fallbackAvailable: true,
+        fallbackMessage: 'Try using email/password login instead'
+      };
     }
   };
 
-  // Email/Password Login (Firebase or Legacy)
+  // Email/Password Login (Firebase with Legacy fallback)
   const loginWithEmailPassword = async (email, password) => {
-    if (firebaseEnabled) {
+    // Try Firebase first if enabled
+    if (firebaseEnabled && useFirebaseAuth) {
       try {
         const result = await firebaseLoginWithEmail(email, password);
         
@@ -197,33 +255,32 @@ export const AuthProvider = ({ children }) => {
           }
         }
         
+        // If Firebase returns network error, fall back to legacy auth
+        if (result.error?.includes('network') || result.error?.includes('Network')) {
+          console.log('Firebase network error, falling back to legacy auth');
+          return await legacyLogin(email, password);
+        }
+        
         return result;
       } catch (error) {
         console.error('Firebase email login error:', error);
+        // Fall back to legacy auth on any Firebase error
+        if (error.message?.includes('network') || error.message?.includes('Network')) {
+          console.log('Firebase error, falling back to legacy auth');
+          return await legacyLogin(email, password);
+        }
         return { success: false, error: error.message };
       }
-    } else {
-      // Fallback to legacy auth
-      try {
-        const response = await axios.post(`${API}/auth/login`, { email, password });
-        if (response.data.success) {
-          const userData = response.data.user;
-          setUser(userData);
-          setIsVerified(true);
-          localStorage.setItem('afroToken', response.data.token);
-          localStorage.setItem('afroUser', JSON.stringify(userData));
-          return { success: true, user: userData };
-        }
-        return { success: false, error: 'Login failed' };
-      } catch (error) {
-        return { success: false, error: error.response?.data?.detail || 'Login failed' };
-      }
     }
+    
+    // Use legacy auth directly
+    return await legacyLogin(email, password);
   };
 
-  // Email/Password Registration (Firebase or Legacy)
+  // Email/Password Registration (Firebase with Legacy fallback)
   const registerWithEmailPassword = async (email, password, displayName) => {
-    if (firebaseEnabled) {
+    // Try Firebase first if enabled
+    if (firebaseEnabled && useFirebaseAuth) {
       try {
         const result = await firebaseRegisterWithEmail(email, password, displayName);
         
@@ -246,38 +303,32 @@ export const AuthProvider = ({ children }) => {
           };
         }
         
+        // If Firebase returns network error, fall back to legacy auth
+        if (result.error?.includes('network') || result.error?.includes('Network')) {
+          console.log('Firebase network error, falling back to legacy registration');
+          return await legacyRegister(email, password, displayName);
+        }
+        
         return result;
       } catch (error) {
         console.error('Firebase registration error:', error);
+        // Fall back to legacy auth on Firebase errors
+        if (error.message?.includes('network') || error.message?.includes('Network')) {
+          console.log('Firebase error, falling back to legacy registration');
+          return await legacyRegister(email, password, displayName);
+        }
         return { success: false, error: error.message };
       }
-    } else {
-      // Fallback to legacy auth
-      try {
-        const response = await axios.post(`${API}/auth/register`, { 
-          name: displayName, 
-          email, 
-          password 
-        });
-        if (response.data.success) {
-          const userData = response.data.user;
-          setUser(userData);
-          setIsVerified(true);
-          localStorage.setItem('afroToken', response.data.token);
-          localStorage.setItem('afroUser', JSON.stringify(userData));
-          return { success: true, user: userData };
-        }
-        return { success: false, error: 'Registration failed' };
-      } catch (error) {
-        return { success: false, error: error.response?.data?.detail || 'Registration failed' };
-      }
     }
+    
+    // Use legacy auth directly
+    return await legacyRegister(email, password, displayName);
   };
 
   // Resend verification email
   const resendVerification = async () => {
-    if (!firebaseEnabled) {
-      return { success: false, error: 'Firebase not configured' };
+    if (!firebaseEnabled || !useFirebaseAuth) {
+      return { success: false, error: 'Email verification not available' };
     }
     return await resendVerificationEmail();
   };
@@ -293,7 +344,7 @@ export const AuthProvider = ({ children }) => {
   // Logout
   const logout = async () => {
     try {
-      if (firebaseEnabled) {
+      if (firebaseEnabled && useFirebaseAuth) {
         await logoutFirebase();
       }
     } catch (error) {
@@ -308,7 +359,7 @@ export const AuthProvider = ({ children }) => {
 
   // Refresh user verification status
   const refreshVerificationStatus = async () => {
-    if (firebaseUser && firebaseEnabled) {
+    if (firebaseUser && firebaseEnabled && useFirebaseAuth) {
       await firebaseUser.reload();
       const verified = isUserVerified(firebaseUser);
       setIsVerified(verified);
@@ -339,6 +390,11 @@ export const AuthProvider = ({ children }) => {
     return isVerified;
   };
 
+  // Disable Firebase auth (use legacy only)
+  const disableFirebaseAuth = () => {
+    setUseFirebaseAuth(false);
+  };
+
   const value = {
     user,
     firebaseUser,
@@ -347,12 +403,15 @@ export const AuthProvider = ({ children }) => {
     loading,
     isAuthenticated: !!user,
     isVerified,
-    firebaseEnabled,
+    firebaseEnabled: firebaseEnabled && useFirebaseAuth,
     loginWithGoogle: loginWithGoogleProvider,
     loginWithEmail: loginWithEmailPassword,
     registerWithEmail: registerWithEmailPassword,
     resendVerification,
-    refreshVerificationStatus
+    refreshVerificationStatus,
+    disableFirebaseAuth,
+    legacyLogin,
+    legacyRegister
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
