@@ -1421,6 +1421,20 @@ async def create_order(
                     customer_info=customer_info
                 )
                 logger.info(f"Order notification sent to vendor {vendor.business_name}")
+                
+                # Send real-time WebSocket notification
+                vendor_total = sum(item.get('price', 0) * item.get('quantity', 1) for item in items)
+                await NotificationService.notify_order(
+                    db_session=db,
+                    vendor_id=vendor.id,
+                    order_data={
+                        'order_id': new_order.order_id,
+                        'total': vendor_total,
+                        'items_count': len(items),
+                        'buyer_name': shipping_info.get('fullName', current_user.name),
+                        'items': [{'name': item.get('name'), 'quantity': item.get('quantity')} for item in items]
+                    }
+                )
     except Exception as e:
         logger.error(f"Failed to send vendor notification: {str(e)}")
     
