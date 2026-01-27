@@ -2960,15 +2960,32 @@ async def track_analytics_event(
     
     return {"success": True}
 
+# Helper function to create vendor notification
+async def create_vendor_notification(db: AsyncSession, vendor_id: int, notification_type: str, title: str, message: str, link: str = None):
+    """Create a notification for a vendor"""
+    notification = VendorNotification(
+        vendor_id=vendor_id,
+        type=notification_type,
+        title=title,
+        message=message,
+        link=link
+    )
+    db.add(notification)
+    await db.flush()
+    return notification
+
 # Vendor approval by owner
 @api_router.put("/owner/vendors/{vendor_id}/approve")
 async def owner_approve_vendor(
     vendor_id: int,
     status: str = Query(..., regex="^(approved|rejected)$"),
+    rejection_reason: str = Query(None, description="Reason for rejection"),
     current_user: User = Depends(verify_owner),
     db: AsyncSession = Depends(get_db)
 ):
-    """Approve or reject a vendor"""
+    """Approve or reject a vendor with notifications"""
+    from email_service import email_service
+    
     result = await db.execute(select(Vendor).where(Vendor.id == vendor_id))
     vendor = result.scalar_one_or_none()
     
@@ -2981,14 +2998,198 @@ async def owner_approve_vendor(
     
     await db.flush()
     
-    # Send email notification
+    # Create in-app notification
     if status == "approved":
-        try:
-            await EmailService.send_vendor_approval_notification(vendor.email, vendor.business_name)
-        except:
-            pass
+        notification_title = "🎉 Your Vendor Application has been Approved!"
+        notification_message = f"Congratulations {vendor.business_name}! Your vendor application has been approved. You can now start adding products and reaching customers."
+        notification_link = "/vendor/dashboard"
+    else:
+        notification_title = "Vendor Application Update"
+        notification_message = f"We're sorry, but your vendor application for {vendor.business_name} was not approved at this time."
+        if rejection_reason:
+            notification_message += f" Reason: {rejection_reason}"
+        notification_message += " Please contact support if you have questions."
+        notification_link = "/help"
     
-    return {"success": True, "message": f"Vendor {status}"}
+    await create_vendor_notification(
+        db=db,
+        vendor_id=vendor.id,
+        notification_type="approval" if status == "approved" else "rejection",
+        title=notification_title,
+        message=notification_message,
+        link=notification_link
+    )
+    
+    # Send email notification
+    email_sent = False
+    try:
+        email_sent = email_service.send_vendor_approval_email(vendor.email, vendor.business_name, status == "approved")
+        logger.info(f"Vendor {status} email sent to {vendor.email}")
+    except Exception as e:
+        logger.error(f"Failed to send vendor {status} email: {str(e)}")
+    
+    return {
+        "success": True, 
+        "message": f"Vendor {status}", 
+        "emailSent": email_sent,
+        "notificationCreated": True
+    }
+
+# ============ VENDOR NOTIFICATION ROUTES ============
+@api_router.get("/vendor/notifications")
+async def get_vendor_notifications(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+    unread_only: bool = Query(False)
+):
+    """Get all notifications for the current vendor"""
+    # Get vendor for current user
+    result = await db.execute(select(Vendor).where(Vendor.user_id == current_user.id))
+    vendor = result.scalar_one_or_none()
+    
+    # Also check by email if user_id not linked
+    if not vendor:
+        result = await db.execute(select(Vendor).where(Vendor.email == current_user.email))
+        vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        return {"success": True, "notifications": [], "unreadCount": 0}
+    
+    # Get notifications
+    query = select(VendorNotification).where(VendorNotification.vendor_id == vendor.id)
+    if unread_only:
+        query = query.where(VendorNotification.is_read == False)
+    query = query.order_by(VendorNotification.created_at.desc())
+    
+    result = await db.execute(query)
+    notifications = result.scalars().all()
+    
+    # Count unread
+    unread_result = await db.execute(
+        select(VendorNotification).where(
+            VendorNotification.vendor_id == vendor.id,
+            VendorNotification.is_read == False
+        )
+    )
+    unread_count = len(unread_result.scalars().all())
+    
+    return {
+        "success": True,
+        "notifications": [{
+            "id": n.id,
+            "type": n.type,
+            "title": n.title,
+            "message": n.message,
+            "link": n.link,
+            "isRead": n.is_read,
+            "createdAt": n.created_at.isoformat()
+        } for n in notifications],
+        "unreadCount": unread_count
+    }
+
+@api_router.get("/vendor/notifications/by-email/{email}")
+async def get_vendor_notifications_by_email(
+    email: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get notifications for a vendor by email (for non-authenticated access)"""
+    result = await db.execute(select(Vendor).where(Vendor.email == email))
+    vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        return {"success": True, "notifications": [], "unreadCount": 0, "vendorStatus": None}
+    
+    # Get notifications
+    result = await db.execute(
+        select(VendorNotification)
+        .where(VendorNotification.vendor_id == vendor.id)
+        .order_by(VendorNotification.created_at.desc())
+        .limit(10)
+    )
+    notifications = result.scalars().all()
+    
+    # Count unread
+    unread_result = await db.execute(
+        select(VendorNotification).where(
+            VendorNotification.vendor_id == vendor.id,
+            VendorNotification.is_read == False
+        )
+    )
+    unread_count = len(unread_result.scalars().all())
+    
+    return {
+        "success": True,
+        "vendorStatus": vendor.status,
+        "vendorName": vendor.business_name,
+        "notifications": [{
+            "id": n.id,
+            "type": n.type,
+            "title": n.title,
+            "message": n.message,
+            "link": n.link,
+            "isRead": n.is_read,
+            "createdAt": n.created_at.isoformat()
+        } for n in notifications],
+        "unreadCount": unread_count
+    }
+
+@api_router.put("/vendor/notifications/{notification_id}/read")
+async def mark_notification_read(
+    notification_id: int,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Mark a notification as read"""
+    result = await db.execute(select(Vendor).where(Vendor.user_id == current_user.id))
+    vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        result = await db.execute(select(Vendor).where(Vendor.email == current_user.email))
+        vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        raise HTTPException(status_code=403, detail="Vendor not found")
+    
+    result = await db.execute(
+        select(VendorNotification).where(
+            VendorNotification.id == notification_id,
+            VendorNotification.vendor_id == vendor.id
+        )
+    )
+    notification = result.scalar_one_or_none()
+    
+    if not notification:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    
+    notification.is_read = True
+    notification.read_at = datetime.utcnow()
+    await db.flush()
+    
+    return {"success": True}
+
+@api_router.put("/vendor/notifications/mark-all-read")
+async def mark_all_notifications_read(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Mark all notifications as read for the current vendor"""
+    result = await db.execute(select(Vendor).where(Vendor.user_id == current_user.id))
+    vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        result = await db.execute(select(Vendor).where(Vendor.email == current_user.email))
+        vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        raise HTTPException(status_code=403, detail="Vendor not found")
+    
+    await db.execute(
+        update(VendorNotification)
+        .where(VendorNotification.vendor_id == vendor.id, VendorNotification.is_read == False)
+        .values(is_read=True, read_at=datetime.utcnow())
+    )
+    
+    return {"success": True}
 
 # ============ AFROBOT CHATBOT ROUTES ============
 @api_router.get("/chatbot/welcome")
