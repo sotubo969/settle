@@ -157,35 +157,177 @@ class AfroMarketAPITester:
             self.log_test("Vendor Registration - Creates Vendor in Database", False, str(response))
             return None
 
-    def test_vendor_registration_authenticated(self):
-        """Test authenticated vendor registration endpoint"""
-        print("\n🏪 Testing Authenticated Vendor Registration...")
+    def test_admin_vendor_approval(self):
+        """Test admin vendor approval endpoint creates notification and sends email"""
+        print("\n👑 Testing Admin Vendor Approval...")
         
-        if not self.token:
-            self.log_test("Authenticated Vendor Registration", False, "No auth token available")
-            return None
+        if not self.vendor_id:
+            self.log_test("Admin Vendor Approval - No Vendor to Approve", False, "No vendor ID available")
+            return False
         
-        # Test authenticated vendor registration
-        timestamp = datetime.now().strftime('%H%M%S')
-        vendor_data = {
-            "businessName": f"Test Authenticated Store {timestamp}",
-            "description": "A test store for authenticated user registration",
-            "email": f"auth_vendor_{timestamp}@teststore.com",
-            "phone": "+44 20 9876 5432",
-            "address": "456 Auth Street",
-            "city": "Manchester",
-            "postcode": "M1 1AA"
+        # Test vendor approval
+        approval_data = {
+            "vendorId": self.vendor_id,
+            "status": "approved"
         }
         
-        success, response = self.make_request('POST', 'vendors/register', vendor_data, auth_required=True)
+        success, response = self.make_request('POST', 'admin/vendors/approve', approval_data, auth_required=False)
         
         if success and response.get('success'):
-            vendor_id = response.get('vendor', {}).get('id')
-            self.log_test("Authenticated Vendor Registration", True, f"Vendor ID: {vendor_id}")
-            return vendor_id
+            email_sent = response.get('emailSent', False)
+            notification_created = response.get('notificationCreated', False)
+            
+            self.log_test("Admin Vendor Approval - Creates Notification", notification_created, 
+                         f"Notification created: {notification_created}")
+            self.log_test("Admin Vendor Approval - Sends Email", email_sent, 
+                         f"Email sent: {email_sent}")
+            
+            return True
         else:
-            self.log_test("Authenticated Vendor Registration", False, str(response))
-            return None
+            self.log_test("Admin Vendor Approval - Creates Notification", False, str(response))
+            self.log_test("Admin Vendor Approval - Sends Email", False, str(response))
+            return False
+
+    def test_vendor_notifications_by_email(self):
+        """Test vendor notifications by email endpoint (non-authenticated access)"""
+        print("\n📧 Testing Vendor Notifications by Email...")
+        
+        if not self.vendor_email:
+            self.log_test("Vendor Notifications by Email - No Email", False, "No vendor email available")
+            return False
+        
+        # Wait a moment for notification to be created
+        time.sleep(2)
+        
+        success, response = self.make_request('GET', f'vendor/notifications/by-email/{self.vendor_email}', 
+                                            auth_required=False)
+        
+        if success and response.get('success'):
+            notifications = response.get('notifications', [])
+            unread_count = response.get('unreadCount', 0)
+            vendor_status = response.get('vendorStatus')
+            
+            self.log_test("Vendor Notifications by Email - Returns Notifications List", True, 
+                         f"Found {len(notifications)} notifications, {unread_count} unread")
+            self.log_test("Vendor Notifications by Email - Vendor Status", vendor_status == "approved", 
+                         f"Vendor status: {vendor_status}")
+            
+            # Check if approval notification exists
+            approval_notification = any(n.get('type') == 'approval' for n in notifications)
+            self.log_test("Vendor Notifications by Email - Approval Notification", approval_notification,
+                         f"Approval notification found: {approval_notification}")
+            
+            return len(notifications) > 0
+        else:
+            self.log_test("Vendor Notifications by Email - Returns Notifications List", False, str(response))
+            return False
+
+    def test_vendor_notifications_authenticated(self):
+        """Test authenticated vendor notifications endpoint"""
+        print("\n🔐 Testing Authenticated Vendor Notifications...")
+        
+        if not self.token:
+            self.log_test("Authenticated Vendor Notifications - No Token", False, "No auth token available")
+            return False
+        
+        success, response = self.make_request('GET', 'vendor/notifications', auth_required=True)
+        
+        if success and response.get('success'):
+            notifications = response.get('notifications', [])
+            unread_count = response.get('unreadCount', 0)
+            
+            self.log_test("Authenticated Vendor Notifications - Returns Notifications List", True, 
+                         f"Found {len(notifications)} notifications, {unread_count} unread")
+            
+            return len(notifications) > 0, notifications
+        else:
+            self.log_test("Authenticated Vendor Notifications - Returns Notifications List", False, str(response))
+            return False, []
+
+    def test_mark_notification_as_read(self):
+        """Test mark notification as read endpoint"""
+        print("\n✅ Testing Mark Notification as Read...")
+        
+        if not self.token:
+            self.log_test("Mark Notification as Read - No Token", False, "No auth token available")
+            return False
+        
+        # Get notifications first
+        has_notifications, notifications = self.test_vendor_notifications_authenticated()
+        
+        if not has_notifications or not notifications:
+            self.log_test("Mark Notification as Read - No Notifications", False, "No notifications to mark as read")
+            return False
+        
+        # Find an unread notification
+        unread_notification = next((n for n in notifications if not n.get('isRead')), None)
+        
+        if not unread_notification:
+            self.log_test("Mark Notification as Read - No Unread Notifications", True, "All notifications already read")
+            return True
+        
+        notification_id = unread_notification['id']
+        success, response = self.make_request('PUT', f'vendor/notifications/{notification_id}/read', 
+                                            {}, auth_required=True)
+        
+        if success and response.get('success'):
+            self.log_test("Mark Notification as Read - Works", True, f"Marked notification {notification_id} as read")
+            return True
+        else:
+            self.log_test("Mark Notification as Read - Works", False, str(response))
+            return False
+
+    def test_mark_all_notifications_as_read(self):
+        """Test mark all notifications as read endpoint"""
+        print("\n✅✅ Testing Mark All Notifications as Read...")
+        
+        if not self.token:
+            self.log_test("Mark All Notifications as Read - No Token", False, "No auth token available")
+            return False
+        
+        success, response = self.make_request('PUT', 'vendor/notifications/mark-all-read', 
+                                            {}, auth_required=True)
+        
+        if success and response.get('success'):
+            self.log_test("Mark All Notifications as Read - Works", True, "All notifications marked as read")
+            
+            # Verify by checking notifications again
+            time.sleep(1)
+            success2, response2 = self.make_request('GET', 'vendor/notifications', auth_required=True)
+            if success2 and response2.get('success'):
+                unread_count = response2.get('unreadCount', 0)
+                self.log_test("Mark All Notifications as Read - Verification", unread_count == 0, 
+                             f"Unread count after marking all as read: {unread_count}")
+            
+            return True
+        else:
+            self.log_test("Mark All Notifications as Read - Works", False, str(response))
+            return False
+
+    def test_notification_system_workflow(self):
+        """Test full notification workflow: register vendor -> approve -> notification created"""
+        print("\n🔄 Testing Full Notification Workflow...")
+        
+        # Step 1: Register vendor
+        vendor_id = self.test_vendor_registration_public()
+        if not vendor_id:
+            self.log_test("Full Workflow - Vendor Registration", False, "Failed to register vendor")
+            return False
+        
+        # Step 2: Approve vendor (creates notification)
+        approval_success = self.test_admin_vendor_approval()
+        if not approval_success:
+            self.log_test("Full Workflow - Vendor Approval", False, "Failed to approve vendor")
+            return False
+        
+        # Step 3: Check notifications were created
+        notifications_success = self.test_vendor_notifications_by_email()
+        if not notifications_success:
+            self.log_test("Full Workflow - Notification Creation", False, "No notifications found after approval")
+            return False
+        
+        self.log_test("Full Workflow - Complete", True, "Register -> Approve -> Notification workflow successful")
+        return True
 
     def test_basic_endpoints(self):
         """Test basic API endpoints are working"""
