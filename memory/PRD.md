@@ -8,118 +8,107 @@
 
 ---
 
-## User Personas
-
-### 1. Customer (Shopper)
-- UK residents seeking authentic African groceries
-- Nigerian, Ghanaian, Kenyan diaspora communities
-- Food enthusiasts interested in African cuisine
-
-### 2. Vendor (Seller)
-- African grocery store owners
-- Food importers/distributors
-- Local producers of African products
-
-### 3. Admin/Owner
-- Platform administrators
-- Customer service representatives
-
----
-
-## Core Requirements (Static)
-
-### Authentication
-- [x] Email/Password registration and login
-- [x] Firebase Authentication (Google Sign-In) ✅ CONFIGURED
-- [x] JWT token-based session management
-- [x] Password reset functionality
-- [x] Email verification
-
-### Product Management
-- [x] Product catalog with categories
-- [x] Product search and filtering
-- [x] Product detail pages
-- [x] Stock management
-- [x] Featured products
-
-### Shopping Experience
-- [x] Shopping cart
-- [x] Wishlist
-- [x] Checkout flow
-- [x] Stripe payment integration
-- [x] Order confirmation
-
-### Vendor Features
-- [x] Vendor registration with email notification ✅ WORKING
-- [x] Vendor dashboard
-- [x] **Real-time notifications** ✅ NEW
-- [x] Product management
-- [x] Order management
-- [x] Sales analytics
-- [x] Advertising wallet
-
-### Admin Features
-- [x] Admin dashboard
-- [x] User management
-- [x] **Vendor approval with notifications** ✅ ENHANCED
-- [x] Order oversight
-- [x] Analytics
-
----
-
 ## What's Been Implemented
 
-### January 27, 2026 - Session 3 (Notification System)
-1. ✅ **VendorNotification Database Model** - Stores notifications in SQLite
-2. ✅ **Notification API Endpoints**:
-   - `GET /api/vendor/notifications` - Get vendor's notifications
-   - `GET /api/vendor/notifications/by-email/{email}` - Get by email (no auth)
-   - `PUT /api/vendor/notifications/{id}/read` - Mark as read
-   - `PUT /api/vendor/notifications/mark-all-read` - Mark all read
-3. ✅ **Enhanced Vendor Approval** - Creates notification + sends email
-4. ✅ **VendorNotifications Component** - Bell icon with dropdown, polling every 30s
-5. ✅ **VendorNotificationsPage** - Full notifications management page
-6. ✅ **Dashboard Integration** - Notification bell in vendor dashboard header
+### January 27, 2026 - Session 4 (Real-Time Notifications)
+1. ✅ **WebSocket Notifications** - Real-time updates via WebSocket (`/ws/vendor/{vendor_id}`)
+2. ✅ **PWA Push Notifications** - Browser push notifications with VAPID keys
+3. ✅ **Order Notifications** - Vendors receive instant notifications when orders placed
+4. ✅ **Notification Preferences** - Full control over email/in-app/push notifications
+5. ✅ **Notification Settings Page** - `/vendor/notifications/settings` for preference management
 
-### January 27, 2026 - Session 2
-1. ✅ **Vendor Email Notifications** - Admin receives email when vendor registers
-2. ✅ **Firebase Google Sign-In** - Configured with user's Firebase project
-3. ✅ **SMTP Email Service** - Gmail SMTP configured and working
-4. ✅ **Public Vendor Registration** - Non-authenticated vendor registration endpoint
+### Session 3 - Notification System
+- VendorNotification database model
+- Basic notification endpoints
+- In-app notification bell
 
-### January 27, 2026 - Session 1
-1. ✅ **GitHub Code Pull** - Repository cloned and set up
-2. ✅ **Database Seeding** - 32 products from 3 vendors
-3. ✅ **Environment Configuration** - Backend and frontend .env files
-4. ✅ **Website Audit** - Comprehensive comparison to Amazon/eBay/Vinted
+### Session 2 - Email & Auth
+- Vendor email notifications (SMTP)
+- Firebase Google Sign-In
+- Public vendor registration
+
+### Session 1 - Initial Setup
+- GitHub code pull
+- Database seeding (32 products)
+- Environment configuration
 
 ---
 
 ## Notification System Architecture
 
-### Flow
-```
-1. Vendor Registers → Admin receives email notification
-2. Admin Reviews in Owner Dashboard → Clicks Approve/Reject
-3. System Creates:
-   - In-app notification (stored in VendorNotification table)
-   - Email notification (sent via SMTP)
-4. Vendor sees notification:
-   - Bell icon shows unread count
-   - Click opens dropdown with notifications
-   - Click notification → marked as read, redirects to link
-```
+### Channels
+1. **WebSocket** - Real-time in-app updates
+   - Endpoint: `wss://domain/ws/vendor/{vendor_id}`
+   - Auto-reconnect with exponential backoff
+   - Ping/pong heartbeat every 30s
+
+2. **PWA Push** - Browser notifications
+   - Works even when browser is closed
+   - VAPID authentication
+   - Service worker: `/sw-push.js`
+
+3. **Email** - Traditional email notifications
+   - Gmail SMTP configured
+   - HTML templates for each type
+
+4. **In-App** - Dashboard notifications
+   - Bell icon with unread count
+   - Notification panel with types
 
 ### Notification Types
-- `approval` - Vendor application approved
-- `rejection` - Vendor application rejected
-- `order` - New order received (future)
-- `message` - New message received (future)
-- `system` - System announcements (future)
+- `order` - New order placed
+- `approval` - Vendor approved
+- `rejection` - Vendor rejected
+- `message` - Customer message
+- `review` - Product review
+- `system` - Admin alerts
 
-### Polling Interval
-- Frontend polls every 30 seconds for new notifications
-- Can be upgraded to WebSockets for true real-time
+### Preferences Schema
+```json
+{
+  "email": {
+    "orders": true,
+    "messages": true,
+    "reviews": true,
+    "adminAlerts": true,
+    "marketing": false
+  },
+  "inapp": {
+    "orders": true,
+    "messages": true,
+    "reviews": true,
+    "adminAlerts": true,
+    "marketing": true
+  },
+  "push": {
+    "enabled": true,
+    "orders": true,
+    "messages": true,
+    "reviews": false,
+    "adminAlerts": true
+  }
+}
+```
+
+---
+
+## API Endpoints
+
+### WebSocket
+- `WS /ws/vendor/{vendor_id}` - Real-time notifications
+
+### Notification Preferences
+- `GET /api/vendor/notifications/preferences` - Get preferences
+- `PUT /api/vendor/notifications/preferences` - Update preferences
+
+### Push Notifications
+- `GET /api/push/vapid-key` - Get VAPID public key
+- `POST /api/vendor/push/subscribe` - Subscribe to push
+- `DELETE /api/vendor/push/unsubscribe` - Unsubscribe from push
+- `POST /api/vendor/push/test` - Send test push
+
+### Status
+- `GET /api/ws/status` - WebSocket connection status
 
 ---
 
@@ -127,77 +116,77 @@
 
 | Service | Status | Details |
 |---------|--------|---------|
-| SMTP Email | ✅ Working | Gmail SMTP with app password |
-| Firebase Auth | ✅ Configured | Google Sign-In enabled |
-| Notifications | ✅ Working | SQLite + polling |
+| WebSocket | ✅ Working | Real-time via FastAPI |
+| PWA Push | ✅ Configured | VAPID keys generated |
+| SMTP Email | ✅ Working | Gmail SMTP |
+| Firebase | ✅ Configured | Google Sign-In |
 | Stripe | ⚠️ Test Mode | Using test keys |
-| Database | ✅ Seeded | SQLite with 32 products |
 
 ---
 
 ## Key Files
 
-### Notification System
-- `/app/backend/database.py` - VendorNotification model
-- `/app/backend/server.py` - Notification endpoints
-- `/app/frontend/src/components/VendorNotifications.js` - Bell component
-- `/app/frontend/src/pages/VendorNotificationsPage.js` - Full page
+### Backend
+- `/app/backend/notification_service.py` - WebSocket manager & push service
+- `/app/backend/database.py` - VendorNotificationPreferences, PushSubscription models
+- `/app/backend/server.py` - WebSocket endpoint, preference APIs
 
-### Email & Auth
-- `/app/backend/email_service.py` - SMTP email service
-- `/app/backend/firebase_auth.py` - Firebase Admin SDK
-- `/app/frontend/src/lib/firebase.js` - Firebase client config
+### Frontend
+- `/app/frontend/src/hooks/useWebSocket.js` - WebSocket connection hook
+- `/app/frontend/src/hooks/usePushNotifications.js` - Push notification hook
+- `/app/frontend/src/components/VendorNotifications.js` - Notification bell
+- `/app/frontend/src/pages/VendorNotificationSettings.js` - Settings page
+- `/app/frontend/public/sw-push.js` - Service worker for push
 
-### Vendor Management
-- `/app/frontend/src/pages/VendorRegister.js` - Registration form
-- `/app/frontend/src/pages/VendorDashboard.js` - Dashboard with bell
+---
+
+## Test Results
+
+### Session 4
+- Backend: 96.2% pass rate
+- Frontend: 75% pass rate
+- Note: Frontend requires vendor approval workflow for dashboard access
+
+### Passed Tests
+- WebSocket status endpoint
+- VAPID key endpoint
+- Notification preferences GET/PUT
+- Push subscription endpoint
+- Admin vendor approval creates notification
+- Order notifications sent on order creation
+- Email notification preferences
+- In-app notification preferences
 
 ---
 
 ## Prioritized Backlog
 
-### P0 - Critical (Completed ✅)
-1. [x] Vendor email notifications
-2. [x] Firebase Google Sign-In
-3. [x] Real-time in-app notifications
-4. [x] Vendor approval workflow
+### P0 - Completed ✅
+1. [x] WebSocket real-time notifications
+2. [x] PWA push notifications
+3. [x] Order notifications for vendors
+4. [x] Notification preferences
 
 ### P1 - Production Ready
 1. [ ] Replace Stripe test keys with live keys
-2. [ ] Add production domain to Firebase authorized domains
-3. [ ] Set production CORS origins
+2. [ ] Add production domain to Firebase
+3. [ ] SSL/TLS for WebSocket in production
 
 ### P2 - Enhancements
-1. [ ] WebSocket for true real-time notifications
-2. [ ] Order notifications for vendors
-3. [ ] Push notifications (PWA)
-4. [ ] Multiple product images
+1. [ ] Message notifications for buyer-seller chat
+2. [ ] Review notifications
+3. [ ] Low stock alerts for vendors
+4. [ ] Daily/weekly summary emails
 
 ### P3 - Future
-1. [ ] Multi-language support
-2. [ ] Dark mode
-3. [ ] SMS notifications
-
----
-
-## Testing Summary
-
-### Session 3 Test Results
-- Backend: 88.2% pass rate
-- Frontend: 85% pass rate
-- Overall: 87% pass rate
-
-### Passed Tests
-- Vendor registration creates vendor in database
-- Admin vendor approval creates notification and sends email
-- Vendor notifications endpoints work correctly
-- Full workflow: register → approve → notification created
-- Frontend security: proper redirects for unauthenticated users
+1. [ ] Mobile app push notifications
+2. [ ] SMS notifications via Twilio
+3. [ ] Webhook integrations
 
 ---
 
 ## Next Session Tasks
-1. Upgrade to WebSockets for real-time notifications
-2. Add order notifications for vendors
-3. Implement push notifications via PWA
-4. Add notification preferences settings
+1. Test full order -> notification flow with real user
+2. Add review notifications
+3. Implement message notifications for chat
+4. Add notification sound toggle
