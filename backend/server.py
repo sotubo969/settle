@@ -3223,6 +3223,291 @@ async def mark_all_notifications_read(
     
     return {"success": True}
 
+# ============ WEBSOCKET NOTIFICATIONS ============
+@app.websocket("/ws/vendor/{vendor_id}")
+async def vendor_websocket(websocket: WebSocket, vendor_id: int):
+    """WebSocket endpoint for real-time vendor notifications"""
+    await ws_manager.connect(websocket, vendor_id)
+    try:
+        while True:
+            # Keep connection alive and handle incoming messages
+            data = await websocket.receive_text()
+            try:
+                message = json.loads(data)
+                if message.get("type") == "ping":
+                    await websocket.send_json({"type": "pong", "timestamp": datetime.utcnow().isoformat()})
+            except json.JSONDecodeError:
+                pass
+    except WebSocketDisconnect:
+        ws_manager.disconnect(websocket)
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}")
+        ws_manager.disconnect(websocket)
+
+@api_router.get("/ws/status")
+async def websocket_status():
+    """Get WebSocket connection status"""
+    return {
+        "success": True,
+        "connected_vendors": ws_manager.get_connected_vendors(),
+        "total_connections": sum(len(conns) for conns in ws_manager.active_connections.values())
+    }
+
+# ============ NOTIFICATION PREFERENCES ============
+class NotificationPreferencesUpdate(BaseModel):
+    email_orders: Optional[bool] = None
+    email_messages: Optional[bool] = None
+    email_reviews: Optional[bool] = None
+    email_admin_alerts: Optional[bool] = None
+    email_marketing: Optional[bool] = None
+    inapp_orders: Optional[bool] = None
+    inapp_messages: Optional[bool] = None
+    inapp_reviews: Optional[bool] = None
+    inapp_admin_alerts: Optional[bool] = None
+    inapp_marketing: Optional[bool] = None
+    push_enabled: Optional[bool] = None
+    push_orders: Optional[bool] = None
+    push_messages: Optional[bool] = None
+    push_reviews: Optional[bool] = None
+    push_admin_alerts: Optional[bool] = None
+
+@api_router.get("/vendor/notifications/preferences")
+async def get_notification_preferences(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get vendor notification preferences"""
+    # Get vendor
+    result = await db.execute(select(Vendor).where(Vendor.user_id == current_user.id))
+    vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        result = await db.execute(select(Vendor).where(Vendor.email == current_user.email))
+        vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        raise HTTPException(status_code=403, detail="Vendor not found")
+    
+    # Get or create preferences
+    result = await db.execute(
+        select(VendorNotificationPreferences).where(
+            VendorNotificationPreferences.vendor_id == vendor.id
+        )
+    )
+    prefs = result.scalar_one_or_none()
+    
+    if not prefs:
+        prefs = VendorNotificationPreferences(vendor_id=vendor.id)
+        db.add(prefs)
+        await db.flush()
+        await db.refresh(prefs)
+    
+    return {
+        "success": True,
+        "preferences": {
+            "email": {
+                "orders": prefs.email_orders,
+                "messages": prefs.email_messages,
+                "reviews": prefs.email_reviews,
+                "adminAlerts": prefs.email_admin_alerts,
+                "marketing": prefs.email_marketing
+            },
+            "inapp": {
+                "orders": prefs.inapp_orders,
+                "messages": prefs.inapp_messages,
+                "reviews": prefs.inapp_reviews,
+                "adminAlerts": prefs.inapp_admin_alerts,
+                "marketing": prefs.inapp_marketing
+            },
+            "push": {
+                "enabled": prefs.push_enabled,
+                "orders": prefs.push_orders,
+                "messages": prefs.push_messages,
+                "reviews": prefs.push_reviews,
+                "adminAlerts": prefs.push_admin_alerts
+            }
+        }
+    }
+
+@api_router.put("/vendor/notifications/preferences")
+async def update_notification_preferences(
+    prefs_update: NotificationPreferencesUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update vendor notification preferences"""
+    # Get vendor
+    result = await db.execute(select(Vendor).where(Vendor.user_id == current_user.id))
+    vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        result = await db.execute(select(Vendor).where(Vendor.email == current_user.email))
+        vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        raise HTTPException(status_code=403, detail="Vendor not found")
+    
+    # Get or create preferences
+    result = await db.execute(
+        select(VendorNotificationPreferences).where(
+            VendorNotificationPreferences.vendor_id == vendor.id
+        )
+    )
+    prefs = result.scalar_one_or_none()
+    
+    if not prefs:
+        prefs = VendorNotificationPreferences(vendor_id=vendor.id)
+        db.add(prefs)
+        await db.flush()
+    
+    # Update only provided fields
+    update_data = prefs_update.dict(exclude_unset=True)
+    for key, value in update_data.items():
+        if value is not None:
+            setattr(prefs, key, value)
+    
+    await db.flush()
+    
+    return {"success": True, "message": "Preferences updated"}
+
+# ============ PUSH SUBSCRIPTION MANAGEMENT ============
+class PushSubscriptionRequest(BaseModel):
+    endpoint: str
+    p256dh_key: str
+    auth_key: str
+    device_name: Optional[str] = None
+
+@api_router.get("/push/vapid-key")
+async def get_vapid_public_key():
+    """Get VAPID public key for push subscription"""
+    return {
+        "success": True,
+        "publicKey": PushNotificationService.get_public_key(),
+        "configured": PushNotificationService.is_configured()
+    }
+
+@api_router.post("/vendor/push/subscribe")
+async def subscribe_push(
+    subscription: PushSubscriptionRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Subscribe vendor to push notifications"""
+    # Get vendor
+    result = await db.execute(select(Vendor).where(Vendor.user_id == current_user.id))
+    vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        result = await db.execute(select(Vendor).where(Vendor.email == current_user.email))
+        vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        raise HTTPException(status_code=403, detail="Vendor not found")
+    
+    # Check if subscription already exists
+    result = await db.execute(
+        select(PushSubscription).where(
+            PushSubscription.vendor_id == vendor.id,
+            PushSubscription.endpoint == subscription.endpoint
+        )
+    )
+    existing = result.scalar_one_or_none()
+    
+    if existing:
+        existing.is_active = True
+        existing.p256dh_key = subscription.p256dh_key
+        existing.auth_key = subscription.auth_key
+        existing.device_name = subscription.device_name
+    else:
+        new_sub = PushSubscription(
+            vendor_id=vendor.id,
+            endpoint=subscription.endpoint,
+            p256dh_key=subscription.p256dh_key,
+            auth_key=subscription.auth_key,
+            device_name=subscription.device_name
+        )
+        db.add(new_sub)
+    
+    await db.flush()
+    
+    return {"success": True, "message": "Push subscription saved"}
+
+@api_router.delete("/vendor/push/unsubscribe")
+async def unsubscribe_push(
+    endpoint: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Unsubscribe vendor from push notifications"""
+    result = await db.execute(select(Vendor).where(Vendor.user_id == current_user.id))
+    vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        result = await db.execute(select(Vendor).where(Vendor.email == current_user.email))
+        vendor = result.scalar_one_or_none()
+    
+    if vendor:
+        await db.execute(
+            update(PushSubscription)
+            .where(PushSubscription.vendor_id == vendor.id, PushSubscription.endpoint == endpoint)
+            .values(is_active=False)
+        )
+    
+    return {"success": True}
+
+@api_router.post("/vendor/push/test")
+async def test_push_notification(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Send a test push notification to vendor"""
+    result = await db.execute(select(Vendor).where(Vendor.user_id == current_user.id))
+    vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        result = await db.execute(select(Vendor).where(Vendor.email == current_user.email))
+        vendor = result.scalar_one_or_none()
+    
+    if not vendor:
+        raise HTTPException(status_code=403, detail="Vendor not found")
+    
+    # Get subscriptions
+    result = await db.execute(
+        select(PushSubscription).where(
+            PushSubscription.vendor_id == vendor.id,
+            PushSubscription.is_active == True
+        )
+    )
+    subscriptions = result.scalars().all()
+    
+    if not subscriptions:
+        return {"success": False, "message": "No active push subscriptions found"}
+    
+    sent_count = 0
+    for sub in subscriptions:
+        subscription_info = {
+            "endpoint": sub.endpoint,
+            "keys": {
+                "p256dh": sub.p256dh_key,
+                "auth": sub.auth_key
+            }
+        }
+        
+        result = await PushNotificationService.send_push(
+            subscription_info=subscription_info,
+            title="🔔 Test Notification",
+            body="Push notifications are working! You'll receive instant updates here.",
+            url="/vendor/dashboard"
+        )
+        
+        if result:
+            sent_count += 1
+    
+    return {
+        "success": sent_count > 0,
+        "message": f"Test notification sent to {sent_count} device(s)"
+    }
+
 # ============ AFROBOT CHATBOT ROUTES ============
 @api_router.get("/chatbot/welcome")
 async def get_chatbot_welcome():
