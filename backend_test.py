@@ -115,27 +115,73 @@ class AfroMarketAPITester:
         
         return True
 
-    def test_products_api(self):
-        """Test products endpoints"""
-        print("\n📦 Testing Products API...")
+    def test_vendor_registration_public(self):
+        """Test public vendor registration endpoint with email notification"""
+        print("\n🏪 Testing Public Vendor Registration...")
         
-        # Get all products
-        success, response = self.make_request('GET', 'products', auth_required=False)
-        if success and isinstance(response, list):
-            product_count = len(response)
-            self.log_test(f"Get Products (Found {product_count})", product_count >= 30, 
-                         f"Expected 32 products, got {product_count}")
+        # Test public vendor registration (no auth required)
+        timestamp = datetime.now().strftime('%H%M%S')
+        vendor_data = {
+            "businessName": f"Test African Store {timestamp}",
+            "description": "A test store selling authentic African products and groceries",
+            "email": f"vendor_{timestamp}@teststore.com",
+            "phone": "+44 20 1234 5678",
+            "address": "123 Test Street",
+            "city": "London",
+            "postcode": "SW1A 1AA",
+            "ownerName": "Test Owner"
+        }
+        
+        success, response = self.make_request('POST', 'vendors/register/public', vendor_data, auth_required=False)
+        
+        if success and response.get('success'):
+            email_sent = response.get('emailSent', False)
+            vendor_id = response.get('vendor', {}).get('id')
             
-            if product_count > 0:
-                # Test single product
-                product_id = response[0]['id']
-                success, product = self.make_request('GET', f'products/{product_id}', auth_required=False)
-                self.log_test("Get Single Product", success and 'name' in product)
-                return product_id
+            self.log_test("Public Vendor Registration - Success", True, f"Vendor ID: {vendor_id}")
+            self.log_test("Public Vendor Registration - Email Sent", email_sent, 
+                         f"Email sent status: {email_sent}")
+            
+            # Check if response includes proper message
+            message = response.get('message', '')
+            expected_message_parts = ['submitted successfully', 'review', 'contact']
+            message_ok = any(part in message.lower() for part in expected_message_parts)
+            self.log_test("Public Vendor Registration - Message", message_ok, f"Message: {message}")
+            
+            return vendor_id
         else:
-            self.log_test("Get Products", False, str(response))
+            self.log_test("Public Vendor Registration - Success", False, str(response))
+            return None
+
+    def test_vendor_registration_authenticated(self):
+        """Test authenticated vendor registration endpoint"""
+        print("\n🏪 Testing Authenticated Vendor Registration...")
         
-        return None
+        if not self.token:
+            self.log_test("Authenticated Vendor Registration", False, "No auth token available")
+            return None
+        
+        # Test authenticated vendor registration
+        timestamp = datetime.now().strftime('%H%M%S')
+        vendor_data = {
+            "businessName": f"Test Authenticated Store {timestamp}",
+            "description": "A test store for authenticated user registration",
+            "email": f"auth_vendor_{timestamp}@teststore.com",
+            "phone": "+44 20 9876 5432",
+            "address": "456 Auth Street",
+            "city": "Manchester",
+            "postcode": "M1 1AA"
+        }
+        
+        success, response = self.make_request('POST', 'vendors/register', vendor_data, auth_required=True)
+        
+        if success and response.get('success'):
+            vendor_id = response.get('vendor', {}).get('id')
+            self.log_test("Authenticated Vendor Registration", True, f"Vendor ID: {vendor_id}")
+            return vendor_id
+        else:
+            self.log_test("Authenticated Vendor Registration", False, str(response))
+            return None
 
     def test_promo_codes(self):
         """Test promo code validation"""
