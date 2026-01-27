@@ -229,6 +229,9 @@ export const loginWithEmail = async (email, password) => {
       case 'auth/invalid-credential':
         errorMessage = 'Invalid email or password';
         break;
+      case 'auth/network-request-failed':
+        errorMessage = 'Network error. Please check your internet connection and ensure this domain is authorized in Firebase Console.';
+        break;
       default:
         errorMessage = error.message;
     }
