@@ -67,20 +67,27 @@ const VendorRegister = () => {
     try {
       // Get token if user is logged in
       const token = localStorage.getItem('afroToken');
+      
+      // Use authenticated endpoint if logged in, public endpoint otherwise
+      const endpoint = token ? `${API}/vendors/register` : `${API}/vendors/register/public`;
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       
-      const response = await axios.post(`${API}/vendors/register`, {
+      const response = await axios.post(endpoint, {
         businessName: formData.businessName,
         description: formData.description,
         email: formData.email,
         phone: formData.phone,
         address: formData.address,
         city: formData.city,
-        postcode: formData.postcode
+        postcode: formData.postcode,
+        ownerName: formData.ownerName
       }, { headers });
       
       if (response.data.success) {
-        toast.success('Vendor application submitted! We will review and email you within 2-3 business days.');
+        const emailNote = response.data.emailSent 
+          ? 'An email has been sent to the admin for review.' 
+          : '';
+        toast.success(`Vendor application submitted! We will review and email you within 2-3 business days. ${emailNote}`);
         navigate('/');
       } else {
         toast.error(response.data.message || 'Registration failed');
