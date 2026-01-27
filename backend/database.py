@@ -458,7 +458,7 @@ class VendorNotification(Base):
     vendor_id = Column(Integer, ForeignKey('vendors.id'), nullable=False)
     
     # Notification content
-    type = Column(String(50), nullable=False)  # 'approval', 'rejection', 'order', 'message', 'system'
+    type = Column(String(50), nullable=False)  # 'approval', 'rejection', 'order', 'message', 'system', 'review'
     title = Column(String(255), nullable=False)
     message = Column(Text, nullable=False)
     
@@ -468,12 +468,78 @@ class VendorNotification(Base):
     # Link to related content (optional)
     link = Column(String(500), nullable=True)
     
+    # Additional data (JSON)
+    data = Column(JSON, default=dict)
+    
     # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)
     read_at = Column(DateTime, nullable=True)
     
     # Relationships
     vendor = relationship('Vendor', backref='notifications')
+
+
+class VendorNotificationPreferences(Base):
+    """Vendor notification preferences"""
+    __tablename__ = 'vendor_notification_preferences'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    vendor_id = Column(Integer, ForeignKey('vendors.id'), unique=True, nullable=False)
+    
+    # Email preferences
+    email_orders = Column(Boolean, default=True)
+    email_messages = Column(Boolean, default=True)
+    email_reviews = Column(Boolean, default=True)
+    email_admin_alerts = Column(Boolean, default=True)
+    email_marketing = Column(Boolean, default=False)
+    
+    # In-app preferences
+    inapp_orders = Column(Boolean, default=True)
+    inapp_messages = Column(Boolean, default=True)
+    inapp_reviews = Column(Boolean, default=True)
+    inapp_admin_alerts = Column(Boolean, default=True)
+    inapp_marketing = Column(Boolean, default=True)
+    
+    # Push notification preferences
+    push_enabled = Column(Boolean, default=True)
+    push_orders = Column(Boolean, default=True)
+    push_messages = Column(Boolean, default=True)
+    push_reviews = Column(Boolean, default=False)
+    push_admin_alerts = Column(Boolean, default=True)
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    vendor = relationship('Vendor', backref='notification_preferences')
+
+
+class PushSubscription(Base):
+    """Web Push subscriptions for vendors"""
+    __tablename__ = 'push_subscriptions'
+    
+    id = Column(Integer, primary_key=True, index=True)
+    vendor_id = Column(Integer, ForeignKey('vendors.id'), nullable=False)
+    
+    # Push subscription data
+    endpoint = Column(Text, nullable=False)
+    p256dh_key = Column(String(500), nullable=False)
+    auth_key = Column(String(500), nullable=False)
+    
+    # Device info
+    user_agent = Column(String(500), nullable=True)
+    device_name = Column(String(255), nullable=True)
+    
+    # Status
+    is_active = Column(Boolean, default=True)
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_used_at = Column(DateTime, nullable=True)
+    
+    # Relationships
+    vendor = relationship('Vendor', backref='push_subscriptions')
 
 
 # Database session dependency
