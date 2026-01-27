@@ -1,19 +1,26 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Store, Mail, Phone, MapPin, FileText, ArrowLeft } from 'lucide-react';
+import { Store, Mail, Phone, MapPin, FileText, ArrowLeft, Chrome } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Separator } from '../components/ui/separator';
 import { toast } from 'sonner';
-import { mockVendorRegister } from '../mock';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
+
 const VendorRegister = () => {
   const navigate = useNavigate();
+  const { user, isAuthenticated, loginWithGoogle, firebaseEnabled } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [formData, setFormData] = useState({
     businessName: '',
     ownerName: '',
@@ -25,18 +32,62 @@ const VendorRegister = () => {
     description: '',
   });
 
+  // Pre-fill email if user is logged in
+  useState(() => {
+    if (user?.email) {
+      setFormData(prev => ({ ...prev, email: user.email, ownerName: user.name || '' }));
+    }
+  }, [user]);
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    try {
+      const result = await loginWithGoogle();
+      if (result.success) {
+        toast.success('Signed in with Google! Please complete the form below.');
+        setFormData(prev => ({
+          ...prev,
+          email: result.user?.email || '',
+          ownerName: result.user?.name || result.user?.displayName || ''
+        }));
+      } else {
+        toast.error(result.error || 'Google sign-in failed');
+      }
+    } catch (error) {
+      toast.error('Google sign-in failed');
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const response = await mockVendorRegister(formData);
-      if (response.success) {
-        toast.success('Vendor application submitted! We will review and get back to you soon.');
+      // Get token if user is logged in
+      const token = localStorage.getItem('afroToken');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      const response = await axios.post(`${API}/vendors/register`, {
+        businessName: formData.businessName,
+        description: formData.description,
+        email: formData.email,
+        phone: formData.phone,
+        address: formData.address,
+        city: formData.city,
+        postcode: formData.postcode
+      }, { headers });
+      
+      if (response.data.success) {
+        toast.success('Vendor application submitted! We will review and email you within 2-3 business days.');
         navigate('/');
+      } else {
+        toast.error(response.data.message || 'Registration failed');
       }
     } catch (error) {
-      toast.error('Registration failed');
+      const errorMsg = error.response?.data?.detail || 'Registration failed. Please try again.';
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
