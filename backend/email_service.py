@@ -9,14 +9,19 @@ from dotenv import load_dotenv
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env')
+load_dotenv(ROOT_DIR / '.env', override=True)
 
 logger = logging.getLogger(__name__)
 
 class EmailService:
     def __init__(self):
         # Reload environment variables to ensure they're loaded
-        load_dotenv(ROOT_DIR / '.env')
+        load_dotenv(ROOT_DIR / '.env', override=True)
+        self._load_credentials()
+    
+    def _load_credentials(self):
+        """Load or reload SMTP credentials from environment"""
+        load_dotenv(ROOT_DIR / '.env', override=True)
         
         self.smtp_host = os.environ.get('SMTP_HOST', 'smtp.gmail.com')
         self.smtp_port = int(os.environ.get('SMTP_PORT', '587'))
