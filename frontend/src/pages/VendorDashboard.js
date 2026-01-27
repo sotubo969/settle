@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import VendorNotifications from '../components/VendorNotifications';
 import { toast } from 'sonner';
 import { 
   LayoutDashboard, Package, ShoppingCart, DollarSign, TrendingUp,
@@ -10,7 +11,7 @@ import {
   ChevronLeft, ChevronRight, RefreshCw, Store, Truck, CreditCard,
   ArrowUpRight, ArrowDownRight, Mail, Phone, MapPin, Calendar,
   BarChart3, PieChart, Search, Filter, Download, Plus, XCircle,
-  Banknote, Receipt, Percent, Box, Target, Award, Megaphone, Wallet
+  Banknote, Receipt, Percent, Box, Target, Award, Megaphone, Wallet, Bell
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
