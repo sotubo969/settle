@@ -152,6 +152,12 @@ export const registerWithEmail = async (email, password, displayName) => {
       case 'auth/invalid-email':
         errorMessage = 'Invalid email address';
         break;
+      case 'auth/network-request-failed':
+        errorMessage = 'Network error. Please check your internet connection and ensure this domain is authorized in Firebase Console.';
+        break;
+      case 'auth/operation-not-allowed':
+        errorMessage = 'Email/password sign-up is not enabled. Please enable it in Firebase Console.';
+        break;
       default:
         errorMessage = error.message;
     }
