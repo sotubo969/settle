@@ -15,6 +15,7 @@ import VendorDashboard from './pages/VendorDashboard';
 import VendorAds from './pages/VendorAds';
 import VendorWallet from './pages/VendorWallet';
 import VendorSubscription from './pages/VendorSubscription';
+import VendorNotificationsPage from './pages/VendorNotificationsPage';
 import PremiumMembership from './pages/PremiumMembership';
 import Profile from './pages/Profile';
 import HelpSupport from './pages/HelpSupport';
