@@ -59,6 +59,7 @@ function AppRouter() {
       <Route path="/vendor/ads" element={<VendorAds />} />
       <Route path="/vendor/wallet" element={<VendorWallet />} />
       <Route path="/vendor/subscription" element={<VendorSubscription />} />
+      <Route path="/vendor/notifications" element={<VendorNotificationsPage />} />
       <Route path="/premium" element={<PremiumMembership />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/orders" element={<OrderHistory />} />
