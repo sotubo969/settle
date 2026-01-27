@@ -538,13 +538,10 @@ class AfroMarketAPITester:
             self.log_test("Vendors API", False, str(response))
 
     def run_all_tests(self):
-        """Run comprehensive test suite for vendor notification system"""
-        print("🧪 Starting AfroMarket UK Backend Tests - Vendor Notification System")
+        """Run comprehensive test suite for WebSocket and push notification system"""
+        print("🧪 Starting AfroMarket UK Backend Tests - WebSocket & Push Notification System")
         print(f"🌐 Testing against: {self.base_url}")
         print("=" * 70)
-        
-        # Test Firebase configuration
-        self.test_firebase_status()
         
         # Test basic endpoints
         self.test_basic_endpoints()
@@ -552,18 +549,34 @@ class AfroMarketAPITester:
         # Test authentication
         auth_success = self.test_authentication()
         
-        # Test notification system workflow
+        # Test WebSocket and Push Notification System
         print("\n" + "="*50)
-        print("🔔 VENDOR NOTIFICATION SYSTEM TESTS")
+        print("🔔 WEBSOCKET & PUSH NOTIFICATION TESTS")
         print("="*50)
         
-        # Test full workflow
-        self.test_notification_system_workflow()
+        # Test WebSocket status
+        self.test_websocket_status()
         
-        # Test individual notification endpoints if we have auth
+        # Test VAPID key configuration
+        self.test_vapid_key_endpoint()
+        
+        # Test notification preferences (requires auth)
         if auth_success and self.token:
-            self.test_mark_notification_as_read()
-            self.test_mark_all_notifications_as_read()
+            self.test_notification_preferences_get()
+            self.test_notification_preferences_put()
+            self.test_push_subscription_endpoint()
+        
+        # Test vendor registration and approval workflow
+        vendor_id = self.test_vendor_registration_public()
+        if vendor_id:
+            self.test_admin_vendor_approval()
+            self.test_vendor_notifications_by_email()
+            
+            # Test order notification workflow
+            if auth_success and self.token:
+                self.test_order_notification_creation()
+                self.test_mark_notification_as_read()
+                self.test_mark_all_notifications_as_read()
         
         # Print summary
         print("\n" + "=" * 70)
