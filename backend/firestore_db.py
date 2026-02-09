@@ -300,17 +300,31 @@ class FirestoreDB:
     
     async def get_user_orders(self, user_id: str, limit: int = 50) -> List[Dict]:
         """Get orders for a user"""
-        docs = self.db.collection('orders').where(
-            filter=FieldFilter('user_id', '==', user_id)
-        ).order_by('created_at', direction=Query.DESCENDING).limit(limit).get()
-        return docs_to_list(docs)
+        try:
+            docs = self.db.collection('orders').where(
+                filter=FieldFilter('user_id', '==', user_id)
+            ).limit(limit).get()
+            results = docs_to_list(docs)
+            # Sort by created_at descending in Python to avoid composite index requirement
+            results.sort(key=lambda x: str(x.get('created_at', '')), reverse=True)
+            return results
+        except Exception as e:
+            logger.error(f"Error fetching user orders: {e}")
+            return []
     
     async def get_vendor_orders(self, vendor_id: str, limit: int = 50) -> List[Dict]:
         """Get orders containing products from a vendor"""
-        docs = self.db.collection('orders').where(
-            filter=FieldFilter('vendor_ids', 'array_contains', vendor_id)
-        ).order_by('created_at', direction=Query.DESCENDING).limit(limit).get()
-        return docs_to_list(docs)
+        try:
+            docs = self.db.collection('orders').where(
+                filter=FieldFilter('vendor_ids', 'array_contains', vendor_id)
+            ).limit(limit).get()
+            results = docs_to_list(docs)
+            # Sort by created_at descending in Python
+            results.sort(key=lambda x: str(x.get('created_at', '')), reverse=True)
+            return results
+        except Exception as e:
+            logger.error(f"Error fetching vendor orders: {e}")
+            return []
     
     async def update_order(self, order_id: str, updates: Dict) -> bool:
         """Update order data"""
