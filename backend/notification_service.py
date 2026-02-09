@@ -74,8 +74,9 @@ class ConnectionManager:
         
         logger.info(f"WebSocket disconnected for vendor {vendor_id}")
     
-    async def send_to_vendor(self, vendor_id: int, message: dict):
+    async def send_to_vendor(self, vendor_id: str, message: dict):
         """Send a message to all connections for a specific vendor"""
+        vendor_id = str(vendor_id)  # Ensure string
         if vendor_id not in self.active_connections:
             logger.debug(f"No active connections for vendor {vendor_id}")
             return False
