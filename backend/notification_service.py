@@ -34,13 +34,14 @@ VAPID_CLAIMS = {
 class ConnectionManager:
     """Manages WebSocket connections for real-time notifications"""
     
-    # vendor_id -> set of WebSocket connections
-    active_connections: Dict[int, Set[WebSocket]] = field(default_factory=dict)
+    # vendor_id -> set of WebSocket connections (using str for Firestore compatibility)
+    active_connections: Dict[str, Set[WebSocket]] = field(default_factory=dict)
     # WebSocket -> vendor_id mapping for cleanup
-    connection_to_vendor: Dict[WebSocket, int] = field(default_factory=dict)
+    connection_to_vendor: Dict[WebSocket, str] = field(default_factory=dict)
     
-    async def connect(self, websocket: WebSocket, vendor_id: int):
+    async def connect(self, websocket: WebSocket, vendor_id: str):
         """Accept a new WebSocket connection for a vendor"""
+        vendor_id = str(vendor_id)  # Ensure string
         await websocket.accept()
         
         if vendor_id not in self.active_connections:
