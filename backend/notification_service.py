@@ -99,7 +99,7 @@ class ConnectionManager:
         logger.info(f"Sent notification to {sent_count} connections for vendor {vendor_id}")
         return sent_count > 0
     
-    async def broadcast(self, message: dict, exclude_vendors: Set[int] = None):
+    async def broadcast(self, message: dict, exclude_vendors: Set[str] = None):
         """Broadcast a message to all connected vendors"""
         exclude_vendors = exclude_vendors or set()
         
@@ -107,12 +107,13 @@ class ConnectionManager:
             if vendor_id not in exclude_vendors:
                 await self.send_to_vendor(vendor_id, message)
     
-    def get_connected_vendors(self) -> List[int]:
+    def get_connected_vendors(self) -> List[str]:
         """Get list of currently connected vendor IDs"""
         return list(self.active_connections.keys())
     
-    def is_vendor_connected(self, vendor_id: int) -> bool:
+    def is_vendor_connected(self, vendor_id: str) -> bool:
         """Check if a vendor has any active connections"""
+        vendor_id = str(vendor_id)
         return vendor_id in self.active_connections and len(self.active_connections[vendor_id]) > 0
 
 
