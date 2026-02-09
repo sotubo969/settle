@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-AfroMarket UK Backend API Testing - WebSocket & Push Notification System
-Tests WebSocket status, VAPID keys, notification preferences, push subscriptions, and real-time notifications
+AfroMarket UK Backend API Testing - Firestore Migration Testing
+Tests core functionality after migration from SQLite/MongoDB to Firebase Firestore
 """
 
 import requests
@@ -11,7 +11,7 @@ import time
 from datetime import datetime
 from typing import Dict, Any, Optional
 
-class AfroMarketAPITester:
+class AfroMarketFirestoreTester:
     def __init__(self, base_url: str = "https://github-code-pull.preview.emergentagent.com"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
