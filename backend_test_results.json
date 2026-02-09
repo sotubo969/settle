@@ -1,144 +1,100 @@
 {
-  "timestamp": "2026-01-27T15:00:16.095486",
-  "total_tests": 26,
-  "passed_tests": 25,
+  "timestamp": "2026-02-09T13:20:23.289726",
+  "test_type": "firestore_migration",
+  "total_tests": 17,
+  "passed_tests": 16,
   "failed_tests": [
     {
-      "test": "Mark Notification as Read - No Notifications",
-      "error": "No notifications to mark as read"
+      "test": "Notifications - By Email Endpoint",
+      "error": "Notifications failed: {'status_code': 520, 'text': 'Internal Server Error'}"
     }
   ],
-  "success_rate": 96.15384615384616,
+  "success_rate": 94.11764705882352,
   "detailed_results": {
-    "Products API": {
+    "Health Endpoint - Database Firestore": {
+      "success": true,
+      "details": "Database: firestore",
+      "timestamp": "2026-02-09T13:20:19.161405"
+    },
+    "Products API - Returns Products": {
       "success": true,
       "details": "Found 32 products",
-      "timestamp": "2026-01-27T15:00:01.348192"
+      "timestamp": "2026-02-09T13:20:19.372493"
     },
-    "Vendors API": {
+    "Products API - Product Structure": {
       "success": true,
-      "details": "Found 5 vendors",
-      "timestamp": "2026-01-27T15:00:01.396805"
+      "details": "Fields: ['created_at', 'description', 'price', 'rating', 'updated_at', 'brand', 'review_count', 'name', 'in_stock', 'vendor_id', 'image', 'stock_quantity', 'category', 'weight', 'id']",
+      "timestamp": "2026-02-09T13:20:19.372508"
     },
-    "Email/Password Registration": {
+    "Vendors API - Returns 3+ Vendors": {
       "success": true,
-      "details": "",
-      "timestamp": "2026-01-27T15:00:01.693551"
+      "details": "Found 3 vendors",
+      "timestamp": "2026-02-09T13:20:19.560099"
     },
-    "Email/Password Login": {
+    "Vendors API - Vendor Structure": {
       "success": true,
-      "details": "",
-      "timestamp": "2026-01-27T15:00:01.955182"
+      "details": "Fields: ['id', 'name', 'rating', 'totalSales', 'location', 'verified']",
+      "timestamp": "2026-02-09T13:20:19.560113"
     },
-    "WebSocket Status - Available": {
+    "User Registration - Creates User": {
       "success": true,
-      "details": "Connected vendors: 0, Total connections: 0",
-      "timestamp": "2026-01-27T15:00:01.990001"
+      "details": "User ID: z2YfdhjSsZJCciDpiwgx",
+      "timestamp": "2026-02-09T13:20:20.082726"
     },
-    "VAPID Key - Configured": {
+    "User Registration - Returns Token": {
       "success": true,
-      "details": "Public key length: 87",
-      "timestamp": "2026-01-27T15:00:02.032723"
+      "details": "Token length: 231",
+      "timestamp": "2026-02-09T13:20:20.082739"
     },
-    "Authenticated Vendor Registration - Creates Vendor": {
+    "User Registration - User Data": {
       "success": true,
-      "details": "Vendor ID: 15",
-      "timestamp": "2026-01-27T15:00:02.835033"
+      "details": "Name: Firestore Test User",
+      "timestamp": "2026-02-09T13:20:20.082744"
     },
-    "Notification Preferences GET - Returns Structure": {
+    "User Login - Test Credentials": {
       "success": true,
-      "details": "Preferences keys: ['email', 'inapp', 'push']",
-      "timestamp": "2026-01-27T15:00:02.880878"
+      "details": "Logged in as test@afromarket.co.uk",
+      "timestamp": "2026-02-09T13:20:20.490167"
     },
-    "Notification Preferences GET - Email Preferences": {
+    "Auth Me - Returns User Data": {
       "success": true,
-      "details": "Email preferences: ['orders', 'messages', 'reviews', 'adminAlerts', 'marketing']",
-      "timestamp": "2026-01-27T15:00:02.880892"
+      "details": "User: test@afromarket.co.uk",
+      "timestamp": "2026-02-09T13:20:20.668927"
     },
-    "Notification Preferences PUT - Updates Successfully": {
+    "Auth Me - User ID Match": {
       "success": true,
-      "details": "Preferences updated",
-      "timestamp": "2026-01-27T15:00:02.926667"
+      "details": "ID: kLZWkFS9tZ6LPiESLxK5",
+      "timestamp": "2026-02-09T13:20:20.668937"
     },
-    "Notification Preferences PUT - Verification": {
+    "Vendor Registration - Creates in Firestore": {
       "success": true,
-      "details": "Email reviews preference: False",
-      "timestamp": "2026-01-27T15:00:03.966567"
-    },
-    "Push Subscription - Creates Subscription": {
-      "success": true,
-      "details": "Push subscription created",
-      "timestamp": "2026-01-27T15:00:04.017859"
-    },
-    "Vendor Registration - Creates Vendor in Database": {
-      "success": true,
-      "details": "Vendor ID: 16",
-      "timestamp": "2026-01-27T15:00:04.996409"
+      "details": "Vendor ID: zYQqofxd3gpvRQcWIMJR",
+      "timestamp": "2026-02-09T13:20:21.809762"
     },
     "Vendor Registration - Email Notification": {
       "success": true,
-      "details": "Email sent status: True",
-      "timestamp": "2026-01-27T15:00:04.996421"
+      "details": "Email sent: True",
+      "timestamp": "2026-02-09T13:20:21.809776"
     },
     "Vendor Registration - Response Message": {
       "success": true,
-      "details": "Message: Application submitted successfully! We will review and contact you within 2-3 business days.",
-      "timestamp": "2026-01-27T15:00:04.996429"
+      "details": "Message: Application submitted! We will review within 2-3 business days.",
+      "timestamp": "2026-02-09T13:20:21.809780"
     },
-    "Admin Vendor Approval - Creates Notification": {
+    "Contact Form - Submission Works": {
       "success": true,
-      "details": "Notification created: True",
-      "timestamp": "2026-01-27T15:00:06.192714"
+      "details": "Response: Message sent successfully",
+      "timestamp": "2026-02-09T13:20:22.936034"
     },
-    "Admin Vendor Approval - Sends Email": {
+    "Firebase Auth - Configured Status": {
       "success": true,
-      "details": "Email sent: True",
-      "timestamp": "2026-01-27T15:00:06.192726"
+      "details": "Message: Firebase is configured",
+      "timestamp": "2026-02-09T13:20:22.975944"
     },
-    "Vendor Notifications by Email - Returns Notifications List": {
-      "success": true,
-      "details": "Found 1 notifications, 1 unread",
-      "timestamp": "2026-01-27T15:00:08.260660"
-    },
-    "Vendor Notifications by Email - Vendor Status": {
-      "success": true,
-      "details": "Vendor status: approved",
-      "timestamp": "2026-01-27T15:00:08.260670"
-    },
-    "Vendor Notifications by Email - Approval Notification": {
-      "success": true,
-      "details": "Approval notification found: True",
-      "timestamp": "2026-01-27T15:00:08.260678"
-    },
-    "Order Notification - Order Created": {
-      "success": true,
-      "details": "Order ID: ORD-2026-8298",
-      "timestamp": "2026-01-27T15:00:11.892741"
-    },
-    "Order Notification - Vendor Notified": {
-      "success": true,
-      "details": "Found 1 order notifications",
-      "timestamp": "2026-01-27T15:00:14.962025"
-    },
-    "Authenticated Vendor Notifications - Returns Notifications List": {
-      "success": true,
-      "details": "Found 0 notifications, 0 unread",
-      "timestamp": "2026-01-27T15:00:15.007988"
-    },
-    "Mark Notification as Read - No Notifications": {
+    "Notifications - By Email Endpoint": {
       "success": false,
-      "details": "No notifications to mark as read",
-      "timestamp": "2026-01-27T15:00:15.008002"
-    },
-    "Mark All Notifications as Read - Works": {
-      "success": true,
-      "details": "All notifications marked as read",
-      "timestamp": "2026-01-27T15:00:15.049859"
-    },
-    "Mark All Notifications as Read - Verification": {
-      "success": true,
-      "details": "Unread count after marking all as read: 0",
-      "timestamp": "2026-01-27T15:00:16.095215"
+      "details": "Notifications failed: {'status_code': 520, 'text': 'Internal Server Error'}",
+      "timestamp": "2026-02-09T13:20:23.289458"
     }
   }
 }
