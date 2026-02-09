@@ -390,15 +390,29 @@ class FirestoreDB:
     async def get_vendor_notifications(self, vendor_id: str, unread_only: bool = False, 
                                         limit: int = 50) -> List[Dict]:
         """Get notifications for a vendor"""
-        query = self.db.collection('notifications').where(
-            filter=FieldFilter('vendor_id', '==', vendor_id)
-        )
-        
-        if unread_only:
-            query = query.where(filter=FieldFilter('is_read', '==', False))
-        
-        docs = query.order_by('created_at', direction=Query.DESCENDING).limit(limit).get()
-        return docs_to_list(docs)
+        try:
+            query = self.db.collection('notifications').where(
+                filter=FieldFilter('vendor_id', '==', vendor_id)
+            )
+            
+            if unread_only:
+                query = query.where(filter=FieldFilter('is_read', '==', False))
+            
+            # Try with order_by (requires composite index)
+            try:
+                docs = query.order_by('created_at', direction=Query.DESCENDING).limit(limit).get()
+            except Exception:
+                # Fallback: fetch without order and sort in Python
+                docs = query.limit(limit * 2).get()
+                results = docs_to_list(docs)
+                # Sort by created_at descending
+                results.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+                return results[:limit]
+            
+            return docs_to_list(docs)
+        except Exception as e:
+            logger.error(f"Error fetching notifications: {e}")
+            return []
     
     async def mark_notification_read(self, notification_id: str) -> bool:
         """Mark notification as read"""
