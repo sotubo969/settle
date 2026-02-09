@@ -1,0 +1,74 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".write": "auth != null && auth.uid == $uid"
+      }
+    },
+    "vendors": {
+      ".read": true,
+      "$vendorId": {
+        ".write": "auth != null && (root.child('vendors').child($vendorId).child('user_id').val() == auth.uid || root.child('users').child(auth.uid).child('is_admin').val() == true)"
+      }
+    },
+    "products": {
+      ".read": true,
+      "$productId": {
+        ".write": "auth != null && root.child('products').child($productId).child('vendor_id').val() != null && root.child('vendors').child(root.child('products').child($productId).child('vendor_id').val()).child('user_id').val() == auth.uid"
+      }
+    },
+    "orders": {
+      "$orderId": {
+        ".read": "auth != null && (data.child('user_id').val() == auth.uid || root.child('users').child(auth.uid).child('is_admin').val() == true)",
+        ".write": "auth != null"
+      }
+    },
+    "carts": {
+      "$cartId": {
+        ".read": "auth != null && data.child('user_id').val() == auth.uid",
+        ".write": "auth != null && (data.child('user_id').val() == auth.uid || !data.exists())"
+      }
+    },
+    "notifications": {
+      "$notificationId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "ads": {
+      ".read": true,
+      "$adId": {
+        ".write": "auth != null"
+      }
+    },
+    "contact_submissions": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('is_admin').val() == true",
+      ".write": true
+    },
+    "reviews": {
+      ".read": true,
+      "$reviewId": {
+        ".write": "auth != null"
+      }
+    },
+    "messages": {
+      "$messageId": {
+        ".read": "auth != null && (data.child('sender_id').val() == auth.uid || data.child('receiver_id').val() == auth.uid)",
+        ".write": "auth != null"
+      }
+    },
+    "notification_preferences": {
+      "$vendorId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "push_subscriptions": {
+      "$subscriptionId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    }
+  }
+}
