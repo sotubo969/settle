@@ -345,49 +345,48 @@ class AfroMarketFirestoreTester:
             self.log_test("Notifications - By Email Endpoint", False, f"Notifications failed: {response}")
             return False
 
-    def run_all_tests(self):
-        """Run comprehensive test suite for WebSocket and push notification system"""
-        print("🧪 Starting AfroMarket UK Backend Tests - WebSocket & Push Notification System")
+    def run_firestore_migration_tests(self):
+        """Run comprehensive test suite for Firestore migration"""
+        print("🧪 Starting AfroMarket UK Backend Tests - Firestore Migration")
         print(f"🌐 Testing against: {self.base_url}")
         print("=" * 70)
         
-        # Test basic endpoints
-        self.test_basic_endpoints()
-        
-        # Test authentication
-        auth_success = self.test_authentication()
-        
-        # Test WebSocket and Push Notification System
+        # Core Firestore Migration Tests
         print("\n" + "="*50)
-        print("🔔 WEBSOCKET & PUSH NOTIFICATION TESTS")
+        print("🔥 FIRESTORE MIGRATION TESTS")
         print("="*50)
         
-        # Test WebSocket status
-        self.test_websocket_status()
+        # 1. Health endpoint returns database=firestore
+        self.test_health_endpoint()
         
-        # Test VAPID key configuration
-        self.test_vapid_key_endpoint()
+        # 2. Products API returns products from Firestore
+        product_count = self.test_products_api()
         
-        # Test notification preferences (requires auth and vendor)
-        if auth_success and self.token:
-            # First register user as vendor to enable vendor-specific endpoints
-            auth_vendor_id = self.test_vendor_registration_authenticated()
-            if auth_vendor_id:
-                self.test_notification_preferences_get()
-                self.test_notification_preferences_put()
-                self.test_push_subscription_endpoint()
+        # 3. Vendors API returns 3 vendors
+        vendor_count = self.test_vendors_api()
         
-        # Test vendor registration and approval workflow
-        vendor_id = self.test_vendor_registration_public()
-        if vendor_id:
-            self.test_admin_vendor_approval()
-            self.test_vendor_notifications_by_email()
-            
-            # Test order notification workflow
-            if auth_success and self.token:
-                self.test_order_notification_creation()
-                self.test_mark_notification_as_read()
-                self.test_mark_all_notifications_as_read()
+        # 4. User registration works with Firestore
+        registration_success = self.test_user_registration()
+        
+        # 5. User login works and returns JWT token
+        login_success = self.test_user_login()
+        
+        # 6. Authenticated /auth/me endpoint works
+        if self.token:
+            self.test_auth_me_endpoint()
+        
+        # 7. Vendor registration creates vendor in Firestore and sends email
+        vendor_registration_success = self.test_vendor_registration_firestore()
+        
+        # 8. Contact form submission works
+        self.test_contact_form_submission()
+        
+        # 9. Firebase auth status returns configured=true
+        self.test_firebase_auth_status()
+        
+        # 10. Notifications endpoints work
+        if vendor_registration_success:
+            self.test_notifications_endpoints()
         
         # Print summary
         print("\n" + "=" * 70)
@@ -401,19 +400,28 @@ class AfroMarketFirestoreTester:
         success_rate = (self.tests_passed / self.tests_run) * 100 if self.tests_run > 0 else 0
         print(f"\n✨ Success Rate: {success_rate:.1f}%")
         
+        # Summary of key metrics
+        print(f"\n📈 Key Metrics:")
+        print(f"  - Products in Firestore: {product_count}")
+        print(f"  - Vendors in Firestore: {vendor_count}")
+        print(f"  - User Registration: {'✅' if registration_success else '❌'}")
+        print(f"  - User Login: {'✅' if login_success else '❌'}")
+        print(f"  - Vendor Registration: {'✅' if vendor_registration_success else '❌'}")
+        
         return success_rate >= 70
 
 def main():
     """Main test execution"""
-    tester = AfroMarketAPITester()
+    tester = AfroMarketFirestoreTester()
     
     try:
-        success = tester.run_all_tests()
+        success = tester.run_firestore_migration_tests()
         
         # Save detailed results
         with open('/app/backend_test_results.json', 'w') as f:
             json.dump({
                 "timestamp": datetime.now().isoformat(),
+                "test_type": "firestore_migration",
                 "total_tests": tester.tests_run,
                 "passed_tests": tester.tests_passed,
                 "failed_tests": tester.failed_tests,
