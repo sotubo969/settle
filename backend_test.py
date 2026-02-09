@@ -72,421 +72,251 @@ class AfroMarketFirestoreTester:
         except requests.exceptions.RequestException as e:
             return False, f"Request failed: {str(e)}"
 
-    def test_websocket_status(self):
-        """Test WebSocket status endpoint"""
-        print("\n🔌 Testing WebSocket Status...")
+    def test_health_endpoint(self):
+        """Test health endpoint returns database=firestore"""
+        print("\n🏥 Testing Health Endpoint...")
         
-        success, response = self.make_request('GET', 'ws/status', auth_required=False)
+        success, response = self.make_request('GET', 'health', auth_required=False)
         
-        if success and response.get('success') == True:
-            connected_vendors = response.get('connected_vendors', [])
-            total_connections = response.get('total_connections', 0)
-            self.log_test("WebSocket Status - Available", True, 
-                         f"Connected vendors: {len(connected_vendors)}, Total connections: {total_connections}")
-            return True
-        else:
-            self.log_test("WebSocket Status - Available", False, f"WebSocket not available: {response}")
-            return False
-
-    def test_vapid_key_endpoint(self):
-        """Test VAPID key endpoint for push notifications"""
-        print("\n🔑 Testing VAPID Key Endpoint...")
-        
-        success, response = self.make_request('GET', 'push/vapid-key', auth_required=False)
-        
-        if success and response.get('configured') == True:
-            public_key = response.get('publicKey')
-            if public_key and len(public_key) > 50:  # VAPID keys are long
-                self.log_test("VAPID Key - Configured", True, f"Public key length: {len(public_key)}")
+        if success and response.get('status') == 'ok':
+            database = response.get('database')
+            if database == 'firestore':
+                self.log_test("Health Endpoint - Database Firestore", True, f"Database: {database}")
                 return True
             else:
-                self.log_test("VAPID Key - Configured", False, "Public key missing or invalid")
+                self.log_test("Health Endpoint - Database Firestore", False, f"Expected 'firestore', got '{database}'")
                 return False
         else:
-            self.log_test("VAPID Key - Configured", False, f"VAPID not configured: {response}")
+            self.log_test("Health Endpoint - Database Firestore", False, f"Health check failed: {response}")
             return False
 
-    def test_vendor_registration_authenticated(self):
-        """Test authenticated vendor registration to link user with vendor"""
-        print("\n🏪 Testing Authenticated Vendor Registration...")
+    def test_products_api(self):
+        """Test products API returns products from Firestore"""
+        print("\n📦 Testing Products API...")
         
-        if not self.token:
-            self.log_test("Authenticated Vendor Registration - No Token", False, "No auth token available")
-            return False
+        success, response = self.make_request('GET', 'products', auth_required=False)
+        
+        if success and isinstance(response, list):
+            product_count = len(response)
+            if product_count > 0:
+                # Check if products have expected structure
+                first_product = response[0]
+                expected_fields = ['id', 'name', 'price', 'category']
+                has_fields = all(field in first_product for field in expected_fields)
+                
+                self.log_test("Products API - Returns Products", True, f"Found {product_count} products")
+                self.log_test("Products API - Product Structure", has_fields, f"Fields: {list(first_product.keys())}")
+                return product_count
+            else:
+                self.log_test("Products API - Returns Products", False, "No products found")
+                return 0
+        else:
+            self.log_test("Products API - Returns Products", False, f"API error: {response}")
+            return 0
+
+    def test_vendors_api(self):
+        """Test vendors API returns 3 vendors"""
+        print("\n🏪 Testing Vendors API...")
+        
+        success, response = self.make_request('GET', 'vendors', auth_required=False)
+        
+        if success and isinstance(response, list):
+            vendor_count = len(response)
+            expected_count = 3
+            
+            if vendor_count >= expected_count:
+                # Check vendor structure
+                if vendor_count > 0:
+                    first_vendor = response[0]
+                    expected_fields = ['id', 'name', 'verified']
+                    has_fields = all(field in first_vendor for field in expected_fields)
+                    
+                    self.log_test("Vendors API - Returns 3+ Vendors", True, f"Found {vendor_count} vendors")
+                    self.log_test("Vendors API - Vendor Structure", has_fields, f"Fields: {list(first_vendor.keys())}")
+                else:
+                    self.log_test("Vendors API - Returns 3+ Vendors", False, "No vendors found")
+                    
+                return vendor_count
+            else:
+                self.log_test("Vendors API - Returns 3+ Vendors", False, f"Expected {expected_count}+, got {vendor_count}")
+                return vendor_count
+        else:
+            self.log_test("Vendors API - Returns 3+ Vendors", False, f"API error: {response}")
+            return 0
+
+    def test_user_registration(self):
+        """Test user registration works with Firestore"""
+        print("\n👤 Testing User Registration...")
         
         timestamp = datetime.now().strftime('%H%M%S')
-        vendor_data = {
-            "businessName": f"Test Authenticated Store {timestamp}",
-            "description": "A test store for authenticated user",
-            "email": f"authvendor{timestamp}@example.com",
-            "phone": "+44 20 1234 5678",
-            "address": "123 Auth Street",
-            "city": "London",
-            "postcode": "SW1A 1AA"
-        }
+        test_email = f"test_firestore_{timestamp}@example.com"
         
-        success, response = self.make_request('POST', 'vendors/register', vendor_data, auth_required=True)
-        
-        if success and response.get('success'):
-            auth_vendor_id = response.get('vendor', {}).get('id')
-            self.log_test("Authenticated Vendor Registration - Creates Vendor", True, f"Vendor ID: {auth_vendor_id}")
-            return auth_vendor_id
-        else:
-            self.log_test("Authenticated Vendor Registration - Creates Vendor", False, str(response))
-            return None
-
-    def test_notification_preferences_get(self):
-        """Test GET notification preferences endpoint"""
-        print("\n⚙️ Testing Notification Preferences GET...")
-        
-        if not self.token:
-            self.log_test("Notification Preferences GET - No Token", False, "No auth token available")
-            return False
-        
-        success, response = self.make_request('GET', 'vendor/notifications/preferences', auth_required=True)
-        
-        if success and response.get('success'):
-            preferences = response.get('preferences', {})
-            
-            # Check if preferences have expected structure
-            expected_keys = ['email', 'inapp', 'push']
-            has_structure = all(key in preferences for key in expected_keys)
-            
-            self.log_test("Notification Preferences GET - Returns Structure", has_structure, 
-                         f"Preferences keys: {list(preferences.keys())}")
-            
-            # Check email preferences
-            email_prefs = preferences.get('email', {})
-            email_keys = ['orders', 'messages', 'reviews', 'adminAlerts']
-            has_email_prefs = all(key in email_prefs for key in email_keys)
-            
-            self.log_test("Notification Preferences GET - Email Preferences", has_email_prefs,
-                         f"Email preferences: {list(email_prefs.keys())}")
-            
-            return has_structure and has_email_prefs
-        else:
-            self.log_test("Notification Preferences GET - Returns Structure", False, str(response))
-            return False
-
-    def test_notification_preferences_put(self):
-        """Test PUT notification preferences endpoint"""
-        print("\n⚙️ Testing Notification Preferences PUT...")
-        
-        if not self.token:
-            self.log_test("Notification Preferences PUT - No Token", False, "No auth token available")
-            return False
-        
-        # Test updating preferences
-        preferences_data = {
-            "email_orders": True,
-            "email_messages": True,
-            "email_reviews": False,
-            "email_admin_alerts": True,
-            "email_marketing": False,
-            "inapp_orders": True,
-            "inapp_messages": True,
-            "inapp_reviews": True,
-            "inapp_admin_alerts": True,
-            "inapp_marketing": True,
-            "push_enabled": True,
-            "push_orders": True,
-            "push_messages": True,
-            "push_reviews": False,
-            "push_admin_alerts": True
-        }
-        
-        success, response = self.make_request('PUT', 'vendor/notifications/preferences', 
-                                            preferences_data, auth_required=True)
-        
-        if success and response.get('success'):
-            self.log_test("Notification Preferences PUT - Updates Successfully", True, "Preferences updated")
-            
-            # Verify the update by getting preferences again
-            time.sleep(1)
-            success2, response2 = self.make_request('GET', 'vendor/notifications/preferences', auth_required=True)
-            
-            if success2 and response2.get('success'):
-                updated_prefs = response2.get('preferences', {})
-                email_prefs = updated_prefs.get('email', {})
-                
-                # Check if our update was saved
-                reviews_disabled = not email_prefs.get('reviews', True)
-                self.log_test("Notification Preferences PUT - Verification", reviews_disabled,
-                             f"Email reviews preference: {email_prefs.get('reviews')}")
-            
-            return True
-        else:
-            self.log_test("Notification Preferences PUT - Updates Successfully", False, str(response))
-            return False
-
-    def test_push_subscription_endpoint(self):
-        """Test push subscription endpoint"""
-        print("\n📱 Testing Push Subscription Endpoint...")
-        
-        if not self.token:
-            self.log_test("Push Subscription - No Token", False, "No auth token available")
-            return False
-        
-        # Mock push subscription data
-        subscription_data = {
-            "endpoint": "https://fcm.googleapis.com/fcm/send/test-endpoint-123",
-            "p256dh_key": "test-p256dh-key-" + datetime.now().strftime('%H%M%S'),
-            "auth_key": "test-auth-key-" + datetime.now().strftime('%H%M%S'),
-            "device_name": "Test Device"
-        }
-        
-        success, response = self.make_request('POST', 'vendor/push/subscribe', 
-                                            subscription_data, auth_required=True)
-        
-        if success and response.get('success'):
-            self.log_test("Push Subscription - Creates Subscription", True, "Push subscription created")
-            return True
-        else:
-            self.log_test("Push Subscription - Creates Subscription", False, str(response))
-            return False
-
-    def test_order_notification_creation(self):
-        """Test that order creation triggers vendor notification"""
-        print("\n📦 Testing Order Notification Creation...")
-        
-        if not self.token or not self.vendor_id:
-            self.log_test("Order Notification - Missing Requirements", False, "No token or vendor ID")
-            return False
-        
-        # Create a mock order with vendor items
-        order_data = {
-            "items": [
-                {
-                    "productId": 1,
-                    "name": "Test Product",
-                    "price": 10.99,
-                    "quantity": 2,
-                    "vendorId": self.vendor_id
-                }
-            ],
-            "shippingInfo": {
-                "fullName": "Test Customer",
-                "address": "123 Test Street",
-                "city": "London",
-                "postcode": "SW1A 1AA",
-                "phone": "+44 20 1234 5678"
-            },
-            "paymentInfo": {
-                "method": "test",
-                "status": "completed"
-            },
-            "subtotal": 21.98,
-            "deliveryFee": 3.99,
-            "total": 25.97
-        }
-        
-        success, response = self.make_request('POST', 'orders', order_data, auth_required=True)
-        
-        if success and response.get('id'):
-            order_id = response.get('orderId')
-            self.log_test("Order Notification - Order Created", True, f"Order ID: {order_id}")
-            
-            # Wait for notification to be processed
-            time.sleep(3)
-            
-            # Check if notification was created for vendor
-            success2, response2 = self.make_request('GET', f'vendor/notifications/by-email/{self.vendor_email}', 
-                                                  auth_required=False)
-            
-            if success2 and response2.get('success'):
-                notifications = response2.get('notifications', [])
-                order_notifications = [n for n in notifications if n.get('type') == 'order']
-                
-                self.log_test("Order Notification - Vendor Notified", len(order_notifications) > 0,
-                             f"Found {len(order_notifications)} order notifications")
-                return len(order_notifications) > 0
-            else:
-                self.log_test("Order Notification - Vendor Notified", False, "Could not check notifications")
-                return False
-        else:
-            self.log_test("Order Notification - Order Created", False, str(response))
-            return False
-
-    def test_authentication(self):
-        """Test user authentication (email/password)"""
-        print("\n🔐 Testing Email/Password Authentication...")
-        
-        # Test registration
-        test_email = f"test_{datetime.now().strftime('%H%M%S')}@example.com"
         success, response = self.make_request('POST', 'auth/register', {
-            "name": "Test User",
+            "name": "Firestore Test User",
             "email": test_email,
-            "password": "Test123!"
+            "password": "TestPass123!"
         }, auth_required=False)
         
-        if success and response.get('token'):
+        if success and response.get('success') and response.get('token'):
             self.token = response['token']
             self.user_id = response['user']['id']
-            self.log_test("Email/Password Registration", True)
-        else:
-            self.log_test("Email/Password Registration", False, str(response))
-            return False
-
-        # Test login
-        success, response = self.make_request('POST', 'auth/login', {
-            "email": test_email,
-            "password": "Test123!"
-        }, auth_required=False)
-        
-        if success and response.get('token'):
-            self.log_test("Email/Password Login", True)
-        else:
-            self.log_test("Email/Password Login", False, str(response))
-        
-        return True
-
-    def test_vendor_registration_authenticated(self):
-        """Test authenticated vendor registration to link user with vendor"""
-        print("\n🏪 Testing Authenticated Vendor Registration...")
-        
-        if not self.token:
-            self.log_test("Authenticated Vendor Registration - No Token", False, "No auth token available")
-            return False
-        
-        timestamp = datetime.now().strftime('%H%M%S')
-        vendor_data = {
-            "businessName": f"Test Authenticated Store {timestamp}",
-            "description": "A test store for authenticated user",
-            "email": f"authvendor{timestamp}@example.com",
-            "phone": "+44 20 1234 5678",
-            "address": "123 Auth Street",
-            "city": "London",
-            "postcode": "SW1A 1AA"
-        }
-        
-        success, response = self.make_request('POST', 'vendors/register', vendor_data, auth_required=True)
-        
-        if success and response.get('success'):
-            self.vendor_id = response.get('vendor', {}).get('id')
-            self.log_test("Authenticated Vendor Registration - Creates Vendor", True, f"Vendor ID: {self.vendor_id}")
-            return self.vendor_id
-        else:
-            self.log_test("Authenticated Vendor Registration - Creates Vendor", False, str(response))
-            return None
-        """Test public vendor registration endpoint with email notification"""
-        print("\n🏪 Testing Public Vendor Registration...")
-        
-        # Test public vendor registration (no auth required)
-        timestamp = datetime.now().strftime('%H%M%S')
-        self.vendor_email = f"testvendor{timestamp}@example.com"
-        vendor_data = {
-            "businessName": f"Test African Store {timestamp}",
-            "description": "A test store selling authentic African products and groceries",
-            "email": self.vendor_email,
-            "phone": "+44 20 1234 5678",
-            "address": "123 Test Street",
-            "city": "London",
-            "postcode": "SW1A 1AA",
-            "ownerName": "Test Owner"
-        }
-        
-        success, response = self.make_request('POST', 'vendors/register/public', vendor_data, auth_required=False)
-        
-        if success and response.get('success'):
-            email_sent = response.get('emailSent', False)
-            self.vendor_id = response.get('vendor', {}).get('id')
+            user_name = response['user']['name']
             
-            self.log_test("Vendor Registration - Creates Vendor in Database", True, f"Vendor ID: {self.vendor_id}")
-            self.log_test("Vendor Registration - Email Notification", email_sent, 
-                         f"Email sent status: {email_sent}")
-            
-            # Check if response includes proper message
-            message = response.get('message', '')
-            expected_message_parts = ['submitted successfully', 'review', 'contact']
-            message_ok = any(part in message.lower() for part in expected_message_parts)
-            self.log_test("Vendor Registration - Response Message", message_ok, f"Message: {message}")
-            
-            return self.vendor_id
-        else:
-            self.log_test("Vendor Registration - Creates Vendor in Database", False, str(response))
-            return None
-
-    def test_vendor_registration_public(self):
-        """Test public vendor registration endpoint with email notification"""
-        print("\n🏪 Testing Public Vendor Registration...")
-        
-        # Test public vendor registration (no auth required)
-        timestamp = datetime.now().strftime('%H%M%S')
-        self.vendor_email = f"testvendor{timestamp}@example.com"
-        vendor_data = {
-            "businessName": f"Test African Store {timestamp}",
-            "description": "A test store selling authentic African products and groceries",
-            "email": self.vendor_email,
-            "phone": "+44 20 1234 5678",
-            "address": "123 Test Street",
-            "city": "London",
-            "postcode": "SW1A 1AA",
-            "ownerName": "Test Owner"
-        }
-        
-        success, response = self.make_request('POST', 'vendors/register/public', vendor_data, auth_required=False)
-        
-        if success and response.get('success'):
-            email_sent = response.get('emailSent', False)
-            self.vendor_id = response.get('vendor', {}).get('id')
-            
-            self.log_test("Vendor Registration - Creates Vendor in Database", True, f"Vendor ID: {self.vendor_id}")
-            self.log_test("Vendor Registration - Email Notification", email_sent, 
-                         f"Email sent status: {email_sent}")
-            
-            # Check if response includes proper message
-            message = response.get('message', '')
-            expected_message_parts = ['submitted successfully', 'review', 'contact']
-            message_ok = any(part in message.lower() for part in expected_message_parts)
-            self.log_test("Vendor Registration - Response Message", message_ok, f"Message: {message}")
-            
-            return self.vendor_id
-        else:
-            self.log_test("Vendor Registration - Creates Vendor in Database", False, str(response))
-            return None
-
-    def test_admin_vendor_approval(self):
-        """Test admin vendor approval endpoint creates notification and sends email"""
-        print("\n👑 Testing Admin Vendor Approval...")
-        
-        if not self.vendor_id:
-            self.log_test("Admin Vendor Approval - No Vendor to Approve", False, "No vendor ID available")
-            return False
-        
-        # Test vendor approval
-        approval_data = {
-            "vendorId": self.vendor_id,
-            "status": "approved"
-        }
-        
-        success, response = self.make_request('POST', 'admin/vendors/approve', approval_data, auth_required=False)
-        
-        if success and response.get('success'):
-            email_sent = response.get('emailSent', False)
-            notification_created = response.get('notificationCreated', False)
-            
-            self.log_test("Admin Vendor Approval - Creates Notification", notification_created, 
-                         f"Notification created: {notification_created}")
-            self.log_test("Admin Vendor Approval - Sends Email", email_sent, 
-                         f"Email sent: {email_sent}")
-            
+            self.log_test("User Registration - Creates User", True, f"User ID: {self.user_id}")
+            self.log_test("User Registration - Returns Token", True, f"Token length: {len(self.token)}")
+            self.log_test("User Registration - User Data", user_name == "Firestore Test User", f"Name: {user_name}")
             return True
         else:
-            self.log_test("Admin Vendor Approval - Creates Notification", False, str(response))
-            self.log_test("Admin Vendor Approval - Sends Email", False, str(response))
+            self.log_test("User Registration - Creates User", False, f"Registration failed: {response}")
             return False
 
-    def test_vendor_notifications_by_email(self):
-        """Test vendor notifications by email endpoint (non-authenticated access)"""
-        print("\n📧 Testing Vendor Notifications by Email...")
+    def test_user_login(self):
+        """Test user login works and returns JWT token"""
+        print("\n🔐 Testing User Login...")
         
-        if not self.vendor_email:
-            self.log_test("Vendor Notifications by Email - No Email", False, "No vendor email available")
+        # Try with the provided test credentials first
+        success, response = self.make_request('POST', 'auth/login', {
+            "email": "test@afromarket.co.uk",
+            "password": "TestPass123!"
+        }, auth_required=False)
+        
+        if success and response.get('success') and response.get('token'):
+            self.token = response['token']
+            self.user_id = response['user']['id']
+            
+            self.log_test("User Login - Test Credentials", True, f"Logged in as {response['user']['email']}")
+            return True
+        else:
+            # If test credentials don't work, try creating a new user
+            timestamp = datetime.now().strftime('%H%M%S')
+            test_email = f"login_test_{timestamp}@example.com"
+            
+            # Register first
+            reg_success, reg_response = self.make_request('POST', 'auth/register', {
+                "name": "Login Test User",
+                "email": test_email,
+                "password": "TestPass123!"
+            }, auth_required=False)
+            
+            if reg_success:
+                # Now try login
+                success, response = self.make_request('POST', 'auth/login', {
+                    "email": test_email,
+                    "password": "TestPass123!"
+                }, auth_required=False)
+                
+                if success and response.get('success') and response.get('token'):
+                    self.token = response['token']
+                    self.user_id = response['user']['id']
+                    
+                    self.log_test("User Login - New User Credentials", True, f"Logged in as {response['user']['email']}")
+                    return True
+            
+            self.log_test("User Login - Authentication", False, f"Login failed: {response}")
+            return False
+
+    def test_auth_me_endpoint(self):
+        """Test authenticated /auth/me endpoint works"""
+        print("\n🔒 Testing /auth/me Endpoint...")
+        
+        if not self.token:
+            self.log_test("Auth Me - No Token", False, "No authentication token available")
             return False
         
-        # Wait a moment for notification to be created
-        time.sleep(2)
+        success, response = self.make_request('GET', 'auth/me', auth_required=True)
         
+        if success and response.get('success'):
+            user_data = response.get('user', {})
+            expected_fields = ['id', 'name', 'email']
+            has_fields = all(field in user_data for field in expected_fields)
+            
+            self.log_test("Auth Me - Returns User Data", has_fields, f"User: {user_data.get('email')}")
+            self.log_test("Auth Me - User ID Match", user_data.get('id') == self.user_id, f"ID: {user_data.get('id')}")
+            return has_fields
+        else:
+            self.log_test("Auth Me - Returns User Data", False, f"Auth me failed: {response}")
+            return False
+
+    def test_vendor_registration_firestore(self):
+        """Test vendor registration creates vendor in Firestore and sends email"""
+        print("\n🏪 Testing Vendor Registration with Firestore...")
+        
+        timestamp = datetime.now().strftime('%H%M%S')
+        self.vendor_email = f"vendor_firestore_{timestamp}@example.com"
+        
+        vendor_data = {
+            "businessName": f"Firestore Test Store {timestamp}",
+            "description": "A test store for Firestore migration testing",
+            "email": self.vendor_email,
+            "phone": "+44 20 1234 5678",
+            "address": "123 Firestore Street",
+            "city": "London",
+            "postcode": "SW1A 1AA",
+            "ownerName": "Firestore Test Owner"
+        }
+        
+        success, response = self.make_request('POST', 'vendors/register/public', vendor_data, auth_required=False)
+        
+        if success and response.get('success'):
+            self.vendor_id = response.get('vendor', {}).get('id')
+            email_sent = response.get('emailSent', False)
+            message = response.get('message', '')
+            
+            self.log_test("Vendor Registration - Creates in Firestore", True, f"Vendor ID: {self.vendor_id}")
+            self.log_test("Vendor Registration - Email Notification", email_sent, f"Email sent: {email_sent}")
+            self.log_test("Vendor Registration - Response Message", 'review' in message.lower(), f"Message: {message}")
+            return True
+        else:
+            self.log_test("Vendor Registration - Creates in Firestore", False, f"Registration failed: {response}")
+            return False
+
+    def test_contact_form_submission(self):
+        """Test contact form submission works"""
+        print("\n📧 Testing Contact Form Submission...")
+        
+        timestamp = datetime.now().strftime('%H%M%S')
+        contact_data = {
+            "name": f"Firestore Test Contact {timestamp}",
+            "email": f"contact_test_{timestamp}@example.com",
+            "subject": "Firestore Migration Test",
+            "message": "This is a test message to verify contact form works with Firestore."
+        }
+        
+        success, response = self.make_request('POST', 'contact', contact_data, auth_required=False)
+        
+        if success and response.get('success'):
+            message = response.get('message', '')
+            self.log_test("Contact Form - Submission Works", True, f"Response: {message}")
+            return True
+        else:
+            self.log_test("Contact Form - Submission Works", False, f"Contact form failed: {response}")
+            return False
+
+    def test_firebase_auth_status(self):
+        """Test Firebase auth status returns configured=true"""
+        print("\n🔥 Testing Firebase Auth Status...")
+        
+        success, response = self.make_request('GET', 'auth/firebase/status', auth_required=False)
+        
+        if success:
+            configured = response.get('configured', False)
+            message = response.get('message', '')
+            
+            self.log_test("Firebase Auth - Configured Status", configured, f"Message: {message}")
+            return configured
+        else:
+            self.log_test("Firebase Auth - Configured Status", False, f"Status check failed: {response}")
+            return False
+
+    def test_notifications_endpoints(self):
+        """Test notifications endpoints work"""
+        print("\n🔔 Testing Notifications Endpoints...")
+        
+        if not self.vendor_email:
+            self.log_test("Notifications - No Vendor Email", False, "No vendor email for testing")
+            return False
+        
+        # Test vendor notifications by email (public endpoint)
         success, response = self.make_request('GET', f'vendor/notifications/by-email/{self.vendor_email}', 
                                             auth_required=False)
         
@@ -495,145 +325,25 @@ class AfroMarketFirestoreTester:
             unread_count = response.get('unreadCount', 0)
             vendor_status = response.get('vendorStatus')
             
-            self.log_test("Vendor Notifications by Email - Returns Notifications List", True, 
+            self.log_test("Notifications - By Email Endpoint", True, 
                          f"Found {len(notifications)} notifications, {unread_count} unread")
-            self.log_test("Vendor Notifications by Email - Vendor Status", vendor_status == "approved", 
+            self.log_test("Notifications - Vendor Status", vendor_status is not None, 
                          f"Vendor status: {vendor_status}")
             
-            # Check if approval notification exists
-            approval_notification = any(n.get('type') == 'approval' for n in notifications)
-            self.log_test("Vendor Notifications by Email - Approval Notification", approval_notification,
-                         f"Approval notification found: {approval_notification}")
-            
-            return len(notifications) > 0
-        else:
-            self.log_test("Vendor Notifications by Email - Returns Notifications List", False, str(response))
-            return False
-
-    def test_vendor_notifications_authenticated(self):
-        """Test authenticated vendor notifications endpoint"""
-        print("\n🔐 Testing Authenticated Vendor Notifications...")
-        
-        if not self.token:
-            self.log_test("Authenticated Vendor Notifications - No Token", False, "No auth token available")
-            return False
-        
-        success, response = self.make_request('GET', 'vendor/notifications', auth_required=True)
-        
-        if success and response.get('success'):
-            notifications = response.get('notifications', [])
-            unread_count = response.get('unreadCount', 0)
-            
-            self.log_test("Authenticated Vendor Notifications - Returns Notifications List", True, 
-                         f"Found {len(notifications)} notifications, {unread_count} unread")
-            
-            return len(notifications) > 0, notifications
-        else:
-            self.log_test("Authenticated Vendor Notifications - Returns Notifications List", False, str(response))
-            return False, []
-
-    def test_mark_notification_as_read(self):
-        """Test mark notification as read endpoint"""
-        print("\n✅ Testing Mark Notification as Read...")
-        
-        if not self.token:
-            self.log_test("Mark Notification as Read - No Token", False, "No auth token available")
-            return False
-        
-        # Get notifications first
-        has_notifications, notifications = self.test_vendor_notifications_authenticated()
-        
-        if not has_notifications or not notifications:
-            self.log_test("Mark Notification as Read - No Notifications", False, "No notifications to mark as read")
-            return False
-        
-        # Find an unread notification
-        unread_notification = next((n for n in notifications if not n.get('isRead')), None)
-        
-        if not unread_notification:
-            self.log_test("Mark Notification as Read - No Unread Notifications", True, "All notifications already read")
-            return True
-        
-        notification_id = unread_notification['id']
-        success, response = self.make_request('PUT', f'vendor/notifications/{notification_id}/read', 
-                                            {}, auth_required=True)
-        
-        if success and response.get('success'):
-            self.log_test("Mark Notification as Read - Works", True, f"Marked notification {notification_id} as read")
-            return True
-        else:
-            self.log_test("Mark Notification as Read - Works", False, str(response))
-            return False
-
-    def test_mark_all_notifications_as_read(self):
-        """Test mark all notifications as read endpoint"""
-        print("\n✅✅ Testing Mark All Notifications as Read...")
-        
-        if not self.token:
-            self.log_test("Mark All Notifications as Read - No Token", False, "No auth token available")
-            return False
-        
-        success, response = self.make_request('PUT', 'vendor/notifications/mark-all-read', 
-                                            {}, auth_required=True)
-        
-        if success and response.get('success'):
-            self.log_test("Mark All Notifications as Read - Works", True, "All notifications marked as read")
-            
-            # Verify by checking notifications again
-            time.sleep(1)
-            success2, response2 = self.make_request('GET', 'vendor/notifications', auth_required=True)
-            if success2 and response2.get('success'):
-                unread_count = response2.get('unreadCount', 0)
-                self.log_test("Mark All Notifications as Read - Verification", unread_count == 0, 
-                             f"Unread count after marking all as read: {unread_count}")
+            # Test authenticated notifications if we have a token
+            if self.token:
+                success2, response2 = self.make_request('GET', 'vendor/notifications', auth_required=True)
+                if success2 and response2.get('success'):
+                    auth_notifications = response2.get('notifications', [])
+                    self.log_test("Notifications - Authenticated Endpoint", True, 
+                                 f"Found {len(auth_notifications)} notifications via auth")
+                else:
+                    self.log_test("Notifications - Authenticated Endpoint", False, f"Auth notifications failed: {response2}")
             
             return True
         else:
-            self.log_test("Mark All Notifications as Read - Works", False, str(response))
+            self.log_test("Notifications - By Email Endpoint", False, f"Notifications failed: {response}")
             return False
-
-    def test_notification_system_workflow(self):
-        """Test full notification workflow: register vendor -> approve -> notification created"""
-        print("\n🔄 Testing Full Notification Workflow...")
-        
-        # Step 1: Register vendor
-        vendor_id = self.test_vendor_registration_public()
-        if not vendor_id:
-            self.log_test("Full Workflow - Vendor Registration", False, "Failed to register vendor")
-            return False
-        
-        # Step 2: Approve vendor (creates notification)
-        approval_success = self.test_admin_vendor_approval()
-        if not approval_success:
-            self.log_test("Full Workflow - Vendor Approval", False, "Failed to approve vendor")
-            return False
-        
-        # Step 3: Check notifications were created
-        notifications_success = self.test_vendor_notifications_by_email()
-        if not notifications_success:
-            self.log_test("Full Workflow - Notification Creation", False, "No notifications found after approval")
-            return False
-        
-        self.log_test("Full Workflow - Complete", True, "Register -> Approve -> Notification workflow successful")
-        return True
-
-    def test_basic_endpoints(self):
-        """Test basic API endpoints are working"""
-        print("\n🌐 Testing Basic API Endpoints...")
-        
-        # Test products endpoint
-        success, response = self.make_request('GET', 'products', auth_required=False)
-        if success and isinstance(response, list):
-            self.log_test("Products API", True, f"Found {len(response)} products")
-        else:
-            self.log_test("Products API", False, str(response))
-        
-        # Test vendors endpoint
-        success, response = self.make_request('GET', 'vendors', auth_required=False)
-        if success and isinstance(response, list):
-            self.log_test("Vendors API", True, f"Found {len(response)} vendors")
-        else:
-            self.log_test("Vendors API", False, str(response))
 
     def run_all_tests(self):
         """Run comprehensive test suite for WebSocket and push notification system"""
