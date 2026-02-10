@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Package, MapPin, CreditCard, LogOut, Edit2, Plus, Trash2, Heart } from 'lucide-react';
 import axios from 'axios';
@@ -26,6 +26,7 @@ const Profile = () => {
   const [addresses, setAddresses] = useState([]);
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [dataLoaded, setDataLoaded] = useState(false);
   
   // Profile edit state
   const [editProfile, setEditProfile] = useState(false);
