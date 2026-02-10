@@ -21,7 +21,7 @@ const OwnerDashboard = () => {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
-  const [loading, setLoading] = useState(false); // Start as false, set to true when fetching
+  const [loading, setLoading] = useState(true); // Start as true to show loading immediately
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
