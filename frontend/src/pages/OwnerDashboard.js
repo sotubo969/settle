@@ -102,41 +102,62 @@ const OwnerDashboard = () => {
     setRefreshing(true);
     try {
       const token = getToken();
+      if (!token) {
+        console.error('No auth token found');
+        setLoading(false);
+        setRefreshing(false);
+        return;
+      }
+      
       const headers = { 'Authorization': `Bearer ${token}` };
       
-      const [dashRes, vendorsRes, productsRes, analyticsRes, transRes, salesRes, deliveriesRes, pendingAdsRes, allAdsRes] = await Promise.all([
-        fetch(`${API_URL}/api/owner/dashboard`, { headers }),
-        fetch(`${API_URL}/api/owner/vendors`, { headers }),
-        fetch(`${API_URL}/api/owner/products`, { headers }),
-        fetch(`${API_URL}/api/owner/analytics?days=${dateRange}`, { headers }),
-        fetch(`${API_URL}/api/owner/transactions`, { headers }),
-        fetch(`${API_URL}/api/owner/sales`, { headers }),
-        fetch(`${API_URL}/api/owner/deliveries`, { headers }),
-        fetch(`${API_URL}/api/ads/pending`, { headers }),
-        fetch(`${API_URL}/api/ads/all`, { headers })
-      ]);
+      // Helper function to fetch with fallback on error
+      const fetchSafe = async (url, fallback) => {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000);
+          const res = await fetch(url, { headers, signal: controller.signal });
+          clearTimeout(timeoutId);
+          if (res.ok) {
+            return await res.json();
+          }
+          console.warn(`API ${url} returned ${res.status}`);
+          return fallback;
+        } catch (err) {
+          console.warn(`Failed to fetch ${url}:`, err.message);
+          return fallback;
+        }
+      };
       
-      if (!dashRes.ok) throw new Error('Failed to fetch dashboard data');
-      
+      // Fetch all data in parallel with individual error handling
       const [dashData, vendorsData, productsData, analyticsData, transData, salesData, deliveriesData, pendingAdsData, allAdsData] = await Promise.all([
-        dashRes.json(), vendorsRes.json(), productsRes.json(), analyticsRes.json(), transRes.json(), salesRes.json(), deliveriesRes.json(),
-        pendingAdsRes.ok ? pendingAdsRes.json() : { ads: [] },
-        allAdsRes.ok ? allAdsRes.json() : { ads: [] }
+        fetchSafe(`${API_URL}/api/owner/dashboard`, {}),
+        fetchSafe(`${API_URL}/api/owner/vendors`, { vendors: [] }),
+        fetchSafe(`${API_URL}/api/owner/products`, { products: [] }),
+        fetchSafe(`${API_URL}/api/owner/analytics?days=${dateRange}`, {}),
+        fetchSafe(`${API_URL}/api/owner/transactions`, []),
+        fetchSafe(`${API_URL}/api/owner/sales`, []),
+        fetchSafe(`${API_URL}/api/owner/deliveries`, []),
+        fetchSafe(`${API_URL}/api/ads/pending`, { ads: [] }),
+        fetchSafe(`${API_URL}/api/ads/all`, { ads: [] })
       ]);
       
-      setDashboardData(dashData);
-      setVendors(vendorsData.vendors || []);
-      setProducts(productsData.products || []);
-      setAnalytics(analyticsData);
-      setTransactions(transData);
-      setSales(salesData);
-      setDeliveries(deliveriesData);
-      setPendingAds(pendingAdsData.ads || []);
-      setAds(allAdsData.ads || []);
-      toast.success('Dashboard data refreshed');
+      // Update state with fetched data
+      setDashboardData(dashData || {});
+      setVendors(vendorsData?.vendors || vendorsData || []);
+      setProducts(productsData?.products || productsData || []);
+      setAnalytics(analyticsData || {});
+      setTransactions(transData || []);
+      setSales(salesData || []);
+      setDeliveries(deliveriesData || []);
+      setPendingAds(pendingAdsData?.ads || []);
+      setAds(allAdsData?.ads || []);
+      
+      console.log('Dashboard data loaded successfully');
     } catch (err) {
+      console.error('Dashboard fetch error:', err.message);
       setError(err.message);
-      toast.error('Failed to fetch data');
+      toast.error('Failed to fetch some dashboard data');
     } finally {
       setLoading(false);
       setRefreshing(false);
