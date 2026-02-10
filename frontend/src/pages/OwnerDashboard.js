@@ -1630,11 +1630,11 @@ const OwnerDashboard = () => {
               </p>
               <div className="flex items-center justify-center gap-4 mt-6">
                 <div className="text-center px-6 py-4 bg-gray-50 rounded-xl">
-                  <p className="text-3xl font-bold text-gray-900">{dashboardData?.overview?.totalUsers}</p>
+                  <p className="text-3xl font-bold text-gray-900">{dashboardData?.totalUsers || dashboardData?.overview?.totalUsers || 0}</p>
                   <p className="text-sm text-gray-500">Registered Users</p>
                 </div>
                 <div className="text-center px-6 py-4 bg-gray-50 rounded-xl">
-                  <p className="text-3xl font-bold text-emerald-600">{dashboardData?.overview?.totalOrders}</p>
+                  <p className="text-3xl font-bold text-emerald-600">{dashboardData?.totalOrders || dashboardData?.overview?.totalOrders || 0}</p>
                   <p className="text-sm text-gray-500">Total Orders</p>
                 </div>
               </div>
