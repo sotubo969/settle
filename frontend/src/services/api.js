@@ -3,12 +3,16 @@ import axios from 'axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API_BASE = `${BACKEND_URL}/api`;
 
+// Track if we're already redirecting to prevent multiple redirects
+let isRedirecting = false;
+
 // Create axios instance
 const apiClient = axios.create({
   baseURL: API_BASE,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 30000, // 30 second timeout to prevent hanging requests
 });
 
 // Add auth token to requests
@@ -25,15 +29,35 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Handle response errors
+// Handle response errors - IMPROVED to prevent aggressive logout
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Only handle 401 for specific auth endpoints, not all endpoints
     if (error.response?.status === 401) {
-      // Unauthorized - clear user data and redirect to login
-      localStorage.removeItem('afroToken');
-      localStorage.removeItem('afroUser');
-      window.location.href = '/login';
+      const url = error.config?.url || '';
+      
+      // Only force logout for core auth endpoints, not owner-specific ones
+      const isAuthEndpoint = url.includes('/auth/me') || url.includes('/auth/verify');
+      const isOwnerEndpoint = url.includes('/owner/') || url.includes('/admin/');
+      
+      // Don't force logout for owner endpoints - just reject the promise
+      if (isOwnerEndpoint) {
+        console.warn('Owner endpoint 401 - not forcing logout');
+        return Promise.reject(error);
+      }
+      
+      // For auth endpoints, clear credentials and redirect (but only once)
+      if (isAuthEndpoint && !isRedirecting) {
+        console.log('Auth verification failed - logging out');
+        isRedirecting = true;
+        localStorage.removeItem('afroToken');
+        localStorage.removeItem('afroUser');
+        setTimeout(() => {
+          isRedirecting = false;
+          window.location.href = '/login';
+        }, 100);
+      }
     }
     return Promise.reject(error);
   }
