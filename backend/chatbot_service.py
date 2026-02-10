@@ -79,13 +79,21 @@ class AfroBotService:
     """AfroBot AI Chatbot Service using OpenAI"""
     
     def __init__(self):
-        self.api_key = OPENAI_API_KEY or EMERGENT_LLM_KEY
-        self.model = "gpt-4o-mini"  # Using mini model for better rate limits
+        # Try OpenAI key first, then fallback to Emergent
+        self.api_key = OPENAI_API_KEY
+        self.use_emergent = False
         
         if self.api_key:
             # Initialize OpenAI client
             self.client = openai.AsyncOpenAI(api_key=self.api_key)
+            self.model = "gpt-4o-mini"
             logger.info("AfroBot initialized with OpenAI")
+        elif EMERGENT_LLM_KEY:
+            # Fallback to Emergent
+            self.api_key = EMERGENT_LLM_KEY
+            self.use_emergent = True
+            self.client = None
+            logger.info("AfroBot initialized with Emergent LLM")
         else:
             self.client = None
             logger.warning("No API key available for AfroBot")
