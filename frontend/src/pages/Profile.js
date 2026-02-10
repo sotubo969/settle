@@ -59,13 +59,21 @@ const Profile = () => {
     // Wait for AuthContext to finish loading
     if (authLoading) return;
     
-    if (!isAuthenticated) {
+    // Check both context and localStorage
+    const token = localStorage.getItem('afroToken');
+    const savedUser = localStorage.getItem('afroUser');
+    
+    const hasAuth = isAuthenticated || (token && savedUser);
+    
+    if (!hasAuth) {
+      console.log('Profile: No auth found, redirecting to login');
       navigate('/login');
       return;
     }
-    console.log('Fetching user data for profile...');
+    
+    console.log('Profile: Auth found, fetching user data...');
     fetchUserData();
-  }, [isAuthenticated, authLoading]);
+  }, [isAuthenticated, authLoading, navigate]);
 
   const fetchUserData = async () => {
     const token = localStorage.getItem('afroToken');
