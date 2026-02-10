@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Star, ShoppingCart, Heart, Share2, MapPin, Package, Shield, ArrowLeft } from 'lucide-react';
 import axios from 'axios';
@@ -22,41 +22,67 @@ const ProductDetail = () => {
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { addToCart } = useCart();
   const { isAuthenticated } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(null);
 
-  useEffect(() => {
-    fetchProduct();
-  }, [id]);
-
-  const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
+    if (!id) {
+      setError('No product ID provided');
+      setLoading(false);
+      return;
+    }
+    
     try {
       setLoading(true);
+      setError(null);
+      console.log('Fetching product with ID:', id);
       const data = await productAPI.getProductById(id);
+      
+      if (!data) {
+        setError('Product not found');
+        setLoading(false);
+        return;
+      }
+      
+      console.log('Product fetched:', data);
       setProduct(data);
       setSelectedImage(data.image);
       
       // Fetch related products
-      if (data.categoryId) {
-        const relatedData = await productAPI.getProducts({ category: data.categoryId });
-        setRelatedProducts(relatedData.filter(p => p.id !== parseInt(id)).slice(0, 4));
+      if (data.category || data.categoryId) {
+        try {
+          const relatedData = await productAPI.getProducts({ category: data.category || data.categoryId });
+          const filtered = (Array.isArray(relatedData) ? relatedData : []).filter(p => p.id !== id).slice(0, 4);
+          setRelatedProducts(filtered);
+        } catch (err) {
+          console.log('No related products found');
+        }
       }
     } catch (error) {
       console.error('Error fetching product:', error);
+      setError('Failed to load product');
       toast.error('Failed to load product');
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchProduct();
+  }, [fetchProduct]);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
         <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-          <p className="text-xl">Loading product...</p>
+          <div className="animate-pulse">
+            <div className="w-16 h-16 bg-emerald-200 rounded-full mx-auto mb-4"></div>
+            <p className="text-xl text-gray-600">Loading product...</p>
+          </div>
         </div>
       </div>
     );
