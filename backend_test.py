@@ -737,16 +737,16 @@ class AfroMarketAPITester:
 
 def main():
     """Main test execution"""
-    tester = AfroMarketFirestoreTester()
+    tester = AfroMarketAPITester()
     
     try:
-        success = tester.run_firestore_migration_tests()
+        success = tester.run_new_features_tests()
         
         # Save detailed results
         with open('/app/backend_test_results.json', 'w') as f:
             json.dump({
                 "timestamp": datetime.now().isoformat(),
-                "test_type": "firestore_migration",
+                "test_type": "new_features_testing",
                 "total_tests": tester.tests_run,
                 "passed_tests": tester.tests_passed,
                 "failed_tests": tester.failed_tests,
