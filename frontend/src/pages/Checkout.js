@@ -212,6 +212,9 @@ const PayPalButton = ({ total, onSuccess, onError, shippingInfo }) => {
   );
 };
 
+// Free delivery threshold constant
+const FREE_DELIVERY_THRESHOLD = 100;
+
 // Main Checkout Component
 const CheckoutContent = () => {
   const navigate = useNavigate();
@@ -221,6 +224,12 @@ const CheckoutContent = () => {
   const [paymentMethod, setPaymentMethod] = useState('stripe');
   const [loading, setLoading] = useState(false);
   const [orderId, setOrderId] = useState(null);
+  
+  // Delivery state
+  const [deliveryInfo, setDeliveryInfo] = useState(null);
+  const [deliveryOptions, setDeliveryOptions] = useState(null);
+  const [selectedDeliveryOption, setSelectedDeliveryOption] = useState('standard');
+  const [loadingDelivery, setLoadingDelivery] = useState(false);
   
   const [shippingInfo, setShippingInfo] = useState({
     fullName: user?.name || '',
@@ -249,12 +258,81 @@ const CheckoutContent = () => {
     }
   }, [cart, step, navigate]);
 
+  // Calculate total weight from cart items
+  const getTotalWeight = () => {
+    return cart.reduce((total, item) => {
+      // Parse weight from item (default 0.5kg if not specified)
+      const weight = parseFloat(item.weight) || 0.5;
+      return total + (weight * item.quantity);
+    }, 0);
+  };
+
+  // Fetch delivery options when postcode changes
+  const fetchDeliveryOptions = async (postcode) => {
+    if (!postcode || postcode.length < 3) return;
+    
+    setLoadingDelivery(true);
+    try {
+      const subtotal = getCartTotal();
+      const weight = getTotalWeight();
+      const response = await axios.get(`${API_URL}/api/delivery/options`, {
+        params: { postcode, subtotal, weight_kg: weight }
+      });
+      setDeliveryOptions(response.data);
+      
+      // Set delivery info based on selected option
+      const selectedOption = response.data.options.find(o => o.key === selectedDeliveryOption) || response.data.options[0];
+      setDeliveryInfo({
+        cost: selectedOption.cost,
+        estimated_days: selectedOption.estimated_days,
+        zone_name: response.data.zone_name,
+        free_delivery: response.data.qualifies_for_free,
+        amount_to_free: response.data.amount_to_free_delivery
+      });
+    } catch (error) {
+      console.error('Error fetching delivery options:', error);
+      // Fallback to default delivery calculation
+      const subtotal = getCartTotal();
+      setDeliveryInfo({
+        cost: subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : 4.99,
+        estimated_days: '2-4 days',
+        zone_name: 'Standard',
+        free_delivery: subtotal >= FREE_DELIVERY_THRESHOLD,
+        amount_to_free: Math.max(0, FREE_DELIVERY_THRESHOLD - subtotal)
+      });
+    } finally {
+      setLoadingDelivery(false);
+    }
+  };
+
+  // Update delivery when postcode or selected option changes
+  useEffect(() => {
+    if (shippingInfo.postcode && shippingInfo.postcode.length >= 3) {
+      fetchDeliveryOptions(shippingInfo.postcode);
+    }
+  }, [shippingInfo.postcode, selectedDeliveryOption]);
+
+  // Update delivery cost when option is selected
+  useEffect(() => {
+    if (deliveryOptions) {
+      const selectedOption = deliveryOptions.options.find(o => o.key === selectedDeliveryOption);
+      if (selectedOption) {
+        setDeliveryInfo(prev => ({
+          ...prev,
+          cost: selectedOption.cost,
+          estimated_days: selectedOption.estimated_days
+        }));
+      }
+    }
+  }, [selectedDeliveryOption, deliveryOptions]);
+
   if (!isAuthenticated || !isVerified || (cart.length === 0 && step !== 3)) {
     return null;
   }
 
   const subtotal = getCartTotal();
-  const delivery = subtotal > 30 ? 0 : 4.99;
+  // Use calculated delivery or fallback
+  const delivery = deliveryInfo?.cost ?? (subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : 4.99);
   const total = subtotal + delivery;
 
   const handleInputChange = (e) => {
