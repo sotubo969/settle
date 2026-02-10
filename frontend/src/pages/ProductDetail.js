@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Star, ShoppingCart, Heart, Share2, MapPin, Package, Shield, ArrowLeft, Store } from 'lucide-react';
+import { Star, ShoppingCart, Heart, Share2, MapPin, Package, Shield, ArrowLeft } from 'lucide-react';
 import axios from 'axios';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
