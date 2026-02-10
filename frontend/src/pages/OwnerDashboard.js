@@ -132,10 +132,12 @@ const OwnerDashboard = () => {
       setAds(allAdsData?.ads || []);
       
       console.log('Dashboard data loaded successfully');
+      setDataLoaded(true);
     } catch (err) {
       console.error('Dashboard fetch error:', err.message);
       setError(err.message);
       toast.error('Failed to fetch some dashboard data');
+      setDataLoaded(true); // Still mark as loaded to show error state
     } finally {
       setLoading(false);
       setRefreshing(false);
