@@ -543,15 +543,18 @@ backend:
 
   - task: "Owner Dashboard Overview API"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/server.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
         agent: "testing"
         comment: "✅ WORKING - GET /api/owner/dashboard endpoint working correctly. Owner authentication successful with sotubodammy@gmail.com. Returns comprehensive dashboard data including totalVendors: 13, totalProducts: 12, totalOrders: 5, totalRevenue: £74.9, commission tracking, and user statistics."
+      - working: false
+        agent: "testing"
+        comment: "❌ DASHBOARD LOADING ISSUE (Jul 10, 2025) - Owner dashboard page is accessible at /owner/dashboard, but it's stuck in 'Loading dashboard...' state. Dashboard never fully loads despite successful authentication. The API endpoint may be experiencing issues or frontend integration problems."
 
   - task: "Owner Vendors Management API"
     implemented: true
