@@ -224,7 +224,7 @@ const Home = () => {
                           <span className="text-xs sm:text-sm text-gray-500 line-through">£{product.originalPrice}</span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-600 truncate">by {product.vendor.name}</p>
+                      <p className="text-xs text-gray-600 truncate">by {product.vendor?.name || product.vendorName || 'AfroMarket Vendor'}</p>
                     </div>
                   </CardContent>
                 </Card>
