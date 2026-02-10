@@ -1400,6 +1400,120 @@ const OwnerDashboard = () => {
           </div>
         )}
 
+        {/* Vendor Approval Modal */}
+        {showVendorModal && selectedVendor && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-gray-900">Vendor Application Review</h3>
+                  <button onClick={() => { setShowVendorModal(false); setSelectedVendor(null); }}
+                    className="p-2 hover:bg-gray-100 rounded-lg">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="p-6 space-y-6">
+                {/* Vendor Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">Business Name</label>
+                    <p className="text-lg font-semibold text-gray-900">{selectedVendor.businessName || selectedVendor.business_name}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">Status</label>
+                    <StatusBadge status={selectedVendor.status} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">Email</label>
+                    <p className="text-gray-900 flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-gray-400" />
+                      {selectedVendor.email}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">Phone</label>
+                    <p className="text-gray-900 flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-gray-400" />
+                      {selectedVendor.phone}
+                    </p>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-500 mb-1">Address</label>
+                    <p className="text-gray-900 flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-gray-400" />
+                      {selectedVendor.address}, {selectedVendor.city}, {selectedVendor.postcode}
+                    </p>
+                  </div>
+                  {selectedVendor.description && (
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-500 mb-1">Description</label>
+                      <p className="text-gray-700">{selectedVendor.description}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-xl">
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-emerald-600">£{selectedVendor.revenue?.toLocaleString() || 0}</p>
+                    <p className="text-xs text-gray-500">Revenue</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-blue-600">{selectedVendor.productCount || 0}</p>
+                    <p className="text-xs text-gray-500">Products</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-purple-600">{selectedVendor.orderCount || 0}</p>
+                    <p className="text-xs text-gray-500">Orders</p>
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Admin Notes (optional)</label>
+                  <textarea
+                    value={vendorApprovalNotes}
+                    onChange={(e) => setVendorApprovalNotes(e.target.value)}
+                    placeholder="Add any notes about this vendor..."
+                    rows={3}
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                {selectedVendor.status === 'pending' && (
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => approveVendor(selectedVendor.id, 'approved')}
+                      className="flex-1 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 font-semibold flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <Check className="w-5 h-5" />
+                      Approve Vendor
+                    </button>
+                    <button 
+                      onClick={() => approveVendor(selectedVendor.id, 'rejected')}
+                      className="flex-1 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 font-semibold flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                      Reject Vendor
+                    </button>
+                  </div>
+                )}
+                
+                {selectedVendor.status !== 'pending' && (
+                  <div className="text-center py-4 bg-gray-50 rounded-xl">
+                    <p className="text-gray-600">
+                      This vendor has already been {selectedVendor.status === 'approved' ? 'approved ✓' : 'rejected ✗'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Ad Rejection Modal */}
         {showAdModal && selectedAd && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
