@@ -64,22 +64,42 @@ export const AuthProvider = ({ children }) => {
     if (authInitialized.current) return;
     authInitialized.current = true;
     
-    // PRIORITY 1: Check for existing legacy session
+    // PRIORITY 1: Check for existing legacy session IMMEDIATELY
     const hasLegacySession = checkLegacyAuth();
     
     if (hasLegacySession) {
       // Legacy session found - don't let Firebase override it
+      console.log('Using legacy session - Firebase listener disabled');
       setLoading(false);
-      return;
+      return; // Don't even set up Firebase listener for legacy sessions
     }
     
     // PRIORITY 2: No legacy session - set up Firebase listener
     if (firebaseEnabled && useFirebaseAuth) {
+      console.log('No legacy session - setting up Firebase listener');
       const unsubscribe = onAuthStateChange(async (fbUser) => {
-        // Don't override legacy sessions
+        // Double-check legacy session wasn't set while we were waiting
         if (isLegacySession.current) {
           console.log('Skipping Firebase auth change - legacy session active');
+          setLoading(false);
           return;
+        }
+        
+        // Also check localStorage directly in case of race condition
+        const legacyToken = localStorage.getItem('afroToken');
+        const savedUser = localStorage.getItem('afroUser');
+        if (legacyToken && savedUser) {
+          console.log('Found legacy token during Firebase callback - restoring');
+          try {
+            const userData = JSON.parse(savedUser);
+            setUser(userData);
+            setIsVerified(true);
+            isLegacySession.current = true;
+            setLoading(false);
+            return;
+          } catch (e) {
+            // Invalid saved data, continue with Firebase
+          }
         }
         
         setFirebaseUser(fbUser);
