@@ -153,23 +153,36 @@ const Cart = () => {
           </div>
           
           {/* Progress Bar for Free Delivery */}
-          {subtotal < 50 && (
-            <Card className="mt-6 bg-emerald-50 border-emerald-200">
+          {subtotal < FREE_DELIVERY_THRESHOLD && (
+            <Card className="mt-6 bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
                     <TruckIcon className="h-5 w-5 text-emerald-600" />
                     <span className="font-medium text-emerald-900">
-                      Add £{(70 - subtotal).toFixed(2)} more for FREE delivery!
+                      Add £{amountToFreeDelivery.toFixed(2)} more for FREE delivery!
                     </span>
                   </div>
-                  <Badge className="bg-emerald-600">Save £{deliveryFee}</Badge>
+                  <Badge className="bg-emerald-600">Save up to £6.99</Badge>
                 </div>
                 <div className="w-full bg-emerald-200 rounded-full h-2.5">
                   <div
                     className="bg-emerald-600 h-2.5 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min((subtotal / 70) * 100, 100)}%` }}
+                    style={{ width: `${Math.min((subtotal / FREE_DELIVERY_THRESHOLD) * 100, 100)}%` }}
                   ></div>
+                </div>
+                <p className="text-xs text-emerald-700 mt-2">Free delivery on all orders over £{FREE_DELIVERY_THRESHOLD}</p>
+              </CardContent>
+            </Card>
+          )}
+          {subtotal >= FREE_DELIVERY_THRESHOLD && (
+            <Card className="mt-6 bg-gradient-to-r from-emerald-100 to-green-100 border-emerald-300">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <TruckIcon className="h-5 w-5 text-emerald-600" />
+                  <span className="font-semibold text-emerald-900">
+                    🎉 You qualify for FREE delivery!
+                  </span>
                 </div>
               </CardContent>
             </Card>
