@@ -36,6 +36,7 @@ class EmailService:
         self.smtp_password = os.environ.get('SMTP_PASSWORD', '')
         self.from_email = os.environ.get('FROM_EMAIL', self.smtp_user)
         self.admin_email = os.environ.get('ADMIN_EMAIL', 'sotubodammy@gmail.com')
+        self.site_url = os.environ.get('SITE_URL', 'https://afro-market.co.uk')
         
         # Log configuration status
         if self.smtp_user and self.smtp_password:
@@ -43,10 +44,40 @@ class EmailService:
         else:
             logger.warning("Email service: SMTP credentials not configured")
     
-    def send_email(self, to_email: str, subject: str, html_content: str, text_content: Optional[str] = None):
-        """Send an email"""
+    def _generate_email_hash(self, to_email: str, subject: str, key_data: str = "") -> str:
+        """Generate a hash to identify duplicate emails"""
+        content = f"{to_email}:{subject}:{key_data}"
+        return hashlib.md5(content.encode()).hexdigest()
+    
+    def _is_duplicate_email(self, email_hash: str) -> bool:
+        """Check if email was recently sent (prevent duplicates)"""
+        global _sent_emails_cache
+        
+        # Clean old entries
+        now = datetime.utcnow()
+        cutoff = now - timedelta(minutes=DUPLICATE_WINDOW_MINUTES)
+        _sent_emails_cache = {k: v for k, v in _sent_emails_cache.items() if v > cutoff}
+        
+        if email_hash in _sent_emails_cache:
+            logger.warning(f"Duplicate email prevented (hash: {email_hash[:8]}...)")
+            return True
+        
+        return False
+    
+    def _mark_email_sent(self, email_hash: str):
+        """Mark email as sent to prevent duplicates"""
+        _sent_emails_cache[email_hash] = datetime.utcnow()
+    
+    def send_email(self, to_email: str, subject: str, html_content: str, text_content: Optional[str] = None, prevent_duplicate: bool = True, duplicate_key: str = ""):
+        """Send an email with duplicate prevention"""
         # Reload credentials in case they were updated
         self._load_credentials()
+        
+        # Check for duplicates
+        if prevent_duplicate:
+            email_hash = self._generate_email_hash(to_email, subject, duplicate_key)
+            if self._is_duplicate_email(email_hash):
+                return False
         
         try:
             # Create message
@@ -70,14 +101,20 @@ class EmailService:
                     server.login(self.smtp_user, self.smtp_password)
                     server.send_message(msg)
                 logger.info(f"Email sent successfully to {to_email}")
+                
+                # Mark as sent for duplicate prevention
+                if prevent_duplicate:
+                    self._mark_email_sent(email_hash)
+                
                 return True
             else:
                 logger.warning("SMTP credentials not configured. Email not sent.")
                 # In development, just log the email content
-                logger.info(f"\n{'='*50}\nEMAIL PREVIEW\nTo: {to_email}\nSubject: {subject}\n{'-'*50}\n{html_content}\n{'='*50}")
+                logger.info(f"\n{'='*50}\nEMAIL PREVIEW\nTo: {to_email}\nSubject: {subject}\n{'-'*50}\n{html_content[:500]}...\n{'='*50}")
                 return False
         except Exception as e:
-            logger.error(f"Error sending email: {str(e)}")
+            logger.error(f"Error sending email to {to_email}: {str(e)}")
+            return False
             return False
     
     def send_vendor_registration_notification(self, vendor_data: dict):
