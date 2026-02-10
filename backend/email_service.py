@@ -3,15 +3,22 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List, Dict, Any
 import logging
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
+import hashlib
+import json
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env', override=True)
 
 logger = logging.getLogger(__name__)
+
+# Track sent emails to prevent duplicates (in-memory cache)
+_sent_emails_cache: Dict[str, datetime] = {}
+DUPLICATE_WINDOW_MINUTES = 5  # Prevent same email within 5 minutes
 
 class EmailService:
     def __init__(self):
