@@ -1,146 +1,90 @@
 {
-  "timestamp": "2026-02-10T12:16:39.227255",
+  "timestamp": "2026-02-10T12:17:00.661919",
   "test_type": "new_features_testing",
-  "total_tests": 15,
-  "passed_tests": 0,
-  "failed_tests": [
-    {
-      "test": "API Health Check",
-      "error": "Health check failed: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/health (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b3ef10>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))"
-    },
-    {
-      "test": "Delivery Calculate - London postcode (SW1A1AA) - subtotal \u00a350",
-      "error": "API error: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/delivery/calculate (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b49610>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))"
-    },
-    {
-      "test": "Delivery Calculate - Manchester postcode (M1) - subtotal \u00a375",
-      "error": "API error: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/delivery/calculate (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b3ea50>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))"
-    },
-    {
-      "test": "Delivery Calculate - London postcode (SW1A1AA) - subtotal \u00a3120 (FREE delivery)",
-      "error": "API error: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/delivery/calculate (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b49290>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))"
-    },
-    {
-      "test": "Delivery Options - SW1A1AA with \u00a350 subtotal",
-      "error": "API error: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/delivery/options?postcode=SW1A1AA&subtotal=50&weight_kg=1.0 (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b4b8d0>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))"
-    },
-    {
-      "test": "Delivery Options - SW1A1AA with \u00a3120 subtotal (FREE delivery)",
-      "error": "API error: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/delivery/options?postcode=SW1A1AA&subtotal=120&weight_kg=1.0 (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b5da10>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))"
-    },
-    {
-      "test": "Delivery Options - M1 1AA (Manchester) with \u00a375 subtotal",
-      "error": "API error: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/delivery/options?postcode=M1%201AA&subtotal=75&weight_kg=2.0 (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b5fad0>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))"
-    },
-    {
-      "test": "Delivery Zones - Get Zones",
-      "error": "API error: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/delivery/zones (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b5fad0>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))"
-    },
-    {
-      "test": "Chatbot Welcome - Complete Response",
-      "error": "API error: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/chatbot/welcome (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b5cd90>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))"
-    },
-    {
-      "test": "Chatbot Message - 'What products do you...'",
-      "error": "API error: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/chatbot/message (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b5c090>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))"
-    },
-    {
-      "test": "Chatbot Message - 'How much is delivery...'",
-      "error": "API error: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/chatbot/message (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b4b7d0>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))"
-    },
-    {
-      "test": "Chatbot Quick Replies - Response Structure",
-      "error": "API error: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/chatbot/quick-replies (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b3e090>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))"
-    },
-    {
-      "test": "Owner Login - Authentication Success",
-      "error": "Login failed: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/auth/login (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b724d0>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))"
-    },
-    {
-      "test": "Regular User Login - Authentication Success",
-      "error": "Login failed: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/auth/login (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323f1ccd0>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))"
-    },
-    {
-      "test": "New User Registration - Success",
-      "error": "Registration failed: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/auth/register (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b48ad0>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))"
-    }
-  ],
-  "success_rate": 0.0,
+  "total_tests": 16,
+  "passed_tests": 16,
+  "failed_tests": [],
+  "success_rate": 100.0,
   "detailed_results": {
     "API Health Check": {
-      "success": false,
-      "details": "Health check failed: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/health (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b3ef10>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))",
-      "timestamp": "2026-02-10T12:14:08.692778"
+      "success": true,
+      "details": "Status: ok, Message: AfroMarket UK API is running",
+      "timestamp": "2026-02-10T12:16:49.738432"
     },
     "Delivery Calculate - London postcode (SW1A1AA) - subtotal \u00a350": {
-      "success": false,
-      "details": "API error: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/delivery/calculate (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b49610>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))",
-      "timestamp": "2026-02-10T12:14:18.715938"
+      "success": true,
+      "details": "Zone: local, Cost: \u00a32.99, Free: False",
+      "timestamp": "2026-02-10T12:16:49.740370"
     },
     "Delivery Calculate - Manchester postcode (M1) - subtotal \u00a375": {
-      "success": false,
-      "details": "API error: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/delivery/calculate (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b3ea50>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))",
-      "timestamp": "2026-02-10T12:14:28.745608"
+      "success": true,
+      "details": "Zone: far, Cost: \u00a38.99, Free: False",
+      "timestamp": "2026-02-10T12:16:49.741951"
     },
     "Delivery Calculate - London postcode (SW1A1AA) - subtotal \u00a3120 (FREE delivery)": {
-      "success": false,
-      "details": "API error: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/delivery/calculate (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b49290>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))",
-      "timestamp": "2026-02-10T12:14:38.806283"
+      "success": true,
+      "details": "Zone: local, Cost: \u00a30.0, Free: True",
+      "timestamp": "2026-02-10T12:16:49.743563"
     },
     "Delivery Options - SW1A1AA with \u00a350 subtotal": {
-      "success": false,
-      "details": "API error: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/delivery/options?postcode=SW1A1AA&subtotal=50&weight_kg=1.0 (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b4b8d0>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))",
-      "timestamp": "2026-02-10T12:14:48.836272"
+      "success": true,
+      "details": "Zone: local, Options: 3, Free qualifying: False",
+      "timestamp": "2026-02-10T12:16:49.744955"
     },
     "Delivery Options - SW1A1AA with \u00a3120 subtotal (FREE delivery)": {
-      "success": false,
-      "details": "API error: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/delivery/options?postcode=SW1A1AA&subtotal=120&weight_kg=1.0 (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b5da10>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))",
-      "timestamp": "2026-02-10T12:14:58.860757"
+      "success": true,
+      "details": "Zone: local, Options: 3, Free qualifying: True",
+      "timestamp": "2026-02-10T12:16:49.746268"
     },
     "Delivery Options - M1 1AA (Manchester) with \u00a375 subtotal": {
-      "success": false,
-      "details": "API error: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/delivery/options?postcode=M1%201AA&subtotal=75&weight_kg=2.0 (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b5fad0>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))",
-      "timestamp": "2026-02-10T12:15:08.882146"
+      "success": true,
+      "details": "Zone: far, Options: 3, Free qualifying: False",
+      "timestamp": "2026-02-10T12:16:49.747704"
     },
-    "Delivery Zones - Get Zones": {
-      "success": false,
-      "details": "API error: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/delivery/zones (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b5fad0>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))",
-      "timestamp": "2026-02-10T12:15:18.910698"
+    "Delivery Zones - All Zones Present": {
+      "success": true,
+      "details": "Zones: ['local', 'near', 'mid', 'far', 'remote']",
+      "timestamp": "2026-02-10T12:16:49.749165"
+    },
+    "Delivery Zones - Free Threshold \u00a3100": {
+      "success": true,
+      "details": "Threshold: \u00a3100.0",
+      "timestamp": "2026-02-10T12:16:49.749173"
     },
     "Chatbot Welcome - Complete Response": {
-      "success": false,
-      "details": "API error: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/chatbot/welcome (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b5cd90>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))",
-      "timestamp": "2026-02-10T12:15:28.938159"
+      "success": true,
+      "details": "Session: 0230a82c..., Replies: 5, Bot: AfroBot",
+      "timestamp": "2026-02-10T12:16:49.784843"
     },
     "Chatbot Message - 'What products do you...'": {
-      "success": false,
-      "details": "API error: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/chatbot/message (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b5c090>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))",
-      "timestamp": "2026-02-10T12:15:38.984595"
+      "success": true,
+      "details": "Response length: 562, Session: 0230a82c...",
+      "timestamp": "2026-02-10T12:16:54.956434"
     },
     "Chatbot Message - 'How much is delivery...'": {
-      "success": false,
-      "details": "API error: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/chatbot/message (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b4b7d0>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))",
-      "timestamp": "2026-02-10T12:15:49.012967"
+      "success": true,
+      "details": "Response length: 395, Session: 0230a82c...",
+      "timestamp": "2026-02-10T12:16:58.723842"
     },
     "Chatbot Quick Replies - Response Structure": {
-      "success": false,
-      "details": "API error: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/chatbot/quick-replies (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b3e090>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))",
-      "timestamp": "2026-02-10T12:15:59.046320"
+      "success": true,
+      "details": "Replies: 5, Structure: \u2713",
+      "timestamp": "2026-02-10T12:16:58.725676"
     },
     "Owner Login - Authentication Success": {
-      "success": false,
-      "details": "Login failed: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/auth/login (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b724d0>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))",
-      "timestamp": "2026-02-10T12:16:09.104862"
+      "success": true,
+      "details": "Owner: sotubodammy@gmail.com, Admin: True",
+      "timestamp": "2026-02-10T12:16:59.655897"
     },
     "Regular User Login - Authentication Success": {
-      "success": false,
-      "details": "Login failed: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/auth/login (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323f1ccd0>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))",
-      "timestamp": "2026-02-10T12:16:29.162613"
+      "success": true,
+      "details": "User: test@test.com",
+      "timestamp": "2026-02-10T12:17:00.037364"
     },
     "New User Registration - Success": {
-      "success": false,
-      "details": "Registration failed: Request failed: HTTPSConnectionPool(host='afro-market.co.uk', port=443): Max retries exceeded with url: /api/auth/register (Caused by ConnectTimeoutError(<urllib3.connection.HTTPSConnection object at 0xf97323b48ad0>, 'Connection to afro-market.co.uk timed out. (connect timeout=10)'))",
-      "timestamp": "2026-02-10T12:16:39.227072"
+      "success": true,
+      "details": "User: newuser_121700@test.com, Token length: 217",
+      "timestamp": "2026-02-10T12:17:00.661760"
     }
   }
 }
