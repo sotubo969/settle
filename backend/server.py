@@ -748,6 +748,35 @@ async def update_owner_delivery(
     return {'success': True, 'message': 'Delivery updated'}
 
 
+# ============ WISHLIST ENDPOINTS ============
+
+@api_router.get("/wishlist")
+async def get_wishlist(current_user: dict = Depends(get_current_user)):
+    """Get user's wishlist"""
+    wishlist = await firestore_db.get_user_wishlist(current_user['id'])
+    return {'items': wishlist}
+
+
+@api_router.post("/wishlist")
+async def add_to_wishlist(
+    product_id: str = Query(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Add product to wishlist"""
+    await firestore_db.add_to_wishlist(current_user['id'], product_id)
+    return {'success': True, 'message': 'Added to wishlist'}
+
+
+@api_router.delete("/wishlist/{product_id}")
+async def remove_from_wishlist(
+    product_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Remove product from wishlist"""
+    await firestore_db.remove_from_wishlist(current_user['id'], product_id)
+    return {'success': True, 'message': 'Removed from wishlist'}
+
+
 # ============ ADS ENDPOINTS ============
 
 @api_router.get("/ads/pending")
