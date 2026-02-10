@@ -651,8 +651,8 @@ const OwnerDashboard = () => {
                   <button onClick={() => setActiveTab('vendors')} className="text-emerald-600 text-sm font-medium hover:underline">View all</button>
                 </div>
                 <div className="space-y-4">
-                  {sales?.vendorSales?.slice(0, 5).map((vendor, index) => (
-                    <div key={vendor.vendorId} className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+                  {Array.isArray(sales?.vendorSales) && sales.vendorSales.length > 0 ? sales.vendorSales.slice(0, 5).map((vendor, index) => (
+                    <div key={vendor?.vendorId || index} className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors">
                       <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white ${
                         index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500' :
                         index === 1 ? 'bg-gradient-to-br from-gray-400 to-gray-500' :
@@ -662,15 +662,17 @@ const OwnerDashboard = () => {
                         {index + 1}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 truncate">{vendor.vendorName}</p>
-                        <p className="text-sm text-gray-500">{vendor.orderCount} orders</p>
+                        <p className="font-semibold text-gray-900 truncate">{vendor?.vendorName || 'Vendor'}</p>
+                        <p className="text-sm text-gray-500">{vendor?.orderCount || 0} orders</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-emerald-600">£{vendor.totalSales?.toLocaleString()}</p>
-                        <p className="text-xs text-gray-500">{vendor.productCount} products</p>
+                        <p className="font-bold text-emerald-600">£{(vendor?.totalSales || 0).toLocaleString()}</p>
+                        <p className="text-xs text-gray-500">{vendor?.productCount || 0} products</p>
                       </div>
                     </div>
-                  ))}
+                  )) : (
+                    <p className="text-gray-500 text-center py-8">No vendor data yet</p>
+                  )}
                 </div>
               </div>
 
@@ -681,19 +683,19 @@ const OwnerDashboard = () => {
                   <button onClick={() => setActiveTab('products')} className="text-emerald-600 text-sm font-medium hover:underline">View all</button>
                 </div>
                 <div className="space-y-4">
-                  {analytics?.topProducts?.slice(0, 5).map((product, index) => (
-                    <div key={product.id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors">
-                      <img src={product.image} alt={product.name} className="w-12 h-12 rounded-xl object-cover" />
+                  {Array.isArray(analytics?.topProducts) && analytics.topProducts.length > 0 ? analytics.topProducts.slice(0, 5).map((product, index) => (
+                    <div key={product?.id || index} className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+                      <img src={product?.image || '/placeholder.png'} alt={product?.name || 'Product'} className="w-12 h-12 rounded-xl object-cover" />
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-gray-900 truncate">{product.name}</p>
-                        <p className="text-sm text-gray-500">{product.clicks} clicks</p>
+                        <p className="font-semibold text-gray-900 truncate">{product?.name || 'Product'}</p>
+                        <p className="text-sm text-gray-500">{product?.clicks || 0} clicks</p>
                       </div>
                       <div className="flex items-center gap-1 text-emerald-600">
                         <TrendingUp className="w-4 h-4" />
                         <span className="font-semibold">#{index + 1}</span>
                       </div>
                     </div>
-                  )) || (
+                  )) : (
                     <p className="text-gray-500 text-center py-8">No product data yet</p>
                   )}
                 </div>
