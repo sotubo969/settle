@@ -665,48 +665,46 @@ class AfroMarketAPITester:
             self.log_test("Notifications - By Email Endpoint", False, f"Notifications failed: {response}")
             return False
 
-    def run_firestore_migration_tests(self):
-        """Run comprehensive test suite for Firestore migration"""
-        print("🧪 Starting AfroMarket UK Backend Tests - Firestore Migration")
+    def run_new_features_tests(self):
+        """Run comprehensive test suite for newly implemented features"""
+        print("🧪 Starting AfroMarket UK Backend Tests - New Features Testing")
         print(f"🌐 Testing against: {self.base_url}")
         print("=" * 70)
         
-        # Core Firestore Migration Tests
+        # Test the health endpoint first to verify API is running
+        print("\n🏥 Testing API Health...")
+        success, response = self.make_request('GET', 'health', auth_required=False)
+        if success and response.get('status') == 'ok':
+            self.log_test("API Health Check", True, f"Status: {response.get('status')}, Message: {response.get('message', '')}")
+        else:
+            self.log_test("API Health Check", False, f"Health check failed: {response}")
+        
+        # 1. DELIVERY API TESTS
         print("\n" + "="*50)
-        print("🔥 FIRESTORE MIGRATION TESTS")
+        print("🚚 DELIVERY API TESTS")
         print("="*50)
         
-        # 1. Health endpoint returns database=firestore
-        self.test_health_endpoint()
+        delivery_calculate_success = self.test_delivery_api_calculate()
+        delivery_options_success = self.test_delivery_api_options()
+        delivery_zones_success = self.test_delivery_api_zones()
         
-        # 2. Products API returns products from Firestore
-        product_count = self.test_products_api()
+        # 2. CHATBOT API TESTS
+        print("\n" + "="*50)
+        print("🤖 CHATBOT API TESTS")
+        print("="*50)
         
-        # 3. Vendors API returns 3 vendors
-        vendor_count = self.test_vendors_api()
+        chatbot_welcome_success = self.test_chatbot_api_welcome()
+        chatbot_message_success = self.test_chatbot_api_message()
+        chatbot_replies_success = self.test_chatbot_api_quick_replies()
         
-        # 4. User registration works with Firestore
-        registration_success = self.test_user_registration()
+        # 3. AUTHENTICATION TESTS
+        print("\n" + "="*50)
+        print("🔐 AUTHENTICATION TESTS")
+        print("="*50)
         
-        # 5. User login works and returns JWT token
-        login_success = self.test_user_login()
-        
-        # 6. Authenticated /auth/me endpoint works
-        if self.token:
-            self.test_auth_me_endpoint()
-        
-        # 7. Vendor registration creates vendor in Firestore and sends email
-        vendor_registration_success = self.test_vendor_registration_firestore()
-        
-        # 8. Contact form submission works
-        self.test_contact_form_submission()
-        
-        # 9. Firebase auth status returns configured=true
-        self.test_firebase_auth_status()
-        
-        # 10. Notifications endpoints work
-        if vendor_registration_success:
-            self.test_notifications_endpoints()
+        owner_login_success = self.test_auth_owner_login()
+        regular_user_login_success = self.test_auth_regular_user_login()
+        user_registration_success = self.test_auth_register_new_user()
         
         # Print summary
         print("\n" + "=" * 70)
@@ -720,13 +718,20 @@ class AfroMarketAPITester:
         success_rate = (self.tests_passed / self.tests_run) * 100 if self.tests_run > 0 else 0
         print(f"\n✨ Success Rate: {success_rate:.1f}%")
         
-        # Summary of key metrics
-        print(f"\n📈 Key Metrics:")
-        print(f"  - Products in Firestore: {product_count}")
-        print(f"  - Vendors in Firestore: {vendor_count}")
-        print(f"  - User Registration: {'✅' if registration_success else '❌'}")
-        print(f"  - User Login: {'✅' if login_success else '❌'}")
-        print(f"  - Vendor Registration: {'✅' if vendor_registration_success else '❌'}")
+        # Summary of key features
+        print(f"\n📈 Feature Status:")
+        print(f"  🚚 Delivery API:")
+        print(f"    - Calculate: {'✅' if delivery_calculate_success else '❌'}")
+        print(f"    - Options: {'✅' if delivery_options_success else '❌'}")
+        print(f"    - Zones: {'✅' if delivery_zones_success else '❌'}")
+        print(f"  🤖 Chatbot API:")
+        print(f"    - Welcome: {'✅' if chatbot_welcome_success else '❌'}")
+        print(f"    - Messages: {'✅' if chatbot_message_success else '❌'}")
+        print(f"    - Quick Replies: {'✅' if chatbot_replies_success else '❌'}")
+        print(f"  🔐 Authentication:")
+        print(f"    - Owner Login: {'✅' if owner_login_success else '❌'}")
+        print(f"    - User Login: {'✅' if regular_user_login_success else '❌'}")
+        print(f"    - Registration: {'✅' if user_registration_success else '❌'}")
         
         return success_rate >= 70
 
