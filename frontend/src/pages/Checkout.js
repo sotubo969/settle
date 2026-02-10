@@ -731,6 +731,36 @@ const CheckoutContent = () => {
 
                 <Separator />
 
+                {/* Delivery Options */}
+                {deliveryOptions && step === 1 && shippingInfo.postcode.length >= 3 && (
+                  <>
+                    <div className="space-y-2">
+                      <p className="font-semibold text-sm text-gray-900">Delivery Options</p>
+                      <p className="text-xs text-gray-500 mb-2">Zone: {deliveryOptions.zone_name}</p>
+                      {deliveryOptions.options.map((option) => (
+                        <div 
+                          key={option.key}
+                          className={`flex items-center justify-between p-2 rounded-lg cursor-pointer border-2 transition-all ${
+                            selectedDeliveryOption === option.key 
+                              ? 'border-emerald-500 bg-emerald-50' 
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                          onClick={() => setSelectedDeliveryOption(option.key)}
+                        >
+                          <div>
+                            <p className="text-sm font-medium">{option.name}</p>
+                            <p className="text-xs text-gray-500">{option.estimated_days}</p>
+                          </div>
+                          <span className={`font-semibold ${option.free ? 'text-emerald-600' : ''}`}>
+                            {option.free ? 'FREE' : `£${option.cost.toFixed(2)}`}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <Separator />
+                  </>
+                )}
+
                 {/* Totals */}
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
@@ -739,10 +769,24 @@ const CheckoutContent = () => {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Delivery</span>
-                    <span>{delivery === 0 ? <span className="text-emerald-600 font-medium">FREE</span> : `£${delivery.toFixed(2)}`}</span>
+                    {loadingDelivery ? (
+                      <span className="text-gray-400">Calculating...</span>
+                    ) : (
+                      <span>{delivery === 0 ? <span className="text-emerald-600 font-medium">FREE</span> : `£${delivery.toFixed(2)}`}</span>
+                    )}
                   </div>
-                  {delivery > 0 && (
-                    <p className="text-xs text-emerald-600">Free delivery on orders over £30</p>
+                  {deliveryInfo && !deliveryInfo.free_delivery && deliveryInfo.amount_to_free > 0 && (
+                    <div className="bg-emerald-50 p-2 rounded-lg">
+                      <p className="text-xs text-emerald-700">
+                        🎉 Add £{deliveryInfo.amount_to_free.toFixed(2)} more for FREE delivery!
+                      </p>
+                    </div>
+                  )}
+                  {deliveryInfo?.free_delivery && (
+                    <p className="text-xs text-emerald-600 font-medium">✓ You qualify for FREE delivery!</p>
+                  )}
+                  {!deliveryInfo && delivery === 0 && (
+                    <p className="text-xs text-emerald-600">Free delivery on orders over £{FREE_DELIVERY_THRESHOLD}</p>
                   )}
                 </div>
 
