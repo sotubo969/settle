@@ -373,7 +373,7 @@ export const AuthProvider = ({ children }) => {
   // Logout
   const logout = async () => {
     try {
-      if (firebaseEnabled && useFirebaseAuth) {
+      if (firebaseEnabled && useFirebaseAuth && !isLegacySession.current) {
         await logoutFirebase();
       }
     } catch (error) {
@@ -382,8 +382,10 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setFirebaseUser(null);
     setIsVerified(false);
+    isLegacySession.current = false; // Clear legacy session flag
     localStorage.removeItem('afroToken');
     localStorage.removeItem('afroUser');
+    console.log('User logged out');
   };
 
   // Refresh user verification status
