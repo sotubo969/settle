@@ -105,11 +105,13 @@ const Cart = () => {
   }
 
   const subtotal = getCartTotal();
-  const deliveryFee = subtotal >= 70 ? 0 : subtotal >= 30 ? 3.99 : 5.99;
-  const serviceFee = parseFloat((subtotal * 0.02).toFixed(2)); // 2% service fee
-  const savings = subtotal >= 70 ? 5.99 : 0;
-  const total = subtotal + deliveryFee + serviceFee;
+  // Free delivery for orders £100+
+  const FREE_DELIVERY_THRESHOLD = 100;
+  const deliveryFee = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : subtotal >= 50 ? 4.99 : 6.99;
+  const savings = subtotal >= FREE_DELIVERY_THRESHOLD ? deliveryFee : 0;
+  const total = subtotal + (subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : deliveryFee);
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const amountToFreeDelivery = Math.max(0, FREE_DELIVERY_THRESHOLD - subtotal);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
