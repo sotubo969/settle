@@ -1012,8 +1012,9 @@ test_plan:
     - "Cart Functionality" 
     - "Stripe Payment Flow - Frontend Integration"
     - "Checkout Flow"
+    - "Owner Dashboard Overview API"
   stuck_tasks: 
-    - "Authentication System"
+    - "Owner Dashboard Overview API"
     - "Cart Functionality"
     - "Stripe Payment Flow - Frontend Integration"
     - "Content Loading Issues"
@@ -1022,10 +1023,11 @@ test_plan:
     - "Mobile Responsiveness"
   test_all: true
   test_priority: "critical_authentication_first"
-  owner_dashboard_testing: "completed"
+  owner_dashboard_testing: "dashboard_loading_issue"
   forgot_password_testing: "completed"
   stripe_checkout_testing: "failed_due_to_auth_issues"
   new_features_testing: "completed_100_percent"
+  latest_test_date: "July 10, 2025"
 
   - task: "Forgot Password API - Request Reset"
     implemented: true
