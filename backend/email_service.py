@@ -1221,5 +1221,967 @@ class EmailService:
             html_content=html_content
         )
 
+    # ============ COMPREHENSIVE PAYMENT NOTIFICATION SYSTEM ============
+    
+    def send_payment_confirmation_to_customer(
+        self, 
+        customer_email: str, 
+        customer_name: str, 
+        order_data: Dict[str, Any]
+    ) -> bool:
+        """
+        Send comprehensive payment confirmation email to customer
+        
+        Args:
+            customer_email: Customer's email address
+            customer_name: Customer's name
+            order_data: Order details including items, shipping, delivery info
+        """
+        order_id = order_data.get('order_id', order_data.get('orderId', 'N/A'))
+        items = order_data.get('items', [])
+        shipping_info = order_data.get('shipping_info', order_data.get('shippingInfo', {}))
+        delivery_info = order_data.get('delivery_info', {})
+        subtotal = order_data.get('subtotal', 0)
+        delivery_fee = order_data.get('delivery_fee', order_data.get('deliveryFee', 0))
+        total = order_data.get('total', subtotal + delivery_fee)
+        payment_method = order_data.get('payment_method', 'Card')
+        
+        # Calculate estimated arrival
+        estimated_days = delivery_info.get('estimated_days', '3-5 days')
+        now = datetime.utcnow()
+        
+        # Parse estimated days to calculate arrival date
+        try:
+            if 'Same day' in estimated_days:
+                arrival_date = now
+            elif 'Next day' in estimated_days:
+                arrival_date = now + timedelta(days=1)
+            else:
+                # Extract first number from string like "2-3 days"
+                import re
+                match = re.search(r'(\d+)', estimated_days)
+                days = int(match.group(1)) if match else 3
+                arrival_date = now + timedelta(days=days + 1)  # Add buffer
+            
+            estimated_arrival = arrival_date.strftime('%A, %d %B %Y')
+        except:
+            estimated_arrival = f"Within {estimated_days}"
+        
+        # Build items HTML
+        items_html = ""
+        for item in items:
+            price = float(item.get('price', 0))
+            qty = int(item.get('quantity', 1))
+            item_total = price * qty
+            items_html += f"""
+            <tr>
+                <td style="padding: 15px; border-bottom: 1px solid #e5e7eb;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <img src="{item.get('image', '')}" alt="" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover; background: #f3f4f6;">
+                        <div>
+                            <p style="margin: 0; font-weight: 600; color: #1f2937;">{item.get('name', 'Product')}</p>
+                            <p style="margin: 4px 0 0; color: #6b7280; font-size: 14px;">Qty: {qty}</p>
+                            {f'<p style="margin: 4px 0 0; color: #9ca3af; font-size: 12px;">Vendor: {item.get("vendor_name", "")}</p>' if item.get('vendor_name') else ''}
+                        </div>
+                    </div>
+                </td>
+                <td style="padding: 15px; border-bottom: 1px solid #e5e7eb; text-align: right;">
+                    <p style="margin: 0; font-weight: 600;">£{item_total:.2f}</p>
+                    <p style="margin: 2px 0 0; color: #9ca3af; font-size: 12px;">£{price:.2f} each</p>
+                </td>
+            </tr>
+            """
+        
+        subject = f"✅ Payment Confirmed - Order #{order_id}"
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;">
+            <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td align="center" style="padding: 20px;">
+                        <table role="presentation" style="width: 100%; max-width: 600px; border-collapse: collapse;">
+                            <!-- Header -->
+                            <tr>
+                                <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
+                                    <h1 style="margin: 0; color: white; font-size: 28px;">✅ Payment Successful!</h1>
+                                    <p style="margin: 10px 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">Thank you for your order</p>
+                                </td>
+                            </tr>
+                            
+                            <!-- Content -->
+                            <tr>
+                                <td style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                                    <p style="margin: 0 0 20px; font-size: 16px;">Hello <strong>{customer_name}</strong>,</p>
+                                    
+                                    <p style="margin: 0 0 25px; color: #4b5563;">
+                                        Great news! Your payment has been successfully processed and your order is confirmed. 
+                                        Here are your complete order details:
+                                    </p>
+                                    
+                                    <!-- Order Reference Box -->
+                                    <table role="presentation" style="width: 100%; background: #f0fdf4; border: 2px solid #10b981; border-radius: 12px; margin-bottom: 25px;">
+                                        <tr>
+                                            <td style="padding: 20px; text-align: center;">
+                                                <p style="margin: 0 0 5px; color: #6b7280; font-size: 14px;">Order Reference</p>
+                                                <p style="margin: 0; font-size: 24px; font-weight: 700; color: #059669;">#{order_id}</p>
+                                                <p style="margin: 10px 0 0; color: #6b7280; font-size: 13px;">
+                                                    Payment Method: {payment_method} | Date: {now.strftime('%d %B %Y, %H:%M')}
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <!-- Order Items -->
+                                    <h3 style="margin: 30px 0 15px; font-size: 18px; color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">
+                                        📦 Order Items
+                                    </h3>
+                                    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                                        {items_html}
+                                    </table>
+                                    
+                                    <!-- Order Summary -->
+                                    <h3 style="margin: 30px 0 15px; font-size: 18px; color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">
+                                        💰 Payment Summary
+                                    </h3>
+                                    <table role="presentation" style="width: 100%;">
+                                        <tr>
+                                            <td style="padding: 10px 0; color: #4b5563;">Subtotal</td>
+                                            <td style="padding: 10px 0; text-align: right; font-weight: 500;">£{subtotal:.2f}</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 10px 0; color: #4b5563;">Delivery Fee</td>
+                                            <td style="padding: 10px 0; text-align: right; font-weight: 500;">
+                                                {f'<span style="color: #10b981;">FREE</span>' if delivery_fee == 0 else f'£{delivery_fee:.2f}'}
+                                            </td>
+                                        </tr>
+                                        <tr style="border-top: 2px solid #10b981;">
+                                            <td style="padding: 15px 0 10px; font-size: 18px; font-weight: 700; color: #059669;">Total Paid</td>
+                                            <td style="padding: 15px 0 10px; text-align: right; font-size: 20px; font-weight: 700; color: #059669;">£{total:.2f}</td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <!-- Delivery Information -->
+                                    <h3 style="margin: 30px 0 15px; font-size: 18px; color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">
+                                        🚚 Delivery Information
+                                    </h3>
+                                    <table role="presentation" style="width: 100%; background: #f9fafb; border-radius: 12px;">
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <table role="presentation" style="width: 100%;">
+                                                    <tr>
+                                                        <td style="width: 50%; vertical-align: top; padding-right: 15px;">
+                                                            <p style="margin: 0 0 5px; color: #6b7280; font-size: 13px; font-weight: 600;">DELIVERY ADDRESS</p>
+                                                            <p style="margin: 0; font-weight: 600; color: #1f2937;">{shipping_info.get('fullName', customer_name)}</p>
+                                                            <p style="margin: 5px 0 0; color: #4b5563;">
+                                                                {shipping_info.get('address', 'N/A')}<br>
+                                                                {shipping_info.get('city', '')}, {shipping_info.get('postcode', '')}<br>
+                                                                {shipping_info.get('phone', '')}
+                                                            </p>
+                                                        </td>
+                                                        <td style="width: 50%; vertical-align: top; padding-left: 15px; border-left: 1px solid #e5e7eb;">
+                                                            <p style="margin: 0 0 5px; color: #6b7280; font-size: 13px; font-weight: 600;">ESTIMATED ARRIVAL</p>
+                                                            <p style="margin: 0; font-size: 18px; font-weight: 700; color: #059669;">{estimated_arrival}</p>
+                                                            <p style="margin: 8px 0 0; color: #4b5563; font-size: 14px;">
+                                                                Delivery: {delivery_info.get('zone_name', 'Standard')}<br>
+                                                                {delivery_info.get('delivery_option', '')}
+                                                            </p>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <!-- What's Next -->
+                                    <table role="presentation" style="width: 100%; background: #fef3c7; border-radius: 12px; margin-top: 25px;">
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <p style="margin: 0 0 10px; color: #92400e; font-weight: 600;">📧 What's Next?</p>
+                                                <ul style="margin: 0; padding-left: 20px; color: #a16207;">
+                                                    <li>You'll receive shipping confirmation with tracking details</li>
+                                                    <li>Track your order anytime in your account</li>
+                                                    <li>Contact us if you have any questions</li>
+                                                </ul>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <!-- CTA Button -->
+                                    <table role="presentation" style="width: 100%; margin-top: 30px;">
+                                        <tr>
+                                            <td align="center">
+                                                <a href="{self.site_url}/profile" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                                                    Track Your Order
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <p style="margin: 30px 0 0; color: #6b7280;">
+                                        Thank you for shopping with us!<br>
+                                        <strong style="color: #1f2937;">The AfroMarket UK Team</strong>
+                                    </p>
+                                </td>
+                            </tr>
+                            
+                            <!-- Footer -->
+                            <tr>
+                                <td style="padding: 30px; text-align: center; color: #9ca3af; font-size: 12px;">
+                                    <p style="margin: 0;">Questions? Contact us at {self.admin_email}</p>
+                                    <p style="margin: 10px 0 0;">&copy; 2025 AfroMarket UK. All rights reserved.</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
+        """
+        
+        text_content = f"""
+        Payment Confirmed - Order #{order_id}
+        
+        Hello {customer_name},
+        
+        Your payment has been successfully processed!
+        
+        Order Reference: #{order_id}
+        Total Paid: £{total:.2f}
+        Payment Method: {payment_method}
+        
+        Delivery Address:
+        {shipping_info.get('fullName', customer_name)}
+        {shipping_info.get('address', '')}
+        {shipping_info.get('city', '')}, {shipping_info.get('postcode', '')}
+        
+        Estimated Arrival: {estimated_arrival}
+        Delivery Fee: {'FREE' if delivery_fee == 0 else f'£{delivery_fee:.2f}'}
+        
+        You'll receive tracking information once your order ships.
+        
+        Thank you for shopping with AfroMarket UK!
+        """
+        
+        return self.send_email(
+            to_email=customer_email,
+            subject=subject,
+            html_content=html_content,
+            text_content=text_content,
+            duplicate_key=f"customer_payment_{order_id}"
+        )
+
+    def send_payment_notification_to_vendor(
+        self,
+        vendor_email: str,
+        vendor_name: str,
+        order_data: Dict[str, Any],
+        vendor_items: List[Dict[str, Any]],
+        customer_info: Dict[str, Any]
+    ) -> bool:
+        """
+        Send comprehensive order notification to vendor after payment success
+        
+        Args:
+            vendor_email: Vendor's email address
+            vendor_name: Vendor's business name
+            order_data: Full order data
+            vendor_items: Only items belonging to this vendor
+            customer_info: Customer details for this order
+        """
+        order_id = order_data.get('order_id', order_data.get('orderId', 'N/A'))
+        shipping_info = order_data.get('shipping_info', order_data.get('shippingInfo', {}))
+        delivery_info = order_data.get('delivery_info', {})
+        
+        # Calculate estimated arrival
+        estimated_days = delivery_info.get('estimated_days', '3-5 days')
+        now = datetime.utcnow()
+        
+        try:
+            if 'Same day' in estimated_days:
+                arrival_date = now
+            elif 'Next day' in estimated_days:
+                arrival_date = now + timedelta(days=1)
+            else:
+                import re
+                match = re.search(r'(\d+)', estimated_days)
+                days = int(match.group(1)) if match else 3
+                arrival_date = now + timedelta(days=days + 1)
+            
+            estimated_arrival = arrival_date.strftime('%A, %d %B %Y')
+        except:
+            estimated_arrival = f"Within {estimated_days}"
+        
+        # Build items HTML and calculate totals
+        items_html = ""
+        vendor_total = 0
+        
+        for item in vendor_items:
+            price = float(item.get('price', 0))
+            qty = int(item.get('quantity', 1))
+            item_total = price * qty
+            vendor_total += item_total
+            
+            items_html += f"""
+            <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <img src="{item.get('image', '')}" alt="" style="width: 50px; height: 50px; border-radius: 6px; object-fit: cover; background: #f3f4f6;">
+                        <span style="font-weight: 500; color: #1f2937;">{item.get('name', 'Product')}</span>
+                    </div>
+                </td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">{qty}</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">£{price:.2f}</td>
+                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">£{item_total:.2f}</td>
+            </tr>
+            """
+        
+        # Calculate commission and earnings
+        commission_rate = 0.10  # 10% platform fee
+        commission = vendor_total * commission_rate
+        vendor_earning = vendor_total - commission
+        
+        subject = f"🎉 New Order Received - #{order_id}"
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+        </head>
+        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;">
+            <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td align="center" style="padding: 20px;">
+                        <table role="presentation" style="width: 100%; max-width: 600px; border-collapse: collapse;">
+                            <!-- Header -->
+                            <tr>
+                                <td style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); padding: 35px 30px; text-align: center; border-radius: 16px 16px 0 0;">
+                                    <h1 style="margin: 0; color: white; font-size: 26px;">🎉 New Order Received!</h1>
+                                    <p style="margin: 10px 0 0; color: rgba(255,255,255,0.9);">Order #{order_id}</p>
+                                </td>
+                            </tr>
+                            
+                            <!-- Content -->
+                            <tr>
+                                <td style="background: white; padding: 35px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                                    <p style="margin: 0 0 20px; font-size: 16px;">Hello <strong>{vendor_name}</strong>,</p>
+                                    
+                                    <p style="margin: 0 0 25px; color: #4b5563;">
+                                        Great news! You have received a new order. Payment has been confirmed - please prepare the items for shipment.
+                                    </p>
+                                    
+                                    <!-- Customer Info Box -->
+                                    <table role="presentation" style="width: 100%; background: #f0f9ff; border: 2px solid #0ea5e9; border-radius: 12px; margin-bottom: 25px;">
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <p style="margin: 0 0 15px; font-weight: 600; color: #0369a1; font-size: 15px;">👤 Customer Information</p>
+                                                <table role="presentation" style="width: 100%;">
+                                                    <tr>
+                                                        <td style="padding: 5px 0; color: #64748b; width: 100px;">Name:</td>
+                                                        <td style="padding: 5px 0; font-weight: 500;">{customer_info.get('name', shipping_info.get('fullName', 'N/A'))}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding: 5px 0; color: #64748b;">Email:</td>
+                                                        <td style="padding: 5px 0;">{customer_info.get('email', 'N/A')}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding: 5px 0; color: #64748b;">Phone:</td>
+                                                        <td style="padding: 5px 0;">{shipping_info.get('phone', 'N/A')}</td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <!-- Delivery Address -->
+                                    <table role="presentation" style="width: 100%; background: #f9fafb; border-radius: 12px; margin-bottom: 25px;">
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <p style="margin: 0 0 10px; font-weight: 600; color: #1f2937; font-size: 15px;">📍 Delivery Address</p>
+                                                <p style="margin: 0; color: #4b5563;">
+                                                    {shipping_info.get('fullName', customer_info.get('name', 'N/A'))}<br>
+                                                    {shipping_info.get('address', 'N/A')}<br>
+                                                    {shipping_info.get('city', '')}, {shipping_info.get('postcode', '')}<br>
+                                                    Phone: {shipping_info.get('phone', 'N/A')}
+                                                </p>
+                                                <p style="margin: 15px 0 0; padding-top: 15px; border-top: 1px solid #e5e7eb;">
+                                                    <strong style="color: #059669;">Estimated Arrival: {estimated_arrival}</strong><br>
+                                                    <span style="color: #6b7280; font-size: 14px;">Delivery: {delivery_info.get('delivery_option', 'Standard')} - {delivery_info.get('zone_name', '')}</span>
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <!-- Order Items -->
+                                    <h3 style="margin: 25px 0 15px; font-size: 16px; color: #1f2937; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">
+                                        📦 Items to Ship
+                                    </h3>
+                                    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                                        <thead>
+                                            <tr style="background: #f3f4f6;">
+                                                <th style="padding: 12px; text-align: left; font-weight: 600; color: #4b5563;">Product</th>
+                                                <th style="padding: 12px; text-align: center; font-weight: 600; color: #4b5563;">Qty</th>
+                                                <th style="padding: 12px; text-align: right; font-weight: 600; color: #4b5563;">Price</th>
+                                                <th style="padding: 12px; text-align: right; font-weight: 600; color: #4b5563;">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {items_html}
+                                        </tbody>
+                                    </table>
+                                    
+                                    <!-- Earnings Box -->
+                                    <table role="presentation" style="width: 100%; background: #f0fdf4; border: 2px solid #10b981; border-radius: 12px; margin-top: 25px;">
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <p style="margin: 0 0 15px; font-weight: 600; color: #059669; font-size: 16px;">💰 Your Earnings</p>
+                                                <table role="presentation" style="width: 100%;">
+                                                    <tr>
+                                                        <td style="padding: 8px 0; color: #4b5563;">Order Total</td>
+                                                        <td style="padding: 8px 0; text-align: right;">£{vendor_total:.2f}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="padding: 8px 0; color: #4b5563;">Platform Fee (10%)</td>
+                                                        <td style="padding: 8px 0; text-align: right; color: #ef4444;">-£{commission:.2f}</td>
+                                                    </tr>
+                                                    <tr style="border-top: 2px solid #10b981;">
+                                                        <td style="padding: 12px 0 0; font-size: 18px; font-weight: 700; color: #059669;">Your Earning</td>
+                                                        <td style="padding: 12px 0 0; text-align: right; font-size: 20px; font-weight: 700; color: #059669;">£{vendor_earning:.2f}</td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <!-- Action Required -->
+                                    <table role="presentation" style="width: 100%; background: #fef3c7; border-radius: 12px; margin-top: 25px;">
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <p style="margin: 0 0 10px; color: #92400e; font-weight: 600;">⚡ Action Required</p>
+                                                <p style="margin: 0; color: #a16207;">
+                                                    Please prepare and ship this order as soon as possible. 
+                                                    Update the tracking information in your vendor dashboard once shipped.
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <!-- CTA -->
+                                    <table role="presentation" style="width: 100%; margin-top: 30px;">
+                                        <tr>
+                                            <td align="center">
+                                                <a href="{self.site_url}/vendor/orders" style="display: inline-block; padding: 14px 35px; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                                                    View Order Details
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <p style="margin: 30px 0 0; color: #6b7280;">
+                                        Thank you for selling on AfroMarket UK!<br>
+                                        <strong style="color: #1f2937;">The AfroMarket UK Team</strong>
+                                    </p>
+                                </td>
+                            </tr>
+                            
+                            <!-- Footer -->
+                            <tr>
+                                <td style="padding: 25px; text-align: center; color: #9ca3af; font-size: 12px;">
+                                    <p style="margin: 0;">&copy; 2025 AfroMarket UK. All rights reserved.</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
+        """
+        
+        return self.send_email(
+            to_email=vendor_email,
+            subject=subject,
+            html_content=html_content,
+            duplicate_key=f"vendor_payment_{order_id}_{vendor_email}"
+        )
+
+    def send_payment_notification_to_admin(
+        self,
+        order_data: Dict[str, Any],
+        customer_info: Dict[str, Any],
+        vendors_info: List[Dict[str, Any]]
+    ) -> bool:
+        """
+        Send comprehensive payment notification to platform admin/owner
+        
+        Args:
+            order_data: Full order data
+            customer_info: Customer details
+            vendors_info: List of vendors and their items in this order
+        """
+        order_id = order_data.get('order_id', order_data.get('orderId', 'N/A'))
+        shipping_info = order_data.get('shipping_info', order_data.get('shippingInfo', {}))
+        delivery_info = order_data.get('delivery_info', {})
+        items = order_data.get('items', [])
+        subtotal = order_data.get('subtotal', 0)
+        delivery_fee = order_data.get('delivery_fee', order_data.get('deliveryFee', 0))
+        total = order_data.get('total', subtotal + delivery_fee)
+        payment_method = order_data.get('payment_method', 'Card')
+        
+        now = datetime.utcnow()
+        
+        # Build items HTML
+        items_html = ""
+        for item in items:
+            price = float(item.get('price', 0))
+            qty = int(item.get('quantity', 1))
+            item_total = price * qty
+            items_html += f"""
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">{item.get('name', 'Product')}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">{item.get('vendor_name', 'N/A')}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: center;">{qty}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: right;">£{item_total:.2f}</td>
+            </tr>
+            """
+        
+        # Build vendors summary
+        vendors_html = ""
+        total_commission = 0
+        for vendor in vendors_info:
+            vendor_total = sum(float(i.get('price', 0)) * int(i.get('quantity', 1)) for i in vendor.get('items', []))
+            commission = vendor_total * 0.10
+            total_commission += commission
+            vendors_html += f"""
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">{vendor.get('name', 'Unknown')}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">{vendor.get('email', 'N/A')}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: right;">£{vendor_total:.2f}</td>
+                <td style="padding: 10px; border-bottom: 1px solid #e5e7eb; text-align: right; color: #10b981;">£{commission:.2f}</td>
+            </tr>
+            """
+        
+        subject = f"💰 New Payment Received - Order #{order_id} (£{total:.2f})"
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+        </head>
+        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;">
+            <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td align="center" style="padding: 20px;">
+                        <table role="presentation" style="width: 100%; max-width: 650px; border-collapse: collapse;">
+                            <!-- Header -->
+                            <tr>
+                                <td style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 35px 30px; text-align: center; border-radius: 16px 16px 0 0;">
+                                    <h1 style="margin: 0; color: white; font-size: 26px;">💰 New Payment Received!</h1>
+                                    <p style="margin: 10px 0 0; color: rgba(255,255,255,0.9);">Order #{order_id}</p>
+                                </td>
+                            </tr>
+                            
+                            <!-- Content -->
+                            <tr>
+                                <td style="background: white; padding: 35px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                                    
+                                    <!-- Summary Box -->
+                                    <table role="presentation" style="width: 100%; margin-bottom: 25px;">
+                                        <tr>
+                                            <td style="background: #f0fdf4; padding: 20px; border-radius: 12px; text-align: center; width: 33%;">
+                                                <p style="margin: 0 0 5px; color: #6b7280; font-size: 13px;">Order Total</p>
+                                                <p style="margin: 0; font-size: 24px; font-weight: 700; color: #059669;">£{total:.2f}</p>
+                                            </td>
+                                            <td style="width: 10px;"></td>
+                                            <td style="background: #fef3c7; padding: 20px; border-radius: 12px; text-align: center; width: 33%;">
+                                                <p style="margin: 0 0 5px; color: #6b7280; font-size: 13px;">Platform Commission</p>
+                                                <p style="margin: 0; font-size: 24px; font-weight: 700; color: #d97706;">£{total_commission:.2f}</p>
+                                            </td>
+                                            <td style="width: 10px;"></td>
+                                            <td style="background: #f0f9ff; padding: 20px; border-radius: 12px; text-align: center; width: 33%;">
+                                                <p style="margin: 0 0 5px; color: #6b7280; font-size: 13px;">Vendors</p>
+                                                <p style="margin: 0; font-size: 24px; font-weight: 700; color: #0ea5e9;">{len(vendors_info)}</p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <!-- Order Details -->
+                                    <table role="presentation" style="width: 100%; background: #f9fafb; border-radius: 12px; margin-bottom: 25px;">
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <table role="presentation" style="width: 100%;">
+                                                    <tr>
+                                                        <td style="width: 50%;">
+                                                            <p style="margin: 0 0 5px; color: #6b7280; font-size: 13px; font-weight: 600;">CUSTOMER</p>
+                                                            <p style="margin: 0; font-weight: 600; color: #1f2937;">{customer_info.get('name', 'N/A')}</p>
+                                                            <p style="margin: 3px 0 0; color: #4b5563; font-size: 14px;">{customer_info.get('email', 'N/A')}</p>
+                                                        </td>
+                                                        <td style="width: 50%;">
+                                                            <p style="margin: 0 0 5px; color: #6b7280; font-size: 13px; font-weight: 600;">PAYMENT</p>
+                                                            <p style="margin: 0; font-weight: 600; color: #1f2937;">{payment_method}</p>
+                                                            <p style="margin: 3px 0 0; color: #4b5563; font-size: 14px;">{now.strftime('%d %B %Y, %H:%M')}</p>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan="2" style="padding-top: 15px;">
+                                                            <p style="margin: 0 0 5px; color: #6b7280; font-size: 13px; font-weight: 600;">DELIVERY ADDRESS</p>
+                                                            <p style="margin: 0; color: #4b5563;">
+                                                                {shipping_info.get('address', 'N/A')}, {shipping_info.get('city', '')}, {shipping_info.get('postcode', '')}
+                                                            </p>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <!-- Items -->
+                                    <h3 style="margin: 25px 0 15px; font-size: 15px; color: #1f2937;">📦 Order Items</h3>
+                                    <table role="presentation" style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                                        <thead>
+                                            <tr style="background: #f3f4f6;">
+                                                <th style="padding: 10px; text-align: left;">Product</th>
+                                                <th style="padding: 10px; text-align: left;">Vendor</th>
+                                                <th style="padding: 10px; text-align: center;">Qty</th>
+                                                <th style="padding: 10px; text-align: right;">Total</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {items_html}
+                                        </tbody>
+                                    </table>
+                                    
+                                    <!-- Vendors Breakdown -->
+                                    <h3 style="margin: 25px 0 15px; font-size: 15px; color: #1f2937;">🏪 Vendor Breakdown</h3>
+                                    <table role="presentation" style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                                        <thead>
+                                            <tr style="background: #f3f4f6;">
+                                                <th style="padding: 10px; text-align: left;">Vendor</th>
+                                                <th style="padding: 10px; text-align: left;">Email</th>
+                                                <th style="padding: 10px; text-align: right;">Sales</th>
+                                                <th style="padding: 10px; text-align: right;">Commission</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {vendors_html}
+                                        </tbody>
+                                        <tfoot>
+                                            <tr style="background: #f0fdf4; font-weight: 600;">
+                                                <td colspan="2" style="padding: 12px;">Total</td>
+                                                <td style="padding: 12px; text-align: right;">£{subtotal:.2f}</td>
+                                                <td style="padding: 12px; text-align: right; color: #059669;">£{total_commission:.2f}</td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                    
+                                    <!-- CTA -->
+                                    <table role="presentation" style="width: 100%; margin-top: 30px;">
+                                        <tr>
+                                            <td align="center">
+                                                <a href="{self.site_url}/owner" style="display: inline-block; padding: 14px 35px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                                                    View in Dashboard
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                            
+                            <!-- Footer -->
+                            <tr>
+                                <td style="padding: 25px; text-align: center; color: #9ca3af; font-size: 12px;">
+                                    <p style="margin: 0;">This is an automated admin notification from AfroMarket UK</p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
+        """
+        
+        return self.send_email(
+            to_email=self.admin_email,
+            subject=subject,
+            html_content=html_content,
+            duplicate_key=f"admin_payment_{order_id}"
+        )
+
+    async def send_all_payment_notifications(
+        self,
+        order_data: Dict[str, Any],
+        customer_info: Dict[str, Any],
+        vendors_data: List[Dict[str, Any]],
+        db_service: Any = None
+    ) -> Dict[str, bool]:
+        """
+        Send all payment notifications (customer, vendors, admin) after successful payment
+        
+        Args:
+            order_data: Full order data including items, shipping, delivery info
+            customer_info: Customer name and email
+            vendors_data: List of vendor info with their items
+            db_service: Database service to fetch vendor emails if needed
+            
+        Returns:
+            Dict with status for each notification type
+        """
+        results = {
+            'customer': False,
+            'vendors': {},
+            'admin': False
+        }
+        
+        order_id = order_data.get('order_id', order_data.get('orderId', 'N/A'))
+        logger.info(f"Sending payment notifications for order #{order_id}")
+        
+        # 1. Send to customer
+        try:
+            results['customer'] = self.send_payment_confirmation_to_customer(
+                customer_email=customer_info.get('email'),
+                customer_name=customer_info.get('name'),
+                order_data=order_data
+            )
+            logger.info(f"Customer notification sent: {results['customer']}")
+        except Exception as e:
+            logger.error(f"Failed to send customer notification: {str(e)}")
+        
+        # 2. Send to each vendor
+        for vendor in vendors_data:
+            vendor_id = vendor.get('id', vendor.get('vendor_id', 'unknown'))
+            try:
+                success = self.send_payment_notification_to_vendor(
+                    vendor_email=vendor.get('email'),
+                    vendor_name=vendor.get('name', vendor.get('business_name', 'Vendor')),
+                    order_data=order_data,
+                    vendor_items=vendor.get('items', []),
+                    customer_info=customer_info
+                )
+                results['vendors'][vendor_id] = success
+                logger.info(f"Vendor {vendor_id} notification sent: {success}")
+            except Exception as e:
+                logger.error(f"Failed to send vendor {vendor_id} notification: {str(e)}")
+                results['vendors'][vendor_id] = False
+        
+        # 3. Send to admin
+        try:
+            results['admin'] = self.send_payment_notification_to_admin(
+                order_data=order_data,
+                customer_info=customer_info,
+                vendors_info=vendors_data
+            )
+            logger.info(f"Admin notification sent: {results['admin']}")
+        except Exception as e:
+            logger.error(f"Failed to send admin notification: {str(e)}")
+        
+        return results
+
+    def send_vendor_approval_notification(
+        self,
+        vendor_email: str,
+        vendor_name: str,
+        approved: bool,
+        admin_notes: str = ""
+    ) -> bool:
+        """
+        Send vendor approval/rejection notification after admin decision
+        
+        Args:
+            vendor_email: Vendor's email
+            vendor_name: Vendor's business name
+            approved: True if approved, False if rejected
+            admin_notes: Optional notes from admin
+        """
+        if approved:
+            subject = "🎉 Congratulations! Your AfroMarket UK Vendor Account is Approved!"
+            
+            notes_html = ""
+            if admin_notes:
+                notes_html = f"""
+                <table role="presentation" style="width: 100%; background: #f0f9ff; border-radius: 12px; margin: 25px 0;">
+                    <tr>
+                        <td style="padding: 20px;">
+                            <p style="margin: 0 0 10px; font-weight: 600; color: #0369a1;">📝 Note from Admin</p>
+                            <p style="margin: 0; color: #0ea5e9;">{admin_notes}</p>
+                        </td>
+                    </tr>
+                </table>
+                """
+            
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;">
+                <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td align="center" style="padding: 20px;">
+                            <table role="presentation" style="width: 100%; max-width: 600px;">
+                                <!-- Header -->
+                                <tr>
+                                    <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 50px 30px; text-align: center; border-radius: 16px 16px 0 0;">
+                                        <div style="width: 80px; height: 80px; background: rgba(255,255,255,0.2); border-radius: 50%; margin: 0 auto 20px; line-height: 80px; font-size: 40px;">✓</div>
+                                        <h1 style="margin: 0; color: white; font-size: 28px;">You're Approved!</h1>
+                                        <p style="margin: 15px 0 0; color: rgba(255,255,255,0.9); font-size: 16px;">Welcome to AfroMarket UK</p>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Content -->
+                                <tr>
+                                    <td style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                                        <p style="margin: 0 0 20px; font-size: 17px;">Hello <strong>{vendor_name}</strong>,</p>
+                                        
+                                        <p style="margin: 0 0 25px; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                                            Great news! Your vendor application has been <strong style="color: #059669;">approved</strong>. 
+                                            You can now start adding products and reaching thousands of customers across the UK!
+                                        </p>
+                                        
+                                        {notes_html}
+                                        
+                                        <!-- What you can do -->
+                                        <table role="presentation" style="width: 100%; background: #f0fdf4; border-radius: 12px; margin: 25px 0;">
+                                            <tr>
+                                                <td style="padding: 25px;">
+                                                    <p style="margin: 0 0 15px; font-weight: 600; color: #059669; font-size: 16px;">🚀 Get Started Now</p>
+                                                    <table role="presentation" style="width: 100%;">
+                                                        <tr>
+                                                            <td style="padding: 8px 0; color: #047857;">✅ Add your products to the marketplace</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="padding: 8px 0; color: #047857;">✅ Set up your store profile</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="padding: 8px 0; color: #047857;">✅ Start receiving orders from customers</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td style="padding: 8px 0; color: #047857;">✅ Track your sales and earnings</td>
+                                                        </tr>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <!-- CTA -->
+                                        <table role="presentation" style="width: 100%; margin: 30px 0;">
+                                            <tr>
+                                                <td align="center">
+                                                    <a href="{self.site_url}/vendor/dashboard" style="display: inline-block; padding: 18px 50px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; text-decoration: none; border-radius: 10px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);">
+                                                        Go to Your Dashboard →
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                        
+                                        <p style="margin: 25px 0 0; color: #6b7280; font-size: 14px;">
+                                            If you have any questions, don't hesitate to contact us at {self.admin_email}
+                                        </p>
+                                        
+                                        <p style="margin: 25px 0 0;">
+                                            Welcome aboard!<br>
+                                            <strong style="color: #1f2937;">The AfroMarket UK Team</strong>
+                                        </p>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Footer -->
+                                <tr>
+                                    <td style="padding: 30px; text-align: center; color: #9ca3af; font-size: 12px;">
+                                        <p style="margin: 0;">&copy; 2025 AfroMarket UK. All rights reserved.</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>
+            """
+        else:
+            # Rejection email
+            subject = "Update on Your AfroMarket UK Vendor Application"
+            
+            notes_html = ""
+            if admin_notes:
+                notes_html = f"""
+                <table role="presentation" style="width: 100%; background: #fef2f2; border-left: 4px solid #ef4444; border-radius: 0 8px 8px 0; margin: 25px 0;">
+                    <tr>
+                        <td style="padding: 20px;">
+                            <p style="margin: 0 0 10px; font-weight: 600; color: #991b1b;">Reason:</p>
+                            <p style="margin: 0; color: #dc2626;">{admin_notes}</p>
+                        </td>
+                    </tr>
+                </table>
+                """
+            
+            html_content = f"""
+            <!DOCTYPE html>
+            <html>
+            <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;">
+                <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td align="center" style="padding: 20px;">
+                            <table role="presentation" style="width: 100%; max-width: 600px;">
+                                <!-- Header -->
+                                <tr>
+                                    <td style="background: #6b7280; padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0;">
+                                        <h1 style="margin: 0; color: white; font-size: 24px;">Application Update</h1>
+                                        <p style="margin: 10px 0 0; color: rgba(255,255,255,0.8);">AfroMarket UK</p>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Content -->
+                                <tr>
+                                    <td style="background: white; padding: 40px 30px; border-radius: 0 0 16px 16px;">
+                                        <p style="margin: 0 0 20px; font-size: 17px;">Hello <strong>{vendor_name}</strong>,</p>
+                                        
+                                        <p style="margin: 0 0 25px; color: #4b5563; line-height: 1.6;">
+                                            Thank you for your interest in becoming a vendor on AfroMarket UK. 
+                                            After careful review, we regret to inform you that we are unable to approve your application at this time.
+                                        </p>
+                                        
+                                        {notes_html}
+                                        
+                                        <p style="margin: 25px 0; color: #4b5563; line-height: 1.6;">
+                                            This decision is not final. You're welcome to address the concerns mentioned above and reapply in the future. 
+                                            If you believe this decision was made in error, please contact us.
+                                        </p>
+                                        
+                                        <p style="margin: 25px 0 0; color: #6b7280;">
+                                            Best regards,<br>
+                                            <strong>The AfroMarket UK Team</strong>
+                                        </p>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Footer -->
+                                <tr>
+                                    <td style="padding: 30px; text-align: center; color: #9ca3af; font-size: 12px;">
+                                        <p style="margin: 0;">Contact us: {self.admin_email}</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>
+            """
+        
+        return self.send_email(
+            to_email=vendor_email,
+            subject=subject,
+            html_content=html_content,
+            duplicate_key=f"vendor_approval_{vendor_email}_{approved}"
+        )
+
+
 # Singleton instance
 email_service = EmailService()
