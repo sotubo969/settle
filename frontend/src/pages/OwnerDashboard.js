@@ -776,18 +776,17 @@ const OwnerDashboard = () => {
                           <div className="flex items-center justify-center gap-2">
                             {vendor.status === 'pending' && (
                               <>
-                                <button onClick={() => approveVendor(vendor.id, 'approved')}
-                                  className="p-2 bg-emerald-100 text-emerald-600 rounded-lg hover:bg-emerald-200 transition-colors" title="Approve">
-                                  <Check className="w-4 h-4" />
-                                </button>
-                                <button onClick={() => approveVendor(vendor.id, 'rejected')}
-                                  className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors" title="Reject">
-                                  <X className="w-4 h-4" />
+                                <button onClick={() => openVendorModal(vendor)}
+                                  className="px-3 py-1.5 bg-emerald-100 text-emerald-600 rounded-lg hover:bg-emerald-200 transition-colors text-sm font-medium" title="Review">
+                                  Review
                                 </button>
                               </>
                             )}
-                            {vendor.status !== 'pending' && (
-                              <span className="text-sm text-gray-400">—</span>
+                            {vendor.status === 'approved' && (
+                              <span className="text-sm text-emerald-600 font-medium">✓ Approved</span>
+                            )}
+                            {vendor.status === 'rejected' && (
+                              <span className="text-sm text-red-600 font-medium">✗ Rejected</span>
                             )}
                           </div>
                         </td>
