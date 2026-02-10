@@ -265,7 +265,7 @@ const OwnerDashboard = () => {
   // Navigation tabs with icons and badges
   const tabs = [
     { id: 'overview', label: 'Overview', icon: LayoutDashboard, badge: null },
-    { id: 'vendors', label: 'Vendors', icon: Store, badge: dashboardData?.overview?.pendingVendors },
+    { id: 'vendors', label: 'Vendors', icon: Store, badge: dashboardData?.pendingVendors || dashboardData?.overview?.pendingVendors },
     { id: 'products', label: 'Products', icon: Package, badge: null },
     { id: 'orders', label: 'Orders', icon: ShoppingCart, badge: dashboardData?.overview?.pendingOrders },
     { id: 'ads', label: 'Advertisements', icon: Megaphone, badge: pendingAds?.length },
