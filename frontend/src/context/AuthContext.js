@@ -437,6 +437,7 @@ export const AuthProvider = ({ children }) => {
     firebaseEnabled: firebaseEnabled && useFirebaseAuth,
     loginWithGoogle: loginWithGoogleProvider,
     loginWithEmail: loginWithEmailPassword,
+    loginWithEmailPassword,
     registerWithEmail: registerWithEmailPassword,
     resendVerification,
     refreshVerificationStatus,
