@@ -492,6 +492,128 @@ async def approve_vendor(approval: VendorApproval):
     return {'success': True, 'emailSent': email_sent, 'notificationCreated': True}
 
 
+# ============ OWNER DASHBOARD ROUTES ============
+
+@api_router.get("/owner/vendors")
+async def get_owner_vendors(
+    status: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get all vendors for owner dashboard"""
+    if not current_user.get('is_admin') and current_user.get('email') != 'sotubodammy@gmail.com':
+        raise HTTPException(status_code=403, detail="Owner access required")
+    
+    vendors = await firestore_db.get_all_vendors(status=status)
+    return vendors
+
+
+@api_router.put("/owner/vendors/{vendor_id}/approve")
+async def owner_approve_vendor(
+    vendor_id: str,
+    status: str = Query(..., description="approved or rejected"),
+    notes: Optional[str] = Query(None, description="Admin notes"),
+    current_user: dict = Depends(get_current_user)
+):
+    """Approve or reject a vendor from owner dashboard with email notification"""
+    # Check owner permissions
+    if not current_user.get('is_admin') and current_user.get('email') != 'sotubodammy@gmail.com':
+        raise HTTPException(status_code=403, detail="Owner access required")
+    
+    vendor = await firestore_db.get_vendor_by_id(vendor_id)
+    if not vendor:
+        raise HTTPException(status_code=404, detail="Vendor not found")
+    
+    # Update vendor status
+    await firestore_db.update_vendor(vendor_id, {
+        'status': status,
+        'verified': status == 'approved',
+        'approval_notes': notes or '',
+        'approved_by': current_user.get('email'),
+        'approved_at': datetime.utcnow().isoformat()
+    })
+    
+    # Create in-app notification
+    if status == 'approved':
+        title = "🎉 Your Vendor Application has been Approved!"
+        message = f"Congratulations {vendor.get('business_name', 'Vendor')}! You can now start selling on AfroMarket UK."
+        notif_type = 'approval'
+        link = "/vendor/dashboard"
+    else:
+        title = "Vendor Application Update"
+        message = f"Your application for {vendor.get('business_name', 'Vendor')} was not approved."
+        if notes:
+            message += f" Reason: {notes}"
+        notif_type = 'rejection'
+        link = "/help"
+    
+    await firestore_db.create_notification({
+        'vendor_id': vendor_id,
+        'type': notif_type,
+        'title': title,
+        'message': message,
+        'link': link
+    })
+    
+    # Send WebSocket notification
+    await ws_manager.send_to_vendor(vendor_id, {
+        'type': 'notification',
+        'notification': {
+            'type': notif_type,
+            'title': title,
+            'message': message,
+            'link': link
+        }
+    })
+    
+    # Send comprehensive email notification
+    email_sent = False
+    try:
+        email_sent = email_service.send_vendor_approval_notification(
+            vendor_email=vendor.get('email', ''),
+            vendor_name=vendor.get('business_name', vendor.get('businessName', 'Vendor')),
+            approved=status == 'approved',
+            admin_notes=notes or ''
+        )
+        logger.info(f"Owner approval email sent to {vendor.get('email')}: {email_sent}")
+    except Exception as e:
+        logger.error(f"Failed to send owner approval email: {e}")
+    
+    return {
+        'success': True, 
+        'vendor_id': vendor_id,
+        'status': status,
+        'emailSent': email_sent,
+        'notificationCreated': True
+    }
+
+
+@api_router.get("/owner/stats")
+async def get_owner_stats(current_user: dict = Depends(get_current_user)):
+    """Get platform statistics for owner dashboard"""
+    if not current_user.get('is_admin') and current_user.get('email') != 'sotubodammy@gmail.com':
+        raise HTTPException(status_code=403, detail="Owner access required")
+    
+    # Get all counts
+    all_vendors = await firestore_db.get_all_vendors()
+    pending_vendors = [v for v in all_vendors if v.get('status') == 'pending']
+    approved_vendors = [v for v in all_vendors if v.get('status') == 'approved']
+    
+    all_orders = await firestore_db.get_all_orders()
+    total_revenue = sum(o.get('total', 0) for o in all_orders)
+    
+    products = await firestore_db.get_all_products()
+    
+    return {
+        'totalVendors': len(all_vendors),
+        'pendingVendors': len(pending_vendors),
+        'approvedVendors': len(approved_vendors),
+        'totalOrders': len(all_orders),
+        'totalRevenue': total_revenue,
+        'totalProducts': len(products),
+        'platformCommission': total_revenue * 0.10
+    }
+
+
 # ============ ORDER ROUTES ============
 
 @api_router.post("/orders")
