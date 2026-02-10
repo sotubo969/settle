@@ -494,7 +494,7 @@ async def create_order(
     order_data: OrderCreate,
     current_user: dict = Depends(get_current_user)
 ):
-    """Create a new order"""
+    """Create a new order and send payment notifications"""
     # Get vendor IDs from items
     vendor_ids = list(set(item.get('vendorId') for item in order_data.items if item.get('vendorId')))
     
@@ -505,21 +505,40 @@ async def create_order(
         'payment_info': {k: v for k, v in order_data.payment_info.items() if k != 'cardNumber'},
         'total': order_data.total,
         'vendor_ids': vendor_ids,
-        'status': 'pending'
+        'status': 'confirmed'  # Payment confirmed
     })
     
-    # Notify vendors
+    # Prepare data for email notifications
+    order_id = order['order_id']
+    
+    # Get vendor details and prepare vendor-specific data
+    vendors_data = []
     for vendor_id in vendor_ids:
         vendor_items = [i for i in order_data.items if i.get('vendorId') == vendor_id]
         vendor_total = sum(i.get('price', 0) * i.get('quantity', 1) for i in vendor_items)
         
+        # Get vendor info from database
+        vendor = await firestore_db.get_vendor_by_id(vendor_id)
+        if vendor:
+            # Add vendor name to items for email
+            for item in vendor_items:
+                item['vendor_name'] = vendor.get('business_name', vendor.get('businessName', 'Vendor'))
+            
+            vendors_data.append({
+                'id': vendor_id,
+                'name': vendor.get('business_name', vendor.get('businessName', 'Vendor')),
+                'email': vendor.get('email', ''),
+                'items': vendor_items
+            })
+        
+        # Create in-app notification for vendor
         await firestore_db.create_notification({
             'vendor_id': vendor_id,
             'type': 'order',
-            'title': f"🛒 New Order #{order['order_id']}!",
+            'title': f"🛒 New Order #{order_id}!",
             'message': f"New order with {len(vendor_items)} item(s) totaling £{vendor_total:.2f}",
-            'link': f"/vendor/dashboard?tab=orders&order={order['order_id']}",
-            'data': {'order_id': order['order_id'], 'total': vendor_total}
+            'link': f"/vendor/dashboard?tab=orders&order={order_id}",
+            'data': {'order_id': order_id, 'total': vendor_total}
         })
         
         # WebSocket notification
@@ -527,11 +546,52 @@ async def create_order(
             'type': 'notification',
             'notification': {
                 'type': 'order',
-                'title': f"🛒 New Order #{order['order_id']}!",
+                'title': f"🛒 New Order #{order_id}!",
                 'message': f"New order with {len(vendor_items)} item(s) totaling £{vendor_total:.2f}",
                 'link': "/vendor/dashboard?tab=orders"
             }
         })
+    
+    # Calculate delivery info
+    subtotal = sum(i.get('price', 0) * i.get('quantity', 1) for i in order_data.items)
+    delivery_fee = order_data.total - subtotal
+    
+    # Prepare order data for emails
+    email_order_data = {
+        'order_id': order_id,
+        'items': order_data.items,
+        'shipping_info': order_data.shipping_info,
+        'delivery_info': {
+            'estimated_days': '2-4 days',  # Default estimate
+            'zone_name': 'Standard',
+            'delivery_option': 'Standard Delivery',
+            'delivery_fee': delivery_fee
+        },
+        'subtotal': subtotal,
+        'delivery_fee': delivery_fee,
+        'total': order_data.total,
+        'payment_method': order_data.payment_info.get('method', 'Card')
+    }
+    
+    # Customer info
+    customer_info = {
+        'name': current_user.get('name', 'Customer'),
+        'email': current_user.get('email', '')
+    }
+    
+    # Send all payment notifications asynchronously (don't block order completion)
+    try:
+        import asyncio
+        asyncio.create_task(
+            email_service.send_all_payment_notifications(
+                order_data=email_order_data,
+                customer_info=customer_info,
+                vendors_data=vendors_data
+            )
+        )
+        logger.info(f"Payment notifications queued for order #{order_id}")
+    except Exception as e:
+        logger.error(f"Failed to queue payment notifications: {str(e)}")
     
     # Clear cart
     await firestore_db.clear_user_cart(current_user['id'])
@@ -540,7 +600,7 @@ async def create_order(
         'success': True,
         'order': {
             'id': order['id'],
-            'orderId': order['order_id'],
+            'orderId': order_id,
             'total': order['total'],
             'status': order['status']
         }
