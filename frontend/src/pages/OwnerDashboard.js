@@ -391,11 +391,6 @@ const OwnerDashboard = () => {
 
   const totalPages = (items) => Math.ceil(items.length / ITEMS_PER_PAGE);
 
-  // Check if this is the owner
-  const storedUser = getStoredUser();
-  const currentUser = user || storedUser;
-  const isOwner = currentUser?.email === OWNER_EMAIL || currentUser?.is_admin === true;
-
   // Loading state - only show during auth loading or initial data fetch
   if (authLoading) {
     return (
