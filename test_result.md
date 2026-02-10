@@ -837,7 +837,7 @@ frontend:
         comment: "✅ FIXED (Jul 10, 2025) - Authentication is now working with sotubodammy@gmail.com/NewPassword123! credentials. Successfully logged in, redirected to homepage, and maintained session after page refresh. CORS_ORIGINS in backend/.env now includes 'https://vendor-hub-141.preview.emergentagent.com' which allows the authentication to work properly."
       - working: true
         agent: "testing"
-        comment: "✅ VERIFICATION TEST PASSED (Feb 10, 2026) - Authentication system confirmed fully functional. Successfully logged in with owner credentials (sotubodammy@gmail.com/NewPassword123!). Login redirects properly to homepage, session persists after page refresh, and authorized access to owner dashboard is granted."
+        comment: "✅ VERIFICATION TEST PASSED (Feb 10, 2026) - Authentication system confirmed fully functional. Successfully logged in with owner credentials (sotubodammy@gmail.com/NewPassword123!). Login redirects properly to homepage, session persists after page refresh."
 
   - task: "Vendor Registration"
     implemented: true
