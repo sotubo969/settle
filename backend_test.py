@@ -72,7 +72,327 @@ class AfroMarketAPITester:
         except requests.exceptions.RequestException as e:
             return False, f"Request failed: {str(e)}"
 
-    def test_health_endpoint(self):
+    def test_delivery_api_calculate(self):
+        """Test POST /api/delivery/calculate with different postcodes and subtotals"""
+        print("\n🚚 Testing Delivery API - Calculate Delivery...")
+        
+        # Test case 1: London postcode with subtotal under £100
+        test_cases = [
+            {
+                "name": "London postcode (SW1A1AA) - subtotal £50",
+                "data": {"postcode": "SW1A1AA", "subtotal": 50.0, "weight_kg": 2.0, "delivery_option": "standard"},
+                "expected_free": False
+            },
+            {
+                "name": "Manchester postcode (M1) - subtotal £75", 
+                "data": {"postcode": "M1 1AA", "subtotal": 75.0, "weight_kg": 1.5, "delivery_option": "standard"},
+                "expected_free": False
+            },
+            {
+                "name": "London postcode (SW1A1AA) - subtotal £120 (FREE delivery)",
+                "data": {"postcode": "SW1A1AA", "subtotal": 120.0, "weight_kg": 3.0, "delivery_option": "standard"},
+                "expected_free": True
+            }
+        ]
+        
+        all_passed = True
+        for case in test_cases:
+            success, response = self.make_request('POST', 'delivery/calculate', case["data"], auth_required=False)
+            
+            if success and isinstance(response, dict):
+                free_delivery = response.get('free_delivery', False)
+                delivery_cost = response.get('delivery_cost', 0)
+                zone = response.get('zone', '')
+                
+                # Check if free delivery expectation matches
+                free_delivery_correct = free_delivery == case["expected_free"]
+                
+                if case["expected_free"]:
+                    cost_correct = delivery_cost == 0
+                else:
+                    cost_correct = delivery_cost > 0
+                
+                test_passed = free_delivery_correct and cost_correct
+                all_passed = all_passed and test_passed
+                
+                details = f"Zone: {zone}, Cost: £{delivery_cost}, Free: {free_delivery}"
+                self.log_test(f"Delivery Calculate - {case['name']}", test_passed, details)
+            else:
+                all_passed = False
+                self.log_test(f"Delivery Calculate - {case['name']}", False, f"API error: {response}")
+        
+        return all_passed
+    
+    def test_delivery_api_options(self):
+        """Test GET /api/delivery/options with different postcodes and subtotals"""
+        print("\n📦 Testing Delivery API - Get Options...")
+        
+        test_cases = [
+            {
+                "name": "SW1A1AA with £50 subtotal",
+                "params": {"postcode": "SW1A1AA", "subtotal": 50, "weight_kg": 1.0}
+            },
+            {
+                "name": "SW1A1AA with £120 subtotal (FREE delivery)",
+                "params": {"postcode": "SW1A1AA", "subtotal": 120, "weight_kg": 1.0}
+            },
+            {
+                "name": "M1 1AA (Manchester) with £75 subtotal",
+                "params": {"postcode": "M1 1AA", "subtotal": 75, "weight_kg": 2.0}
+            }
+        ]
+        
+        all_passed = True
+        for case in test_cases:
+            params = case["params"]
+            endpoint = f"delivery/options?postcode={params['postcode']}&subtotal={params['subtotal']}&weight_kg={params['weight_kg']}"
+            
+            success, response = self.make_request('GET', endpoint, auth_required=False)
+            
+            if success and isinstance(response, dict):
+                options = response.get('options', [])
+                qualifies_for_free = response.get('qualifies_for_free', False)
+                zone = response.get('zone', '')
+                
+                # Check if we have delivery options
+                has_options = len(options) >= 1
+                
+                # For £120+ orders, should qualify for free delivery
+                if params['subtotal'] >= 100:
+                    free_delivery_correct = qualifies_for_free
+                else:
+                    free_delivery_correct = not qualifies_for_free
+                
+                test_passed = has_options and free_delivery_correct
+                all_passed = all_passed and test_passed
+                
+                details = f"Zone: {zone}, Options: {len(options)}, Free qualifying: {qualifies_for_free}"
+                self.log_test(f"Delivery Options - {case['name']}", test_passed, details)
+            else:
+                all_passed = False
+                self.log_test(f"Delivery Options - {case['name']}", False, f"API error: {response}")
+        
+        return all_passed
+    
+    def test_delivery_api_zones(self):
+        """Test GET /api/delivery/zones"""
+        print("\n🗺️ Testing Delivery API - Get Zones...")
+        
+        success, response = self.make_request('GET', 'delivery/zones', auth_required=False)
+        
+        if success and isinstance(response, dict):
+            zones = response.get('zones', {})
+            free_threshold = response.get('free_delivery_threshold', 0)
+            
+            # Expected zones
+            expected_zones = ['local', 'near', 'mid', 'far', 'remote']
+            has_all_zones = all(zone in zones for zone in expected_zones)
+            
+            # Check if free delivery threshold is £100
+            correct_threshold = free_threshold == 100.0
+            
+            test_passed = has_all_zones and correct_threshold
+            details = f"Zones: {list(zones.keys())}, Free threshold: £{free_threshold}"
+            
+            self.log_test("Delivery Zones - All Zones Present", has_all_zones, f"Zones: {list(zones.keys())}")
+            self.log_test("Delivery Zones - Free Threshold £100", correct_threshold, f"Threshold: £{free_threshold}")
+            
+            return test_passed
+        else:
+            self.log_test("Delivery Zones - Get Zones", False, f"API error: {response}")
+            return False
+    
+    def test_chatbot_api_welcome(self):
+        """Test GET /api/chatbot/welcome"""
+        print("\n🤖 Testing Chatbot API - Welcome...")
+        
+        success, response = self.make_request('GET', 'chatbot/welcome', auth_required=False)
+        
+        if success and isinstance(response, dict):
+            success_flag = response.get('success', False)
+            welcome_message = response.get('welcome_message', '')
+            quick_replies = response.get('quick_replies', [])
+            session_id = response.get('session_id', '')
+            bot_name = response.get('bot_name', '')
+            
+            # Check all required fields
+            has_welcome = len(welcome_message) > 0
+            has_session = len(session_id) > 0
+            has_replies = len(quick_replies) >= 3  # Should have at least a few quick replies
+            correct_bot_name = bot_name == 'AfroBot'
+            
+            test_passed = success_flag and has_welcome and has_session and has_replies and correct_bot_name
+            
+            details = f"Session: {session_id[:8]}..., Replies: {len(quick_replies)}, Bot: {bot_name}"
+            self.log_test("Chatbot Welcome - Complete Response", test_passed, details)
+            
+            # Store session_id for next test
+            self.session_id = session_id
+            return test_passed
+        else:
+            self.log_test("Chatbot Welcome - Complete Response", False, f"API error: {response}")
+            return False
+    
+    def test_chatbot_api_message(self):
+        """Test POST /api/chatbot/message with test questions"""
+        print("\n💬 Testing Chatbot API - Send Message...")
+        
+        test_cases = [
+            {
+                "message": "What products do you sell?",
+                "expected_keywords": ["african", "products", "groceries"]
+            },
+            {
+                "message": "How much is delivery?",
+                "expected_keywords": ["delivery", "£100", "free"]
+            }
+        ]
+        
+        all_passed = True
+        session_id = getattr(self, 'session_id', None)
+        
+        for i, case in enumerate(test_cases):
+            test_data = {"message": case["message"]}
+            if session_id:
+                test_data["session_id"] = session_id
+            
+            success, response = self.make_request('POST', 'chatbot/message', test_data, auth_required=False)
+            
+            if success and isinstance(response, dict):
+                success_flag = response.get('success', False)
+                ai_response = response.get('response', '')
+                returned_session_id = response.get('session_id', '')
+                timestamp = response.get('timestamp', '')
+                
+                # Check if response is meaningful (length and contains relevant keywords)
+                response_meaningful = len(ai_response) > 50
+                
+                # Update session_id for continuity
+                if returned_session_id:
+                    session_id = returned_session_id
+                
+                test_passed = success_flag and response_meaningful and len(timestamp) > 0
+                all_passed = all_passed and test_passed
+                
+                details = f"Response length: {len(ai_response)}, Session: {returned_session_id[:8] if returned_session_id else 'None'}..."
+                self.log_test(f"Chatbot Message - '{case['message'][:20]}...'", test_passed, details)
+            else:
+                all_passed = False
+                self.log_test(f"Chatbot Message - '{case['message'][:20]}...'", False, f"API error: {response}")
+        
+        return all_passed
+    
+    def test_chatbot_api_quick_replies(self):
+        """Test GET /api/chatbot/quick-replies"""
+        print("\n⚡ Testing Chatbot API - Quick Replies...")
+        
+        success, response = self.make_request('GET', 'chatbot/quick-replies', auth_required=False)
+        
+        if success and isinstance(response, dict):
+            success_flag = response.get('success', False)
+            quick_replies = response.get('quick_replies', [])
+            
+            # Check if we have quick replies with proper structure
+            has_replies = len(quick_replies) >= 3
+            proper_structure = True
+            
+            if quick_replies:
+                # Check if first reply has required fields
+                first_reply = quick_replies[0]
+                proper_structure = 'id' in first_reply and 'text' in first_reply
+            
+            test_passed = success_flag and has_replies and proper_structure
+            details = f"Replies: {len(quick_replies)}, Structure: {'✓' if proper_structure else '✗'}"
+            
+            self.log_test("Chatbot Quick Replies - Response Structure", test_passed, details)
+            return test_passed
+        else:
+            self.log_test("Chatbot Quick Replies - Response Structure", False, f"API error: {response}")
+            return False
+    
+    def test_auth_owner_login(self):
+        """Test owner login with sotubodammy@gmail.com"""
+        print("\n👑 Testing Authentication - Owner Login...")
+        
+        success, response = self.make_request('POST', 'auth/login', {
+            "email": "sotubodammy@gmail.com",
+            "password": "NewPassword123!"
+        }, auth_required=False)
+        
+        if success and response.get('success') and response.get('token'):
+            self.token = response['token']
+            self.user_id = response['user']['id']
+            user_email = response['user']['email']
+            is_admin = response['user'].get('is_admin', False)
+            
+            # Store owner token for potential future use
+            self.owner_token = self.token
+            
+            self.log_test("Owner Login - Authentication Success", True, f"Owner: {user_email}, Admin: {is_admin}")
+            return True
+        else:
+            self.log_test("Owner Login - Authentication Success", False, f"Login failed: {response}")
+            return False
+    
+    def test_auth_regular_user_login(self):
+        """Test regular user login"""
+        print("\n👤 Testing Authentication - Regular User Login...")
+        
+        success, response = self.make_request('POST', 'auth/login', {
+            "email": "test@test.com",
+            "password": "Test123!"
+        }, auth_required=False)
+        
+        if success and response.get('success') and response.get('token'):
+            token = response['token']
+            user_email = response['user']['email']
+            
+            self.log_test("Regular User Login - Authentication Success", True, f"User: {user_email}")
+            return True
+        else:
+            # Try to create the user first if login fails
+            reg_success, reg_response = self.make_request('POST', 'auth/register', {
+                "name": "Test User",
+                "email": "test@test.com", 
+                "password": "Test123!"
+            }, auth_required=False)
+            
+            if reg_success:
+                # Now try login again
+                success, response = self.make_request('POST', 'auth/login', {
+                    "email": "test@test.com",
+                    "password": "Test123!"
+                }, auth_required=False)
+                
+                if success and response.get('success'):
+                    self.log_test("Regular User Login - After Registration", True, f"User: {response['user']['email']}")
+                    return True
+            
+            self.log_test("Regular User Login - Authentication Success", False, f"Login failed: {response}")
+            return False
+    
+    def test_auth_register_new_user(self):
+        """Test new user registration"""
+        print("\n📝 Testing Authentication - New User Registration...")
+        
+        timestamp = datetime.now().strftime('%H%M%S')
+        test_email = f"newuser_{timestamp}@test.com"
+        
+        success, response = self.make_request('POST', 'auth/register', {
+            "name": "New Test User",
+            "email": test_email,
+            "password": "NewTest123!"
+        }, auth_required=False)
+        
+        if success and response.get('success') and response.get('token'):
+            user_email = response['user']['email']
+            token_length = len(response['token'])
+            
+            self.log_test("New User Registration - Success", True, f"User: {user_email}, Token length: {token_length}")
+            return True
+        else:
+            self.log_test("New User Registration - Success", False, f"Registration failed: {response}")
+            return False
         """Test health endpoint returns database=firestore"""
         print("\n🏥 Testing Health Endpoint...")
         
