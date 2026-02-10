@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-AfroMarket UK Backend API Testing - Firestore Migration Testing
-Tests core functionality after migration from SQLite/MongoDB to Firebase Firestore
+AfroMarket UK Backend API Testing - New Features Testing
+Tests newly implemented Delivery API, Chatbot API, and Authentication features
 """
 
 import requests
