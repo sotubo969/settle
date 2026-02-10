@@ -23,6 +23,7 @@ class AfroMarketAPITester:
         self.tests_passed = 0
         self.failed_tests = []
         self.test_results = {}
+        self.session_id = None
 
     def log_test(self, name: str, success: bool, details: str = ""):
         """Log test result"""
