@@ -376,12 +376,14 @@ const OwnerDashboard = () => {
     return matchesSearch;
   });
 
-  const filteredDeliveries = deliveries?.deliveries?.filter(d => {
-    const matchesSearch = d.orderId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         d.customerName?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = deliveryStatusFilter === 'all' || d.deliveryStatus === deliveryStatusFilter;
+  const filteredDeliveries = (Array.isArray(deliveries) ? deliveries : deliveries?.deliveries || []).filter(d => {
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = !searchTerm || 
+                         (d?.orderId || d?.id || '').toLowerCase().includes(searchLower) ||
+                         (d?.address?.fullName || d?.customerName || '').toLowerCase().includes(searchLower);
+    const matchesStatus = deliveryStatusFilter === 'all' || (d?.status || d?.deliveryStatus) === deliveryStatusFilter;
     return matchesSearch && matchesStatus;
-  }) || [];
+  });
 
   // Pagination
   const paginate = (items) => {
