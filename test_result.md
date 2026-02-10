@@ -769,6 +769,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ WORKING - Product detail page loads correctly, displays product info, Add to Cart and Buy Now buttons functional, quantity controls work. Uses **MOCK** data from products array in mock.js."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TEST PASSED (Jul 10, 2025) - Product detail page loads correctly. Tested with 'Shea Butter (Raw)' product - displays product name, price (£7.99), rating, vendor info, quantity controls, Add to Cart and Buy Now buttons. No 'cannot read property' errors detected in console."
 
   - task: "Cart Functionality"
     implemented: true
