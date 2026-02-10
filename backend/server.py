@@ -748,6 +748,26 @@ async def update_owner_delivery(
     return {'success': True, 'message': 'Delivery updated'}
 
 
+# ============ ADS ENDPOINTS ============
+
+@api_router.get("/ads/pending")
+async def get_pending_ads(current_user: dict = Depends(get_current_user)):
+    """Get pending ads for approval"""
+    if not current_user.get('is_admin') and current_user.get('email') != 'sotubodammy@gmail.com':
+        raise HTTPException(status_code=403, detail="Admin access required")
+    # Return empty list for now - ads feature placeholder
+    return {'ads': []}
+
+
+@api_router.get("/ads/all")
+async def get_all_ads(current_user: dict = Depends(get_current_user)):
+    """Get all ads"""
+    if not current_user.get('is_admin') and current_user.get('email') != 'sotubodammy@gmail.com':
+        raise HTTPException(status_code=403, detail="Admin access required")
+    # Return empty list for now - ads feature placeholder
+    return {'ads': []}
+
+
 # ============ ORDER ROUTES ============
 
 @api_router.post("/orders")
