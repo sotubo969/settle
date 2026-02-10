@@ -955,34 +955,38 @@ const OwnerDashboard = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {transactions.allTransactions?.slice(0, 20).map(order => (
-                      <tr key={order.id} className="hover:bg-gray-50 transition-colors">
+                    {Array.isArray(transactions) && transactions.length > 0 ? transactions.slice(0, 20).map((order, idx) => (
+                      <tr key={order?.id || idx} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4">
-                          <span className="font-mono font-semibold text-emerald-600">{order.orderId}</span>
+                          <span className="font-mono font-semibold text-emerald-600">{order?.orderId || order?.id || 'N/A'}</span>
                         </td>
                         <td className="px-6 py-4">
-                          <p className="font-medium text-gray-900">{order.customerName}</p>
-                          <p className="text-sm text-gray-500">{order.customerEmail}</p>
+                          <p className="font-medium text-gray-900">{order?.user || order?.customerName || 'Customer'}</p>
+                          <p className="text-sm text-gray-500">{order?.customerEmail || ''}</p>
                         </td>
                         <td className="px-6 py-4 text-center">
                           <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-700 rounded-full font-semibold">
-                            {order.items}
+                            {order?.items?.length || order?.items || 1}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <span className="font-bold text-gray-900">£{order.total?.toFixed(2)}</span>
+                          <span className="font-bold text-gray-900">£{(order?.total || order?.amount || 0).toFixed(2)}</span>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <span className="font-medium text-purple-600">£{order.commission?.toFixed(2)}</span>
+                          <span className="font-medium text-purple-600">£{((order?.total || order?.amount || 0) * 0.1).toFixed(2)}</span>
                         </td>
                         <td className="px-6 py-4 text-center">
-                          <StatusBadge status={order.status} size="small" />
+                          <StatusBadge status={order?.status || 'pending'} size="small" />
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</span>
+                          <span className="text-sm text-gray-500">{order?.date || order?.createdAt ? new Date(order?.date || order?.createdAt).toLocaleDateString() : 'N/A'}</span>
                         </td>
                       </tr>
-                    ))}
+                    )) : (
+                      <tr>
+                        <td colSpan="7" className="px-6 py-8 text-center text-gray-500">No transactions yet</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
