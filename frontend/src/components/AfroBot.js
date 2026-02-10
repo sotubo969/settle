@@ -43,20 +43,28 @@ const AfroBot = () => {
       const data = await response.json();
       
       if (data.success) {
+        setSessionId(data.session_id);
         setMessages([{
           role: 'assistant',
-          content: data.message,
+          content: data.welcome_message || data.message || "Hello! 👋 I'm AfroBot. How can I help you today?",
           timestamp: new Date().toISOString()
         }]);
         setQuickReplies(data.quick_replies || []);
+      } else {
+        throw new Error('Failed to load welcome');
       }
     } catch (error) {
       console.error('Error loading welcome message:', error);
       setMessages([{
         role: 'assistant',
-        content: "Hello! 👋 I'm AfroBot. How can I help you today?",
+        content: "Hello! 👋 I'm AfroBot, your friendly assistant at AfroMarket UK! How can I help you today?",
         timestamp: new Date().toISOString()
       }]);
+      setQuickReplies([
+        { id: 'products', text: '🛒 Browse Products' },
+        { id: 'delivery', text: '🚚 Delivery Info' },
+        { id: 'support', text: '💬 Contact Support' }
+      ]);
     }
   };
 
