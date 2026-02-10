@@ -6,13 +6,30 @@ const API_BASE = `${BACKEND_URL}/api`;
 // Track if we're already redirecting to prevent multiple redirects
 let isRedirecting = false;
 
+// Simple in-memory cache for GET requests
+const cache = new Map();
+const CACHE_TTL = 60000; // 1 minute cache
+
+const getCached = (key) => {
+  const item = cache.get(key);
+  if (item && Date.now() - item.timestamp < CACHE_TTL) {
+    return item.data;
+  }
+  cache.delete(key);
+  return null;
+};
+
+const setCache = (key, data) => {
+  cache.set(key, { data, timestamp: Date.now() });
+};
+
 // Create axios instance
 const apiClient = axios.create({
   baseURL: API_BASE,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000, // 30 second timeout to prevent hanging requests
+  timeout: 15000, // 15 second timeout for faster failure
 });
 
 // Add auth token to requests
