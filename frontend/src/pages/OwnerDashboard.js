@@ -81,21 +81,27 @@ const OwnerDashboard = () => {
     const token = getToken();
     const localUser = getStoredUser();
     
-    // Check authentication
-    if (!token || (!isAuthenticated && !localUser)) {
+    // Check authentication - allow if either context user or localStorage user exists
+    const hasAuth = isAuthenticated || (token && localUser);
+    if (!hasAuth) {
+      console.log('OwnerDashboard: No auth found, redirecting to login');
       navigate('/login');
       return;
     }
     
-    // Check owner status
+    // Check owner status - use context user or localStorage user
     const userToCheck = user || localUser;
-    if (userToCheck?.email !== OWNER_EMAIL) {
+    const isOwner = userToCheck?.email === OWNER_EMAIL || userToCheck?.is_admin === true;
+    
+    if (!isOwner) {
+      console.log('OwnerDashboard: Not owner, redirecting to home');
       navigate('/');
       return;
     }
     
+    console.log('OwnerDashboard: Owner verified, fetching data');
     fetchDashboardData();
-  }, [isAuthenticated, authLoading, user, navigate]);
+  }, [isAuthenticated, authLoading, user, navigate, fetchDashboardData]);
 
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
