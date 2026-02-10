@@ -84,20 +84,26 @@ const ProductDetail = () => {
             <p className="text-xl text-gray-600">Loading product...</p>
           </div>
         </div>
+        <Footer />
       </div>
     );
   }
 
-  if (!product) {
+  if (error || !product) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
         <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-          <h1 className="text-3xl font-bold mb-4">Product Not Found</h1>
+          <h1 className="text-3xl font-bold mb-4">{error || 'Product Not Found'}</h1>
+          <p className="text-gray-600 mb-6">The product you're looking for might have been removed or is temporarily unavailable.</p>
           <Link to="/products">
-            <Button>Browse Products</Button>
+            <Button className="bg-emerald-600 hover:bg-emerald-700">Browse All Products</Button>
           </Link>
         </div>
+        <Footer />
+      </div>
+    );
+  }
       </div>
     );
   }
