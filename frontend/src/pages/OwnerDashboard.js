@@ -389,8 +389,32 @@ const OwnerDashboard = () => {
 
   const totalPages = (items) => Math.ceil(items.length / ITEMS_PER_PAGE);
 
-  // Loading state
-  if (authLoading || loading) {
+  // Check if this is the owner
+  const storedUser = getStoredUser();
+  const currentUser = user || storedUser;
+  const isOwner = currentUser?.email === OWNER_EMAIL || currentUser?.is_admin === true;
+
+  // Loading state - only show during auth loading or initial data fetch
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <Header />
+        <div className="flex items-center justify-center h-[calc(100vh-200px)]">
+          <div className="text-center">
+            <div className="relative">
+              <div className="w-20 h-20 border-4 border-emerald-200 rounded-full animate-pulse"></div>
+              <div className="absolute top-0 left-0 w-20 h-20 border-4 border-emerald-600 rounded-full animate-spin border-t-transparent"></div>
+            </div>
+            <p className="mt-4 text-gray-600 font-medium">Checking permissions...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Show loading while fetching data
+  if (loading && !dataLoaded) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <Header />
