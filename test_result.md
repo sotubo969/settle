@@ -228,11 +228,14 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "✅ UPDATED - Order creation now triggers async email notifications to customer, all vendors, and admin"
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETED - Order creation with email integration fully working: POST /api/orders successfully creates orders and triggers async email notification workflow. Authentication required - properly rejects unauthenticated requests with 401. With authentication, creates orders with status='confirmed' and queues email notifications to customer, vendors, and admin through send_all_payment_notifications(). Tested with sample order (£54.97 total) - order creation successful and email workflow triggered correctly."
 
   - task: "Delivery API - Calculate Delivery"
     implemented: true
