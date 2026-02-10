@@ -1357,7 +1357,7 @@ class EmailService:
                                         <tr>
                                             <td style="padding: 10px 0; color: #4b5563;">Delivery Fee</td>
                                             <td style="padding: 10px 0; text-align: right; font-weight: 500;">
-                                                {f'<span style="color: #10b981;">FREE</span>' if delivery_fee == 0 else f'£{delivery_fee:.2f}'}
+                                                {'<span style="color: #10b981;">FREE</span>' if delivery_fee == 0 else f'£{delivery_fee:.2f}'}
                                             </td>
                                         </tr>
                                         <tr style="border-top: 2px solid #10b981;">
