@@ -9,8 +9,8 @@ import json
 import sys
 from datetime import datetime
 
-# Configuration - Use the external URL from frontend/.env
-BASE_URL = "https://afro-market.co.uk/api"
+# Configuration - Use the local backend URL
+BASE_URL = "http://localhost:8001/api"
 
 # Test credentials
 OWNER_EMAIL = "sotubodammy@gmail.com"
