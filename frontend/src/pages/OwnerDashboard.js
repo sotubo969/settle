@@ -21,18 +21,19 @@ const OwnerDashboard = () => {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start as false, set to true when fetching
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
   
   // Data states
-  const [dashboardData, setDashboardData] = useState(null);
+  const [dashboardData, setDashboardData] = useState({});
   const [vendors, setVendors] = useState([]);
   const [products, setProducts] = useState([]);
-  const [analytics, setAnalytics] = useState(null);
-  const [transactions, setTransactions] = useState(null);
-  const [sales, setSales] = useState(null);
-  const [deliveries, setDeliveries] = useState(null);
+  const [analytics, setAnalytics] = useState({});
+  const [transactions, setTransactions] = useState([]);
+  const [sales, setSales] = useState([]);
+  const [deliveries, setDeliveries] = useState([]);
   const [ads, setAds] = useState([]);
   const [pendingAds, setPendingAds] = useState([]);
   
