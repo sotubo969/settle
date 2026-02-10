@@ -326,6 +326,17 @@ class FirestoreDB:
             logger.error(f"Error fetching vendor orders: {e}")
             return []
     
+    async def get_all_orders(self, limit: int = 500) -> List[Dict]:
+        """Get all orders for admin/owner dashboard"""
+        try:
+            docs = self.db.collection('orders').limit(limit).get()
+            results = docs_to_list(docs)
+            results.sort(key=lambda x: str(x.get('created_at', '')), reverse=True)
+            return results
+        except Exception as e:
+            logger.error(f"Error fetching all orders: {e}")
+            return []
+    
     async def update_order(self, order_id: str, updates: Dict) -> bool:
         """Update order data"""
         updates['updated_at'] = get_utc_now()
