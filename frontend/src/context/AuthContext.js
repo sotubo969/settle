@@ -255,21 +255,26 @@ export const AuthProvider = ({ children }) => {
           }
         }
         
-        // If Firebase returns network error, fall back to legacy auth
-        if (result.error?.includes('network') || result.error?.includes('Network')) {
-          console.log('Firebase network error, falling back to legacy auth');
-          return await legacyLogin(email, password);
+        // If Firebase returns any error (user not found, invalid credentials, etc.), 
+        // fall back to legacy auth to check local database
+        if (!result.success) {
+          console.log('Firebase login failed, trying legacy auth...');
+          const legacyResult = await legacyLogin(email, password);
+          if (legacyResult.success) {
+            return legacyResult;
+          }
+          // If both failed, return the more informative error
+          return result.error?.includes('No account') || result.error?.includes('Invalid') 
+            ? legacyResult 
+            : result;
         }
         
         return result;
       } catch (error) {
         console.error('Firebase email login error:', error);
         // Fall back to legacy auth on any Firebase error
-        if (error.message?.includes('network') || error.message?.includes('Network')) {
-          console.log('Firebase error, falling back to legacy auth');
-          return await legacyLogin(email, password);
-        }
-        return { success: false, error: error.message };
+        console.log('Firebase error, falling back to legacy auth');
+        return await legacyLogin(email, password);
       }
     }
     
