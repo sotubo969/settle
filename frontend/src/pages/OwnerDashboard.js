@@ -1138,28 +1138,28 @@ const OwnerDashboard = () => {
         )}
 
         {/* ==================== DELIVERIES TAB ==================== */}
-        {activeTab === 'deliveries' && deliveries && (
+        {activeTab === 'deliveries' && (
           <div className="space-y-6">
             {/* Delivery Stats */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
-                <p className="text-3xl font-bold">{deliveries.statusCounts?.processing || 0}</p>
+                <p className="text-3xl font-bold">{Array.isArray(deliveries) ? deliveries.filter(d => d?.status === 'processing' || d?.status === 'pending').length : 0}</p>
                 <p className="text-blue-100 mt-1">Processing</p>
               </div>
               <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl p-6 text-white">
-                <p className="text-3xl font-bold">{deliveries.statusCounts?.shipped || 0}</p>
+                <p className="text-3xl font-bold">{Array.isArray(deliveries) ? deliveries.filter(d => d?.status === 'shipped').length : 0}</p>
                 <p className="text-purple-100 mt-1">Shipped</p>
               </div>
               <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl p-6 text-white">
-                <p className="text-3xl font-bold">{deliveries.statusCounts?.in_transit || 0}</p>
+                <p className="text-3xl font-bold">{Array.isArray(deliveries) ? deliveries.filter(d => d?.status === 'in_transit').length : 0}</p>
                 <p className="text-indigo-100 mt-1">In Transit</p>
               </div>
               <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white">
-                <p className="text-3xl font-bold">{deliveries.statusCounts?.out_for_delivery || 0}</p>
+                <p className="text-3xl font-bold">{Array.isArray(deliveries) ? deliveries.filter(d => d?.status === 'out_for_delivery').length : 0}</p>
                 <p className="text-orange-100 mt-1">Out for Delivery</p>
               </div>
               <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-2xl p-6 text-white">
-                <p className="text-3xl font-bold">{deliveries.statusCounts?.delivered || 0}</p>
+                <p className="text-3xl font-bold">{Array.isArray(deliveries) ? deliveries.filter(d => d?.status === 'delivered' || d?.status === 'confirmed').length : 0}</p>
                 <p className="text-emerald-100 mt-1">Delivered</p>
               </div>
             </div>
