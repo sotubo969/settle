@@ -1,39 +1,86 @@
+/**
+ * Register Page - Unified Firebase Authentication
+ * Single clean signup form with email/password and Google sign-in
+ * Google sign-in users skip email verification
+ * Email/password users need to verify their email
+ */
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, User as UserIcon, ArrowLeft, Loader2, CheckCircle, AlertCircle, MailCheck, AlertTriangle } from 'lucide-react';
+import { Mail, Lock, User as UserIcon, ArrowLeft, Loader2, Eye, EyeOff, CheckCircle, MailCheck } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Alert, AlertDescription } from '../components/ui/alert';
+import { Card, CardContent } from '../components/ui/card';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
+
+// Google icon SVG component
+const GoogleIcon = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24">
+    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+  </svg>
+);
+
+// Password strength indicator
+const PasswordStrength = ({ password }) => {
+  const getStrength = () => {
+    if (!password) return { level: 0, label: '', color: 'bg-gray-200' };
+    if (password.length < 6) return { level: 1, label: 'Too short', color: 'bg-red-500' };
+    if (password.length < 8) return { level: 2, label: 'Weak', color: 'bg-orange-500' };
+    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) return { level: 2, label: 'Fair', color: 'bg-yellow-500' };
+    if (password.length >= 10 && /(?=.*[!@#$%^&*])/.test(password)) return { level: 4, label: 'Strong', color: 'bg-emerald-500' };
+    return { level: 3, label: 'Good', color: 'bg-emerald-400' };
+  };
+  
+  const strength = getStrength();
+  
+  if (!password) return null;
+  
+  return (
+    <div className="mt-2">
+      <div className="flex gap-1 mb-1">
+        {[1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className={`h-1 flex-1 rounded-full transition-all ${
+              i <= strength.level ? strength.color : 'bg-gray-200'
+            }`}
+          />
+        ))}
+      </div>
+      <p className={`text-xs ${strength.level >= 3 ? 'text-emerald-600' : 'text-gray-500'}`}>
+        {strength.label}
+      </p>
+    </div>
+  );
+};
 
 const Register = () => {
   const navigate = useNavigate();
   const { 
     loginWithGoogle, 
     registerWithEmail,
-    legacyRegister,
     isAuthenticated, 
-    isVerified, 
+    isVerified,
     resendVerification,
-    firebaseEnabled,
-    disableFirebaseAuth
+    firebaseEnabled
   } = useAuth();
+  
+  // Form state
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [showVerificationSent, setShowVerificationSent] = useState(false);
-  const [showNetworkError, setShowNetworkError] = useState(false);
-  const [useLegacyMode, setUseLegacyMode] = useState(false);
-  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [error, setError] = useState('');
+  const [showVerificationScreen, setShowVerificationScreen] = useState(false);
   const [resendingEmail, setResendingEmail] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-  });
 
   // Redirect if already authenticated and verified
   useEffect(() => {
@@ -42,63 +89,61 @@ const Register = () => {
     }
   }, [isAuthenticated, isVerified, navigate]);
 
+  // Handle email/password registration
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
+    setError('');
+    
+    // Validation
+    if (!name.trim()) {
+      setError('Please enter your name');
       return;
     }
-
-    if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+    
+    if (!email) {
+      setError('Please enter your email address');
       return;
     }
-
+    
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+    
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    
     setLoading(true);
-    setShowNetworkError(false);
-
+    
     try {
-      let result;
-      
-      // Use legacy registration if in legacy mode
-      if (useLegacyMode) {
-        result = await legacyRegister(formData.email, formData.password, formData.name);
-      } else {
-        result = await registerWithEmail(formData.email, formData.password, formData.name);
-      }
+      const result = await registerWithEmail(email, password, name);
       
       if (result.success) {
-        if (result.verificationSent && !useLegacyMode) {
-          setShowVerificationSent(true);
-          setRegisteredEmail(formData.email);
-          toast.success('Account created! Please check your email to verify.');
+        if (result.verificationSent) {
+          // Show verification screen for email/password signups
+          setShowVerificationScreen(true);
+          toast.success('Account created! Please verify your email.');
         } else {
-          // Legacy auth - direct login
-          toast.success('Account created! Welcome to AfroMarket!');
+          // Direct login (legacy mode)
+          toast.success('Welcome to AfroMarket!');
           navigate('/');
         }
-      } else if (result.error?.includes('network') || result.error?.includes('Network')) {
-        setShowNetworkError(true);
-        toast.error('Network error - try using standard registration');
       } else {
-        toast.error(result.error || 'Registration failed');
+        setError(result.error || 'Registration failed. Please try again.');
       }
-    } catch (error) {
-      toast.error(error.message || 'Registration failed');
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  // Handle Google sign-up (no email verification needed)
   const handleGoogleSignup = async () => {
-    if (!firebaseEnabled) {
-      toast.error('Google sign-up requires Firebase configuration');
-      return;
-    }
-    
+    setError('');
     setGoogleLoading(true);
-    setShowNetworkError(false);
     
     try {
       const result = await loginWithGoogle();
@@ -106,27 +151,17 @@ const Register = () => {
       if (result.success) {
         toast.success('Welcome to AfroMarket!');
         navigate('/');
-      } else if (result.error?.includes('network') || result.error?.includes('Network') || result.fallbackAvailable) {
-        setShowNetworkError(true);
-        toast.error('Network error - please use email registration');
       } else {
-        toast.error(result.error || 'Google sign-up failed');
+        setError(result.error || 'Google sign-up failed. Please try again.');
       }
-    } catch (error) {
-      setShowNetworkError(true);
-      toast.error('Google sign-up unavailable - please use email registration');
+    } catch (err) {
+      setError('Google sign-up unavailable. Please use email/password.');
     } finally {
       setGoogleLoading(false);
     }
   };
 
-  const handleUseLegacyMode = () => {
-    setUseLegacyMode(true);
-    setShowNetworkError(false);
-    disableFirebaseAuth();
-    toast.success('Switched to standard registration mode');
-  };
-
+  // Handle resend verification email
   const handleResendVerification = async () => {
     setResendingEmail(true);
     try {
@@ -136,292 +171,258 @@ const Register = () => {
       } else {
         toast.error(result.error || 'Failed to send verification email');
       }
-    } catch (error) {
+    } catch (err) {
       toast.error('Failed to send verification email');
     } finally {
       setResendingEmail(false);
     }
   };
 
-  // Show verification sent screen (Firebase only)
-  if (showVerificationSent && !useLegacyMode) {
+  // Verification Screen after successful email/password registration
+  if (showVerificationScreen) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-orange-50 flex items-center justify-center px-4">
-        <div className="w-full max-w-md">
-          <Card className="shadow-2xl">
-            <CardHeader className="space-y-2 text-center">
-              <div className="mx-auto w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
-                <MailCheck className="h-8 w-8 text-emerald-600" />
-              </div>
-              <CardTitle className="text-2xl font-bold">Verify Your Email</CardTitle>
-              <CardDescription className="text-base">
-                We've sent a verification link to
-              </CardDescription>
-              <p className="font-semibold text-emerald-600">{registeredEmail}</p>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Alert className="border-emerald-200 bg-emerald-50">
-                <CheckCircle className="h-4 w-4 text-emerald-600" />
-                <AlertDescription className="text-emerald-800">
-                  <p className="font-medium">Account created successfully!</p>
-                  <p className="text-sm mt-1">
-                    Please check your email and click the verification link to activate your account.
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-orange-50 flex items-center justify-center px-4 py-12">
+        <Card className="w-full max-w-md shadow-2xl border-0 overflow-hidden">
+          <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 py-12 text-center">
+            <div className="mx-auto w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mb-4">
+              <MailCheck className="h-10 w-10 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-2">Check Your Email</h1>
+            <p className="text-emerald-100">We've sent a verification link to</p>
+            <p className="text-white font-semibold mt-1">{email}</p>
+          </div>
+          
+          <CardContent className="p-6 space-y-6">
+            <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
+              <div className="flex items-start gap-3">
+                <CheckCircle className="h-5 w-5 text-emerald-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-emerald-800 font-medium">Account created successfully!</p>
+                  <p className="text-emerald-700 text-sm mt-1">
+                    Click the link in your email to activate your account and start shopping.
                   </p>
-                </AlertDescription>
-              </Alert>
-
-              <div className="space-y-3">
-                <p className="text-sm text-gray-600 text-center">
-                  Didn't receive the email? Check your spam folder or
-                </p>
-                <Button 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={handleResendVerification}
-                  disabled={resendingEmail}
-                >
-                  {resendingEmail ? (
-                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending...</>
-                  ) : (
-                    <><Mail className="h-4 w-4 mr-2" /> Resend Verification Email</>
-                  )}
-                </Button>
-              </div>
-
-              <div className="relative my-4">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-gray-500">or</span>
                 </div>
               </div>
+            </div>
 
-              <Link to="/login">
-                <Button variant="default" className="w-full bg-emerald-600 hover:bg-emerald-700">
-                  Go to Login
+            <div className="space-y-4">
+              <p className="text-center text-gray-600 text-sm">
+                Didn't receive the email? Check your spam folder or
+              </p>
+              
+              <Button
+                variant="outline"
+                className="w-full h-11 border-emerald-600 text-emerald-600 hover:bg-emerald-50"
+                onClick={handleResendVerification}
+                disabled={resendingEmail}
+              >
+                {resendingEmail ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Sending...
+                  </>
+                ) : (
+                  'Resend Verification Email'
+                )}
+              </Button>
+
+              <Link to="/login" className="block">
+                <Button variant="ghost" className="w-full text-gray-600">
+                  Return to Login
                 </Button>
               </Link>
-
-              <p className="text-xs text-center text-gray-500">
-                After verifying your email, you can log in to your account
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-orange-50 flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-orange-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
+        {/* Back to Home */}
         <Link to="/">
-          <Button variant="ghost" className="mb-6">
+          <Button variant="ghost" className="mb-6 text-gray-600 hover:text-gray-900">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Home
           </Button>
         </Link>
 
-        <Card className="shadow-2xl">
-          <CardHeader className="space-y-2 text-center">
-            <CardTitle className="text-3xl font-bold">Create Account</CardTitle>
-            <CardDescription className="text-base">
-              Join AfroMarket UK today
-              {useLegacyMode && (
-                <span className="block text-xs text-emerald-600 mt-1">
-                  (Using standard registration)
-                </span>
+        {/* Main Card */}
+        <Card className="shadow-2xl border-0 overflow-hidden">
+          {/* Header with gradient */}
+          <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 py-8 text-center">
+            <h1 className="text-2xl font-bold text-white mb-1">Create Account</h1>
+            <p className="text-emerald-100">Join AfroMarket today</p>
+          </div>
+          
+          <CardContent className="p-6 space-y-6">
+            {/* Error Alert */}
+            {error && (
+              <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm border border-red-200">
+                {error}
+              </div>
+            )}
+
+            {/* Google Sign-Up Button */}
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-12 text-gray-700 border-2 hover:bg-gray-50 font-medium"
+              onClick={handleGoogleSignup}
+              disabled={googleLoading || !firebaseEnabled}
+            >
+              {googleLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <>
+                  <GoogleIcon />
+                  <span className="ml-3">Continue with Google</span>
+                </>
               )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {showNetworkError && (
-              <Alert className="mb-4 border-orange-200 bg-orange-50">
-                <AlertTriangle className="h-4 w-4 text-orange-600" />
-                <AlertDescription className="text-orange-800">
-                  <p className="font-medium mb-2">Connection issue detected</p>
-                  <p className="text-sm mb-3">
-                    Having trouble connecting. You can use standard registration instead.
-                  </p>
-                  <Button 
-                    size="sm" 
-                    onClick={handleUseLegacyMode}
-                    className="bg-orange-600 hover:bg-orange-700 text-white"
-                  >
-                    Use Standard Registration
-                  </Button>
-                </AlertDescription>
-              </Alert>
-            )}
+            </Button>
 
-            {/* Google Sign-up - Recommended (Firebase only) */}
-            {firebaseEnabled && !useLegacyMode && (
-              <div className="mb-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full border-2 border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50"
-                  size="lg"
-                  onClick={handleGoogleSignup}
-                  disabled={googleLoading}
-                  data-testid="google-signup-btn"
-                >
-                  {googleLoading ? (
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                  ) : (
-                    <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
-                      <path
-                        fill="#4285F4"
-                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                      />
-                      <path
-                        fill="#34A853"
-                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                      />
-                      <path
-                        fill="#FBBC05"
-                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                      />
-                      <path
-                        fill="#EA4335"
-                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                      />
-                    </svg>
-                  )}
-                  Sign up with Google
-                </Button>
-                <p className="text-xs text-center text-gray-500 mt-2">
-                  <CheckCircle className="h-3 w-3 inline mr-1 text-green-500" />
-                  Instant sign-up - no email verification required
-                </p>
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
               </div>
-            )}
-
-            {firebaseEnabled && !useLegacyMode && (
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-gray-500">Or sign up with email</span>
-                </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-white text-gray-500">or create with email</span>
               </div>
-            )}
+            </div>
 
-            {firebaseEnabled && !useLegacyMode && (
-              <Alert className="mb-4 border-blue-200 bg-blue-50">
-                <AlertCircle className="h-4 w-4 text-blue-600" />
-                <AlertDescription className="text-blue-800 text-sm">
-                  Email sign-up requires email verification before you can log in
-                </AlertDescription>
-              </Alert>
-            )}
-
+            {/* Registration Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Name Field */}
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name" className="text-gray-700 font-medium">
+                  Full Name
+                </Label>
                 <div className="relative">
-                  <UserIcon className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
                     id="name"
                     type="text"
                     placeholder="John Doe"
-                    className="pl-10"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                    data-testid="register-name-input"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="pl-10 h-12 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500"
+                    disabled={loading}
                   />
                 </div>
               </div>
 
+              {/* Email Field */}
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-gray-700 font-medium">
+                  Email Address
+                </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
                     id="email"
                     type="email"
-                    placeholder="your@email.com"
-                    className="pl-10"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    required
-                    data-testid="register-email-input"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10 h-12 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500"
+                    disabled={loading}
                   />
                 </div>
               </div>
 
+              {/* Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-gray-700 font-medium">
+                  Password
+                </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
                     id="password"
-                    type="password"
-                    placeholder="Create a password (min 6 characters)"
-                    className="pl-10"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    required
-                    data-testid="register-password-input"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 pr-10 h-12 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500"
+                    disabled={loading}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
                 </div>
+                <PasswordStrength password={password} />
               </div>
 
+              {/* Confirm Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Label htmlFor="confirmPassword" className="text-gray-700 font-medium">
+                  Confirm Password
+                </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
                     id="confirmPassword"
-                    type="password"
-                    placeholder="Confirm your password"
-                    className="pl-10"
-                    value={formData.confirmPassword}
-                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                    required
-                    data-testid="register-confirm-password-input"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="pl-10 pr-10 h-12 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500"
+                    disabled={loading}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
                 </div>
+                {confirmPassword && password !== confirmPassword && (
+                  <p className="text-xs text-red-500">Passwords do not match</p>
+                )}
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full bg-emerald-600 hover:bg-emerald-700" 
-                size="lg" 
-                disabled={loading}
-                data-testid="register-submit-btn"
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-base"
+                disabled={loading || (password !== confirmPassword)}
               >
                 {loading ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creating account...</>
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                    Creating account...
+                  </>
                 ) : (
                   'Create Account'
                 )}
               </Button>
-
-              <div className="text-center text-sm mt-6">
-                Already have an account?{' '}
-                <Link to="/login" className="text-emerald-600 font-semibold hover:underline">
-                  Sign in
-                </Link>
-              </div>
-
-              {!useLegacyMode && (
-                <div className="text-center mt-4">
-                  <button
-                    type="button"
-                    onClick={handleUseLegacyMode}
-                    className="text-xs text-gray-500 hover:text-gray-700 underline"
-                  >
-                    Having trouble? Use standard registration
-                  </button>
-                </div>
-              )}
             </form>
+
+            {/* Sign In Link */}
+            <p className="text-center text-gray-600">
+              Already have an account?{' '}
+              <Link to="/login" className="text-emerald-600 hover:text-emerald-700 font-semibold">
+                Sign In
+              </Link>
+            </p>
           </CardContent>
         </Card>
+
+        {/* Footer */}
+        <p className="text-center text-gray-500 text-sm mt-6">
+          By creating an account, you agree to our{' '}
+          <Link to="/terms" className="text-emerald-600 hover:underline">Terms</Link>
+          {' '}and{' '}
+          <Link to="/privacy" className="text-emerald-600 hover:underline">Privacy Policy</Link>
+        </p>
       </div>
     </div>
   );
