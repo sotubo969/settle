@@ -1192,34 +1192,34 @@ const OwnerDashboard = () => {
 
             {/* Deliveries List */}
             <div className="space-y-4">
-              {filteredDeliveries.map(delivery => (
-                <div key={delivery.id} className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
+              {Array.isArray(filteredDeliveries) && filteredDeliveries.length > 0 ? filteredDeliveries.map((delivery, idx) => (
+                <div key={delivery?.id || idx} className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <span className="font-mono font-bold text-lg text-emerald-600">{delivery.orderId}</span>
-                        <StatusBadge status={delivery.deliveryStatus} />
+                        <span className="font-mono font-bold text-lg text-emerald-600">{delivery?.orderId || delivery?.id || 'N/A'}</span>
+                        <StatusBadge status={delivery?.status || delivery?.deliveryStatus || 'pending'} />
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600">
-                        <p><span className="text-gray-400">Customer:</span> {delivery.customerName}</p>
-                        <p><span className="text-gray-400">Email:</span> {delivery.customerEmail}</p>
-                        <p><span className="text-gray-400">Items:</span> {delivery.itemCount} items</p>
-                        <p><span className="text-gray-400">Total:</span> <span className="font-bold text-gray-900">£{delivery.total?.toFixed(2)}</span></p>
+                        <p><span className="text-gray-400">Customer:</span> {delivery?.address?.fullName || delivery?.customerName || 'Customer'}</p>
+                        <p><span className="text-gray-400">Status:</span> {delivery?.status || 'Pending'}</p>
+                        <p><span className="text-gray-400">Date:</span> {delivery?.date ? new Date(delivery.date).toLocaleDateString() : 'N/A'}</p>
                       </div>
-                      {delivery.trackingNumber && (
-                        <p className="mt-2 text-sm"><span className="text-gray-400">Tracking:</span> <span className="font-mono text-blue-600">{delivery.trackingNumber}</span> ({delivery.carrier})</p>
+                      {delivery?.trackingNumber && (
+                        <p className="mt-2 text-sm"><span className="text-gray-400">Tracking:</span> <span className="font-mono text-blue-600">{delivery.trackingNumber}</span> {delivery.carrier && `(${delivery.carrier})`}</p>
                       )}
                       <p className="mt-2 text-sm text-gray-500">
-                        <span className="text-gray-400">Address:</span> {delivery.shippingAddress?.fullName}, {delivery.shippingAddress?.address}, {delivery.shippingAddress?.city}, {delivery.shippingAddress?.postcode}
+                        <span className="text-gray-400">Address:</span> {delivery?.address?.address || 'N/A'}, {delivery?.address?.city || ''}, {delivery?.address?.postcode || ''}
                       </p>
                     </div>
                     
                     <div className="flex flex-col gap-3 lg:w-64">
                       <select
-                        value={delivery.deliveryStatus}
-                        onChange={(e) => updateDeliveryStatus(delivery.orderId, e.target.value, delivery.trackingNumber, delivery.carrier)}
+                        value={delivery?.status || 'pending'}
+                        onChange={(e) => updateDeliveryStatus(delivery?.orderId || delivery?.id, e.target.value, delivery?.trackingNumber, delivery?.carrier)}
                         className="px-4 py-3 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-emerald-500"
                       >
+                        <option value="pending">Pending</option>
                         <option value="processing">Processing</option>
                         <option value="shipped">Shipped</option>
                         <option value="in_transit">In Transit</option>
@@ -1228,15 +1228,20 @@ const OwnerDashboard = () => {
                       </select>
                       
                       <button
-                        onClick={() => { setSelectedDelivery(delivery); setShowTrackingModal(true); setTrackingForm({ trackingNumber: delivery.trackingNumber || '', carrier: delivery.carrier || '', estimatedDelivery: '' }); }}
+                        onClick={() => { setSelectedDelivery(delivery); setShowTrackingModal(true); setTrackingForm({ trackingNumber: delivery?.trackingNumber || '', carrier: delivery?.carrier || '', estimatedDelivery: '' }); }}
                         className="px-4 py-2 border border-emerald-500 text-emerald-600 rounded-xl text-sm font-medium hover:bg-emerald-50 transition-colors"
                       >
-                        {delivery.trackingNumber ? 'Update Tracking' : 'Add Tracking'}
+                        {delivery?.trackingNumber ? 'Update Tracking' : 'Add Tracking'}
                       </button>
                     </div>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div className="bg-white rounded-2xl p-12 text-center">
+                  <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-500">No deliveries to display</p>
+                </div>
+              )}
             </div>
           </div>
         )}
