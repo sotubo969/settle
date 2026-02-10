@@ -401,6 +401,62 @@ class FirestoreDB:
             doc.reference.delete()
         return True
     
+    # ============ WISHLIST ============
+    
+    async def get_user_wishlist(self, user_id: str) -> List[Dict]:
+        """Get user's wishlist with product details"""
+        try:
+            docs = self.db.collection('wishlists').where(
+                filter=FieldFilter('user_id', '==', user_id)
+            ).get()
+            
+            wishlist_items = docs_to_list(docs)
+            
+            # Get product details for each item
+            for item in wishlist_items:
+                product = await self.get_product_by_id(item.get('product_id'))
+                if product:
+                    item['product'] = product
+            
+            return wishlist_items
+        except Exception as e:
+            logger.error(f"Error fetching wishlist: {e}")
+            return []
+    
+    async def add_to_wishlist(self, user_id: str, product_id: str) -> Dict:
+        """Add product to wishlist"""
+        # Check if already exists
+        docs = self.db.collection('wishlists').where(
+            filter=FieldFilter('user_id', '==', user_id)
+        ).where(
+            filter=FieldFilter('product_id', '==', product_id)
+        ).limit(1).get()
+        
+        for doc in docs:
+            return {'id': doc.id, 'message': 'Already in wishlist'}
+        
+        # Add new item
+        item = {
+            'user_id': user_id,
+            'product_id': product_id,
+            'created_at': get_utc_now()
+        }
+        doc_ref = self.db.collection('wishlists').add(item)[1]
+        item['id'] = doc_ref.id
+        return item
+    
+    async def remove_from_wishlist(self, user_id: str, product_id: str) -> bool:
+        """Remove product from wishlist"""
+        docs = self.db.collection('wishlists').where(
+            filter=FieldFilter('user_id', '==', user_id)
+        ).where(
+            filter=FieldFilter('product_id', '==', product_id)
+        ).get()
+        
+        for doc in docs:
+            doc.reference.delete()
+        return True
+    
     # ============ NOTIFICATIONS ============
     
     async def create_notification(self, notification_data: Dict) -> Dict:
