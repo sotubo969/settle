@@ -56,27 +56,8 @@ const Profile = () => {
     isDefault: false
   });
 
-  useEffect(() => {
-    // Wait for AuthContext to finish loading
-    if (authLoading) return;
-    
-    // Check both context and localStorage
-    const token = localStorage.getItem('afroToken');
-    const savedUser = localStorage.getItem('afroUser');
-    
-    const hasAuth = isAuthenticated || (token && savedUser);
-    
-    if (!hasAuth) {
-      console.log('Profile: No auth found, redirecting to login');
-      navigate('/login');
-      return;
-    }
-    
-    console.log('Profile: Auth found, fetching user data...');
-    fetchUserData();
-  }, [isAuthenticated, authLoading, navigate]);
-
-  const fetchUserData = async () => {
+  // Memoized fetch function to prevent re-creation on each render
+  const fetchUserData = useCallback(async () => {
     const token = localStorage.getItem('afroToken');
     console.log('Token found:', !!token);
     
@@ -113,13 +94,39 @@ const Profile = () => {
         name: meRes.data?.name || '',
         phone: meRes.data?.phone || ''
       });
+      setDataLoaded(true);
     } catch (error) {
       console.error('Error fetching user data:', error);
       toast.error('Failed to load profile data');
+      setDataLoaded(true);
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    // Wait for AuthContext to finish loading
+    if (authLoading) return;
+    
+    // Don't refetch if already loaded
+    if (dataLoaded) return;
+    
+    // Check both context and localStorage
+    const token = localStorage.getItem('afroToken');
+    const savedUser = localStorage.getItem('afroUser');
+    
+    const hasAuth = isAuthenticated || (token && savedUser);
+    
+    if (!hasAuth) {
+      console.log('Profile: No auth found, redirecting to login');
+      setLoading(false);
+      navigate('/login');
+      return;
+    }
+    
+    console.log('Profile: Auth found, fetching user data...');
+    fetchUserData();
+  }, [isAuthenticated, authLoading, navigate, fetchUserData, dataLoaded]);
 
   const handleUpdateProfile = async () => {
     const token = localStorage.getItem('afroToken');
