@@ -1069,6 +1069,10 @@ test_plan:
     - "Cart Functionality" 
     - "Stripe Payment Flow - Frontend Integration"
     - "Checkout Flow"
+    - "Product Detail Page"
+    - "Owner Dashboard Overview API"
+    - "Profile and Orders"
+    - "AfroBot Chatbot"
   stuck_tasks:
     - "Cart Functionality"
     - "Stripe Payment Flow - Frontend Integration"
@@ -1076,13 +1080,16 @@ test_plan:
     - "Cart Add to Cart Functionality"
     - "Cart Quantity Controls"
     - "Mobile Responsiveness"
+    - "Product Detail Page"
+    - "Owner Dashboard Overview API"
+    - "Profile and Orders"
   test_all: true
   test_priority: "critical_authentication_first"
   owner_dashboard_testing: "dashboard_loading_issue"
   forgot_password_testing: "completed"
   stripe_checkout_testing: "failed_due_to_auth_issues"
   new_features_testing: "completed_100_percent"
-  latest_test_date: "July 10, 2025"
+  latest_test_date: "February 10, 2026"
 
   - task: "Forgot Password API - Request Reset"
     implemented: true
