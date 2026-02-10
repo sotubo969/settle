@@ -73,36 +73,7 @@ const OwnerDashboard = () => {
   const currentUser = user || storedUser;
   const isOwner = currentUser?.email === OWNER_EMAIL;
 
-  useEffect(() => {
-    // Wait for auth to finish loading
-    if (authLoading) return;
-    
-    // Get auth info from localStorage as backup
-    const token = getToken();
-    const localUser = getStoredUser();
-    
-    // Check authentication - allow if either context user or localStorage user exists
-    const hasAuth = isAuthenticated || (token && localUser);
-    if (!hasAuth) {
-      console.log('OwnerDashboard: No auth found, redirecting to login');
-      navigate('/login');
-      return;
-    }
-    
-    // Check owner status - use context user or localStorage user
-    const userToCheck = user || localUser;
-    const isOwner = userToCheck?.email === OWNER_EMAIL || userToCheck?.is_admin === true;
-    
-    if (!isOwner) {
-      console.log('OwnerDashboard: Not owner, redirecting to home');
-      navigate('/');
-      return;
-    }
-    
-    console.log('OwnerDashboard: Owner verified, fetching data');
-    fetchDashboardData();
-  }, [isAuthenticated, authLoading, user, navigate, fetchDashboardData]);
-
+  // Fetch function defined as useCallback
   const fetchDashboardData = useCallback(async () => {
     setLoading(true);
     setRefreshing(true);
@@ -169,6 +140,37 @@ const OwnerDashboard = () => {
       setRefreshing(false);
     }
   }, [dateRange]);
+
+  // Auth and data fetch effect
+  useEffect(() => {
+    // Wait for auth to finish loading
+    if (authLoading) return;
+    
+    // Get auth info from localStorage as backup
+    const token = getToken();
+    const localUser = getStoredUser();
+    
+    // Check authentication - allow if either context user or localStorage user exists
+    const hasAuth = isAuthenticated || (token && localUser);
+    if (!hasAuth) {
+      console.log('OwnerDashboard: No auth found, redirecting to login');
+      navigate('/login');
+      return;
+    }
+    
+    // Check owner status - use context user or localStorage user
+    const userToCheck = user || localUser;
+    const isOwner = userToCheck?.email === OWNER_EMAIL || userToCheck?.is_admin === true;
+    
+    if (!isOwner) {
+      console.log('OwnerDashboard: Not owner, redirecting to home');
+      navigate('/');
+      return;
+    }
+    
+    console.log('OwnerDashboard: Owner verified, fetching data');
+    fetchDashboardData();
+  }, [isAuthenticated, authLoading, user, navigate, fetchDashboardData]);
 
   const updateDeliveryStatus = async (orderId, status, trackingNumber = '', carrier = '', estimatedDelivery = '') => {
     try {
