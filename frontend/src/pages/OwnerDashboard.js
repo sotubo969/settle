@@ -1007,21 +1007,21 @@ const OwnerDashboard = () => {
             {/* Top Products */}
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
               <h3 className="text-xl font-bold text-gray-900 mb-6">Top Products by Engagement</h3>
-              {analytics.topProducts?.length > 0 ? (
+              {Array.isArray(analytics?.topProducts) && analytics.topProducts.length > 0 ? (
                 <div className="space-y-4">
                   {analytics.topProducts.map((product, index) => (
-                    <div key={product.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+                    <div key={product?.id || index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
                       <span className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white ${
                         index === 0 ? 'bg-gradient-to-br from-yellow-400 to-yellow-500' :
                         index === 1 ? 'bg-gradient-to-br from-gray-400 to-gray-500' :
                         index === 2 ? 'bg-gradient-to-br from-amber-600 to-amber-700' :
                         'bg-gradient-to-br from-gray-300 to-gray-400'
                       }`}>{index + 1}</span>
-                      <img src={product.image} alt={product.name} className="w-16 h-16 rounded-xl object-cover" />
+                      <img src={product?.image || '/placeholder.png'} alt={product?.name || 'Product'} className="w-16 h-16 rounded-xl object-cover" />
                       <div className="flex-1">
-                        <p className="font-semibold text-gray-900">{product.name}</p>
+                        <p className="font-semibold text-gray-900">{product?.name || 'Product'}</p>
                         <div className="flex items-center gap-4 mt-1">
-                          <ProgressBar value={product.clicks} max={analytics.topProducts[0]?.clicks || 1} color="emerald" showLabel={false} />
+                          <ProgressBar value={product?.clicks || 0} max={analytics.topProducts[0]?.clicks || 1} color="emerald" showLabel={false} />
                         </div>
                       </div>
                       <div className="text-right">
