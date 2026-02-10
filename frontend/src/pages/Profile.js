@@ -287,22 +287,22 @@ const Profile = () => {
                       </div>
                     ) : (
                       <div className="space-y-4">
-                        {orders.map((order) => (
-                          <Card key={order.id} className="hover:shadow-lg transition-shadow">
+                        {orders.map((order, idx) => (
+                          <Card key={order?.id || idx} className="hover:shadow-lg transition-shadow">
                             <CardContent className="pt-6">
                               <div className="flex justify-between items-start mb-4">
                                 <div>
-                                  <p className="font-semibold text-lg">{order.orderId}</p>
-                                  <p className="text-sm text-gray-600">{order.date}</p>
+                                  <p className="font-semibold text-lg">#{order?.order_id || order?.orderId || order?.id || 'N/A'}</p>
+                                  <p className="text-sm text-gray-600">{order?.created_at ? new Date(order.created_at).toLocaleDateString() : 'N/A'}</p>
                                 </div>
-                                <Badge className={order.status === 'delivered' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}>
-                                  {order.status}
+                                <Badge className={order?.status === 'delivered' || order?.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}>
+                                  {order?.status || 'pending'}
                                 </Badge>
                               </div>
                               <div className="flex justify-between items-center pt-4 border-t">
                                 <div>
-                                  <p className="text-sm text-gray-600">{order.items} items</p>
-                                  <p className="text-xl font-bold text-emerald-600">£{order.total.toFixed(2)}</p>
+                                  <p className="text-sm text-gray-600">{Array.isArray(order?.items) ? order.items.length : 1} items</p>
+                                  <p className="text-xl font-bold text-emerald-600">£{(order?.total || 0).toFixed(2)}</p>
                                 </div>
                                 <Button variant="outline">Track Order</Button>
                               </div>
