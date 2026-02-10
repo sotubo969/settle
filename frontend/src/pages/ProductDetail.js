@@ -104,9 +104,6 @@ const ProductDetail = () => {
       </div>
     );
   }
-      </div>
-    );
-  }
 
   const handleAddToCart = async () => {
     if (!isAuthenticated) {
