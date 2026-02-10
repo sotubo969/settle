@@ -940,6 +940,7 @@ test_plan:
   owner_dashboard_testing: "completed"
   forgot_password_testing: "completed"
   stripe_checkout_testing: "failed_due_to_auth_issues"
+  new_features_testing: "completed_100_percent"
 
   - task: "Forgot Password API - Request Reset"
     implemented: true
