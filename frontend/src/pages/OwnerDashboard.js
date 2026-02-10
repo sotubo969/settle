@@ -588,7 +588,7 @@ const OwnerDashboard = () => {
                         <p className="text-sm text-gray-500">Total sales value</p>
                       </div>
                     </div>
-                    <p className="text-2xl font-bold text-emerald-600">£{dashboardData.overview.totalRevenue?.toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-emerald-600">£{(dashboardData.totalRevenue || dashboardData.overview?.totalRevenue || 0).toLocaleString()}</p>
                   </div>
                   <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl">
                     <div className="flex items-center gap-3">
@@ -598,7 +598,7 @@ const OwnerDashboard = () => {
                         <p className="text-sm text-gray-500">10% of all sales</p>
                       </div>
                     </div>
-                    <p className="text-2xl font-bold text-purple-600">£{dashboardData.overview.totalCommission?.toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-purple-600">£{(dashboardData.platformCommission || dashboardData.overview?.totalCommission || (dashboardData.totalRevenue || 0) * 0.1).toLocaleString()}</p>
                   </div>
                   <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl">
                     <div className="flex items-center gap-3">
@@ -608,7 +608,7 @@ const OwnerDashboard = () => {
                         <p className="text-sm text-gray-500">90% to vendors</p>
                       </div>
                     </div>
-                    <p className="text-2xl font-bold text-blue-600">£{(dashboardData.overview.totalRevenue - dashboardData.overview.totalCommission)?.toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-blue-600">£{((dashboardData.totalRevenue || 0) * 0.9).toLocaleString()}</p>
                   </div>
                 </div>
               </div>
@@ -617,28 +617,28 @@ const OwnerDashboard = () => {
               <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-6">Quick Actions</h3>
                 <div className="space-y-3">
-                  {dashboardData.overview.pendingVendors > 0 && (
+                  {(dashboardData.pendingVendors || dashboardData.overview?.pendingVendors || 0) > 0 && (
                     <button onClick={() => { setActiveTab('vendors'); setStatusFilter('pending'); }} 
                       className="w-full flex items-center justify-between p-4 bg-amber-50 border border-amber-200 rounded-xl hover:bg-amber-100 transition-colors group">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-amber-500 rounded-lg"><UserCheck className="w-5 h-5 text-white" /></div>
                         <div className="text-left">
                           <p className="font-semibold text-amber-800">Pending Vendors</p>
-                          <p className="text-sm text-amber-600">{dashboardData.overview.pendingVendors} awaiting approval</p>
+                          <p className="text-sm text-amber-600">{dashboardData.pendingVendors || dashboardData.overview?.pendingVendors || 0} awaiting approval</p>
                         </div>
                       </div>
                       <ChevronRight className="w-5 h-5 text-amber-500 group-hover:translate-x-1 transition-transform" />
                     </button>
                   )}
                   
-                  {dashboardData.overview.pendingOrders > 0 && (
+                  {(dashboardData.pendingOrders || dashboardData.overview?.pendingOrders || 0) > 0 && (
                     <button onClick={() => setActiveTab('orders')} 
                       className="w-full flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors group">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-blue-500 rounded-lg"><Clock className="w-5 h-5 text-white" /></div>
                         <div className="text-left">
                           <p className="font-semibold text-blue-800">Pending Orders</p>
-                          <p className="text-sm text-blue-600">{dashboardData.overview.pendingOrders} need processing</p>
+                          <p className="text-sm text-blue-600">{dashboardData.pendingOrders || dashboardData.overview?.pendingOrders || 0} need processing</p>
                         </div>
                       </div>
                       <ChevronRight className="w-5 h-5 text-blue-500 group-hover:translate-x-1 transition-transform" />
