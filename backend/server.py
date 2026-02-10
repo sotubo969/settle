@@ -802,6 +802,58 @@ async def ws_status():
     }
 
 
+# ============ CHATBOT API ============
+
+class ChatMessageRequest(BaseModel):
+    message: str
+    session_id: Optional[str] = None
+
+@api_router.get("/chatbot/welcome")
+async def get_chatbot_welcome():
+    """Get welcome message and initial options for chatbot"""
+    afrobot = get_afrobot()
+    session_id = await afrobot.create_chat_session()
+    return {
+        "success": True,
+        "welcome_message": afrobot.get_welcome_message(),
+        "quick_replies": afrobot.get_quick_replies(),
+        "session_id": session_id,
+        "bot_name": "AfroBot"
+    }
+
+@api_router.post("/chatbot/message")
+async def send_chatbot_message(request: ChatMessageRequest):
+    """Send a message to AfroBot and get response"""
+    afrobot = get_afrobot()
+    
+    # Create session if not provided
+    session_id = request.session_id
+    if not session_id:
+        session_id = await afrobot.create_chat_session()
+    
+    # Get AI response
+    response = await afrobot.get_chat_response(
+        message=request.message,
+        session_id=session_id
+    )
+    
+    return {
+        "success": True,
+        "response": response,
+        "session_id": session_id,
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+@api_router.get("/chatbot/quick-replies")
+async def get_chatbot_quick_replies():
+    """Get quick reply suggestions"""
+    afrobot = get_afrobot()
+    return {
+        "success": True,
+        "quick_replies": afrobot.get_quick_replies()
+    }
+
+
 # ============ DELIVERY API ============
 
 from delivery_service import get_delivery_service, FREE_DELIVERY_THRESHOLD
