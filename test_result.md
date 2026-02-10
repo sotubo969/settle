@@ -847,7 +847,7 @@ frontend:
 
   - task: "Profile and Orders"
     implemented: true
-    working: true
+    working: false
     file: "/app/frontend/src/pages/Profile.js"
     stuck_count: 0
     priority: "medium"
@@ -865,6 +865,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ PROFILE TEST PASSED (Jul 10, 2025) - Profile page accessible and loads correctly. 'Orders' section is visible. The page is loading but showing minimal content - user email not displayed. Despite this limitation, the profile page is functional and accessible."
+      - working: false
+        agent: "testing"
+        comment: "❌ PROFILE UI RENDERING FAILURE (Jul 10, 2025) - Profile page shows only 'Loading...' message. Backend APIs for profile (orders, wishlist, user profile) all return 200 status codes with proper data. Same React error as dashboard: 'Objects are not valid as a React child' suggesting rendering issues in the component. API calls work but UI fails to display the returned data."
 
   - task: "Stripe Payment Flow - Frontend Integration"
     implemented: true
