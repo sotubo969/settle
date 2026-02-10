@@ -1616,9 +1616,9 @@ const OwnerDashboard = () => {
         {activeTab === 'customers' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <StatCard title="Total Customers" value={dashboardData?.overview?.totalUsers} icon={Users} color="blue" />
-              <StatCard title="Active Vendors" value={dashboardData?.overview?.approvedVendors} icon={Store} color="emerald" />
-              <StatCard title="Total Orders" value={dashboardData?.overview?.totalOrders} icon={ShoppingCart} color="purple" />
+              <StatCard title="Total Customers" value={dashboardData?.totalUsers || dashboardData?.overview?.totalUsers || 0} icon={Users} color="blue" />
+              <StatCard title="Active Vendors" value={dashboardData?.totalVendors || dashboardData?.overview?.approvedVendors || 0} icon={Store} color="emerald" />
+              <StatCard title="Total Orders" value={dashboardData?.totalOrders || dashboardData?.overview?.totalOrders || 0} icon={ShoppingCart} color="purple" />
             </div>
 
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12 text-center">
