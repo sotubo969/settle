@@ -529,7 +529,7 @@ async def create_order(
                 'type': 'order',
                 'title': f"🛒 New Order #{order['order_id']}!",
                 'message': f"New order with {len(vendor_items)} item(s) totaling £{vendor_total:.2f}",
-                'link': f"/vendor/dashboard?tab=orders"
+                'link': "/vendor/dashboard?tab=orders"
             }
         })
     
