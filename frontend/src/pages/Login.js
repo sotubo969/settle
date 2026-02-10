@@ -1,38 +1,46 @@
+/**
+ * Login Page - Unified Firebase Authentication
+ * Single clean login form with email/password and Google sign-in
+ * Google sign-in users skip email verification
+ */
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Mail, Lock, ArrowLeft, Loader2, AlertCircle, CheckCircle, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Mail, Lock, ArrowLeft, Loader2, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
-import { Alert, AlertDescription } from '../components/ui/alert';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
+
+// Google icon SVG component
+const GoogleIcon = () => (
+  <svg className="w-5 h-5" viewBox="0 0 24 24">
+    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+  </svg>
+);
 
 const Login = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { 
     loginWithGoogle, 
-    loginWithEmail, 
-    legacyLogin,
+    loginWithEmailPassword,
     isAuthenticated, 
-    isVerified, 
-    resendVerification, 
-    refreshVerificationStatus,
-    firebaseEnabled,
-    disableFirebaseAuth
+    isVerified,
+    firebaseEnabled
   } = useAuth();
+  
+  // Form state
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [showVerificationAlert, setShowVerificationAlert] = useState(false);
-  const [showNetworkError, setShowNetworkError] = useState(false);
-  const [useLegacyMode, setUseLegacyMode] = useState(false);
-  const [resendingEmail, setResendingEmail] = useState(false);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const [error, setError] = useState('');
 
   // Check if user just verified their email
   useEffect(() => {
@@ -48,310 +56,202 @@ const Login = () => {
     }
   }, [isAuthenticated, isVerified, navigate]);
 
+  // Handle email/password login
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    
+    // Validation
+    if (!email || !password) {
+      setError('Please enter both email and password');
+      return;
+    }
+    
     setLoading(true);
-    setShowVerificationAlert(false);
-    setShowNetworkError(false);
-
+    
     try {
-      let result;
-      
-      // Use legacy login if in legacy mode
-      if (useLegacyMode) {
-        result = await legacyLogin(formData.email, formData.password);
-      } else {
-        result = await loginWithEmail(formData.email, formData.password);
-      }
+      const result = await loginWithEmailPassword(email, password);
       
       if (result.success) {
         toast.success('Welcome back!');
         navigate('/');
       } else if (result.needsVerification) {
-        setShowVerificationAlert(true);
-        toast.error('Please verify your email before logging in');
-      } else if (result.error?.includes('network') || result.error?.includes('Network') || result.fallbackAvailable) {
-        setShowNetworkError(true);
-        toast.error('Network error - try using standard login');
+        setError('Please verify your email before logging in. Check your inbox for the verification link.');
       } else {
-        toast.error(result.error || 'Login failed');
+        setError(result.error || 'Invalid email or password');
       }
-    } catch (error) {
-      toast.error(error.message || 'Login failed');
+    } catch (err) {
+      setError(err.message || 'Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  // Handle Google sign-in (no email verification needed)
   const handleGoogleLogin = async () => {
-    if (!firebaseEnabled) {
-      toast.error('Google sign-in requires Firebase configuration');
-      return;
-    }
-    
+    setError('');
     setGoogleLoading(true);
-    setShowNetworkError(false);
     
     try {
       const result = await loginWithGoogle();
       
       if (result.success) {
-        toast.success('Welcome back!');
+        toast.success('Welcome to AfroMarket!');
         navigate('/');
-      } else if (result.error?.includes('network') || result.error?.includes('Network') || result.fallbackAvailable) {
-        setShowNetworkError(true);
-        toast.error('Network error - please use email/password login');
-      } else if (result.error?.includes('domain') || result.error?.includes('authorized')) {
-        setShowNetworkError(true);
-        toast.error('Domain not authorized - please use email/password login');
       } else {
-        toast.error(result.error || 'Google sign-in failed');
+        setError(result.error || 'Google sign-in failed. Please try again.');
       }
-    } catch (error) {
-      setShowNetworkError(true);
-      toast.error('Google sign-in unavailable - please use email/password');
+    } catch (err) {
+      setError('Google sign-in unavailable. Please use email/password.');
     } finally {
       setGoogleLoading(false);
     }
   };
 
-  const handleUseLegacyMode = () => {
-    setUseLegacyMode(true);
-    setShowNetworkError(false);
-    disableFirebaseAuth();
-    toast.success('Switched to standard login mode');
-  };
-
-  const handleResendVerification = async () => {
-    setResendingEmail(true);
-    try {
-      const result = await resendVerification();
-      if (result.success) {
-        toast.success('Verification email sent! Check your inbox.');
-      } else {
-        toast.error(result.error || 'Failed to send verification email');
-      }
-    } catch (error) {
-      toast.error('Failed to send verification email');
-    } finally {
-      setResendingEmail(false);
-    }
-  };
-
-  const handleCheckVerification = async () => {
-    const verified = await refreshVerificationStatus();
-    if (verified) {
-      toast.success('Email verified! Logging you in...');
-      navigate('/');
-    } else {
-      toast.info('Email not yet verified. Please check your inbox.');
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-orange-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-orange-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
+        {/* Back to Home */}
         <Link to="/">
-          <Button variant="ghost" className="mb-6">
+          <Button variant="ghost" className="mb-6 text-gray-600 hover:text-gray-900">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Home
           </Button>
         </Link>
 
-        <Card className="shadow-2xl">
-          <CardHeader className="space-y-2 text-center">
-            <CardTitle className="text-3xl font-bold">Welcome Back</CardTitle>
-            <CardDescription className="text-base">
-              Sign in to your AfroMarket account
-              {useLegacyMode && (
-                <span className="block text-xs text-emerald-600 mt-1">
-                  (Using standard login)
-                </span>
+        {/* Main Card */}
+        <Card className="shadow-2xl border-0 overflow-hidden">
+          {/* Header with gradient */}
+          <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 px-6 py-8 text-center">
+            <h1 className="text-2xl font-bold text-white mb-1">Welcome Back</h1>
+            <p className="text-emerald-100">Sign in to your AfroMarket account</p>
+          </div>
+          
+          <CardContent className="p-6 space-y-6">
+            {/* Error Alert */}
+            {error && (
+              <div className="bg-red-50 text-red-700 px-4 py-3 rounded-lg text-sm border border-red-200">
+                {error}
+              </div>
+            )}
+
+            {/* Google Sign-In Button */}
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-12 text-gray-700 border-2 hover:bg-gray-50 font-medium"
+              onClick={handleGoogleLogin}
+              disabled={googleLoading || !firebaseEnabled}
+            >
+              {googleLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <>
+                  <GoogleIcon />
+                  <span className="ml-3">Continue with Google</span>
+                </>
               )}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {showNetworkError && (
-              <Alert className="mb-4 border-orange-200 bg-orange-50">
-                <AlertTriangle className="h-4 w-4 text-orange-600" />
-                <AlertDescription className="text-orange-800">
-                  <p className="font-medium mb-2">Connection issue detected</p>
-                  <p className="text-sm mb-3">
-                    Having trouble connecting to Google. You can use standard email/password login instead.
-                  </p>
-                  <Button 
-                    size="sm" 
-                    onClick={handleUseLegacyMode}
-                    className="bg-orange-600 hover:bg-orange-700 text-white"
-                  >
-                    Use Standard Login
-                  </Button>
-                </AlertDescription>
-              </Alert>
-            )}
+            </Button>
 
-            {showVerificationAlert && !useLegacyMode && (
-              <Alert className="mb-4 border-yellow-200 bg-yellow-50">
-                <AlertCircle className="h-4 w-4 text-yellow-600" />
-                <AlertDescription className="text-yellow-800">
-                  <p className="font-medium mb-2">Email verification required</p>
-                  <p className="text-sm mb-3">Please verify your email before logging in. Check your inbox for the verification link.</p>
-                  <div className="flex gap-2">
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      onClick={handleResendVerification}
-                      disabled={resendingEmail}
-                      className="text-yellow-700 border-yellow-300 hover:bg-yellow-100"
-                    >
-                      {resendingEmail ? (
-                        <><Loader2 className="h-3 w-3 mr-1 animate-spin" /> Sending...</>
-                      ) : (
-                        <><Mail className="h-3 w-3 mr-1" /> Resend Email</>
-                      )}
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      onClick={handleCheckVerification}
-                      className="text-yellow-700 border-yellow-300 hover:bg-yellow-100"
-                    >
-                      <RefreshCw className="h-3 w-3 mr-1" /> I've Verified
-                    </Button>
-                  </div>
-                </AlertDescription>
-              </Alert>
-            )}
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-white text-gray-500">or sign in with email</span>
+              </div>
+            </div>
 
+            {/* Email/Password Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Email Field */}
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-gray-700 font-medium">
+                  Email Address
+                </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
                     id="email"
                     type="email"
-                    placeholder="your@email.com"
-                    className="pl-10"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    required
-                    data-testid="login-email-input"
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10 h-12 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500"
+                    disabled={loading}
                   />
                 </div>
               </div>
 
+              {/* Password Field */}
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-gray-700 font-medium">
+                    Password
+                  </Label>
+                  <Link 
+                    to="/forgot-password" 
+                    className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+                  >
+                    Forgot password?
+                  </Link>
+                </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
                   <Input
                     id="password"
-                    type="password"
-                    placeholder="Enter your password"
-                    className="pl-10"
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                    required
-                    data-testid="login-password-input"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 pr-10 h-12 border-gray-200 focus:border-emerald-500 focus:ring-emerald-500"
+                    disabled={loading}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
                 </div>
               </div>
 
-              <div className="flex justify-end">
-                <Link to="/forgot-password">
-                  <Button variant="link" className="px-0 text-emerald-600">
-                    Forgot password?
-                  </Button>
-                </Link>
-              </div>
-
-              <Button 
-                type="submit" 
-                className="w-full bg-emerald-600 hover:bg-emerald-700" 
-                size="lg" 
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-base"
                 disabled={loading}
-                data-testid="login-submit-btn"
               >
                 {loading ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Signing in...</>
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                    Signing in...
+                  </>
                 ) : (
                   'Sign In'
                 )}
               </Button>
-
-              {firebaseEnabled && !useLegacyMode && (
-                <>
-                  <div className="relative my-6">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-white px-2 text-gray-500">Or continue with</span>
-                    </div>
-                  </div>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    size="lg"
-                    onClick={handleGoogleLogin}
-                    disabled={googleLoading}
-                    data-testid="google-login-btn"
-                  >
-                    {googleLoading ? (
-                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    ) : (
-                      <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
-                        <path
-                          fill="#4285F4"
-                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                        />
-                        <path
-                          fill="#34A853"
-                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                        />
-                        <path
-                          fill="#FBBC05"
-                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                        />
-                        <path
-                          fill="#EA4335"
-                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                        />
-                      </svg>
-                    )}
-                    Continue with Google
-                  </Button>
-
-                  <p className="text-xs text-center text-gray-500 mt-2">
-                    Google sign-in is instant - no email verification required
-                  </p>
-                </>
-              )}
-
-              <div className="text-center text-sm mt-6">
-                Don't have an account?{' '}
-                <Link to="/register" className="text-emerald-600 font-semibold hover:underline">
-                  Sign up
-                </Link>
-              </div>
-
-              {!useLegacyMode && (
-                <div className="text-center mt-4">
-                  <button
-                    type="button"
-                    onClick={handleUseLegacyMode}
-                    className="text-xs text-gray-500 hover:text-gray-700 underline"
-                  >
-                    Having trouble? Use standard login
-                  </button>
-                </div>
-              )}
             </form>
+
+            {/* Sign Up Link */}
+            <p className="text-center text-gray-600">
+              Don't have an account?{' '}
+              <Link to="/register" className="text-emerald-600 hover:text-emerald-700 font-semibold">
+                Create Account
+              </Link>
+            </p>
           </CardContent>
         </Card>
+
+        {/* Footer */}
+        <p className="text-center text-gray-500 text-sm mt-6">
+          By signing in, you agree to our{' '}
+          <Link to="/terms" className="text-emerald-600 hover:underline">Terms</Link>
+          {' '}and{' '}
+          <Link to="/privacy" className="text-emerald-600 hover:underline">Privacy Policy</Link>
+        </p>
       </div>
     </div>
   );
