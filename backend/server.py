@@ -801,6 +801,53 @@ async def ws_status():
     }
 
 
+# ============ DELIVERY API ============
+
+from delivery_service import get_delivery_service, FREE_DELIVERY_THRESHOLD
+
+class DeliveryCalculateRequest(BaseModel):
+    postcode: str
+    subtotal: float
+    weight_kg: float = 1.0
+    delivery_option: str = "standard"
+
+@api_router.post("/delivery/calculate")
+async def calculate_delivery(request: DeliveryCalculateRequest):
+    """Calculate delivery cost based on postcode and order details"""
+    delivery_service = get_delivery_service()
+    result = delivery_service.calculate(
+        postcode=request.postcode,
+        subtotal=request.subtotal,
+        weight_kg=request.weight_kg,
+        option=request.delivery_option
+    )
+    return result
+
+@api_router.get("/delivery/options")
+async def get_delivery_options(
+    postcode: str = Query(..., description="UK postcode"),
+    subtotal: float = Query(..., description="Order subtotal in GBP"),
+    weight_kg: float = Query(1.0, description="Total weight in kg")
+):
+    """Get all available delivery options for a postcode"""
+    delivery_service = get_delivery_service()
+    result = delivery_service.get_options(
+        postcode=postcode,
+        subtotal=subtotal,
+        weight_kg=weight_kg
+    )
+    return result
+
+@api_router.get("/delivery/zones")
+async def get_delivery_zones():
+    """Get information about all delivery zones"""
+    delivery_service = get_delivery_service()
+    return {
+        "zones": delivery_service.get_zones_info(),
+        "free_delivery_threshold": FREE_DELIVERY_THRESHOLD
+    }
+
+
 # ============ HEALTH & STATUS ============
 
 @api_router.get("/health")
