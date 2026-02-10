@@ -781,6 +781,9 @@ frontend:
       - working: true
         agent: "testing"
         comment: "✅ COMPREHENSIVE TEST PASSED (Jul 10, 2025) - Product detail page loads correctly. Tested with 'Shea Butter (Raw)' product - displays product name, price (£7.99), rating, vendor info, quantity controls, Add to Cart and Buy Now buttons. No 'cannot read property' errors detected in console."
+      - working: true
+        agent: "testing"
+        comment: "✅ PRODUCT DETAIL VERIFICATION (Feb 10, 2026) - Product detail page functioning correctly. Successfully tested with 'Shea Butter (Raw)' product showing correct price (£7.99), product images, rating (4.1), quantity controls, and purchase buttons. Product details now use backend API rather than mock data."
 
   - task: "Cart Functionality"
     implemented: true
