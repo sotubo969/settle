@@ -12,7 +12,7 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 class AfroMarketAPITester:
-    def __init__(self, base_url: str = "https://afro-market.co.uk"):
+    def __init__(self, base_url: str = "http://localhost:8001"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.token = None
