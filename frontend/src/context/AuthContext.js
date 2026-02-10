@@ -141,37 +141,45 @@ export const AuthProvider = ({ children }) => {
     }
   }, [firebaseEnabled, useFirebaseAuth, checkLegacyAuth]);
 
-  // Legacy login function (direct API call)
+  // Legacy login function (direct API call) - OPTIMIZED
   const legacyLogin = async (email, password) => {
     try {
-      const response = await axios.post(`${API}/auth/login`, { email, password });
+      const response = await axios.post(`${API}/auth/login`, { email, password }, {
+        timeout: 10000 // 10 second timeout for login
+      });
       if (response.data.success) {
         const userData = response.data.user;
         setUser(userData);
         setIsVerified(true);
+        isLegacySession.current = true; // Mark as legacy session
         localStorage.setItem('afroToken', response.data.token);
         localStorage.setItem('afroUser', JSON.stringify(userData));
+        console.log('Legacy login successful for:', userData.email);
         return { success: true, user: userData };
       }
       return { success: false, error: 'Login failed' };
     } catch (error) {
-      const errorMsg = error.response?.data?.detail || 'Invalid email or password';
+      const errorMsg = error.response?.data?.detail || error.message || 'Invalid email or password';
+      console.error('Legacy login error:', errorMsg);
       return { success: false, error: errorMsg };
     }
   };
 
-  // Legacy registration function (direct API call)
+  // Legacy registration function (direct API call) - OPTIMIZED
   const legacyRegister = async (email, password, name) => {
     try {
       const response = await axios.post(`${API}/auth/register`, { 
         name, 
         email, 
         password 
+      }, {
+        timeout: 10000 // 10 second timeout
       });
       if (response.data.success) {
         const userData = response.data.user;
         setUser(userData);
         setIsVerified(true);
+        isLegacySession.current = true; // Mark as legacy session
         localStorage.setItem('afroToken', response.data.token);
         localStorage.setItem('afroUser', JSON.stringify(userData));
         return { success: true, user: userData };
