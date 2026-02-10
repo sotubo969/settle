@@ -796,7 +796,7 @@ frontend:
 
   - task: "Authentication System"
     implemented: true
-    working: false
+    working: true
     file: "/app/frontend/src/context/AuthContext.js"
     stuck_count: 2
     priority: "high"
@@ -817,6 +817,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "❌ ROOT CAUSE IDENTIFIED (Feb 10, 2025) - CORS configuration in backend preventing authentication. The CORS_ORIGINS in backend/.env is set to 'https://afro-market.co.uk,https://www.afro-market.co.uk' but frontend requests come from 'http://localhost:3000', causing API calls to be blocked. Firebase auth also fails with network request error. Login API calls cannot succeed due to CORS blocking."
+      - working: true
+        agent: "testing"
+        comment: "✅ FIXED (Jul 10, 2025) - Authentication is now working with sotubodammy@gmail.com/NewPassword123! credentials. Successfully logged in, redirected to homepage, and maintained session after page refresh. CORS_ORIGINS in backend/.env now includes 'https://vendor-hub-141.preview.emergentagent.com' which allows the authentication to work properly."
 
   - task: "Vendor Registration"
     implemented: true
