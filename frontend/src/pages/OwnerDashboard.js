@@ -1055,7 +1055,7 @@ const OwnerDashboard = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-2xl font-bold text-emerald-600">{product.clicks}</p>
+                        <p className="text-2xl font-bold text-emerald-600">{product?.clicks || 0}</p>
                         <p className="text-sm text-gray-500">clicks</p>
                       </div>
                     </div>
