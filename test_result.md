@@ -1027,9 +1027,7 @@ test_plan:
     - "Cart Functionality" 
     - "Stripe Payment Flow - Frontend Integration"
     - "Checkout Flow"
-    - "Owner Dashboard Overview API"
-  stuck_tasks: 
-    - "Owner Dashboard Overview API"
+  stuck_tasks:
     - "Cart Functionality"
     - "Stripe Payment Flow - Frontend Integration"
     - "Content Loading Issues"
