@@ -122,9 +122,28 @@ class AfroBotService:
         Returns:
             AI response string
         """
-        if not self.client:
+        if not self.api_key:
             return "I'm sorry, but I'm having trouble connecting right now. Please try again later or contact support at sotubodammy@gmail.com"
         
+        # Use Emergent integration if available
+        if self.use_emergent:
+            try:
+                from emergentintegrations.llm.chat import LlmChat, UserMessage
+                
+                chat = LlmChat(
+                    api_key=self.api_key,
+                    session_id=session_id,
+                    system_message=AFROBOT_SYSTEM_PROMPT
+                )
+                chat.with_model("openai", "gpt-4o")
+                user_message = UserMessage(text=message)
+                response = await chat.send_message(user_message)
+                return response
+            except Exception as e:
+                logger.error(f"Emergent Error: {str(e)}")
+                return "I apologize, but I'm experiencing some technical difficulties. Please try again in a moment."
+        
+        # Use OpenAI directly
         try:
             # Get or initialize conversation history for this session
             if session_id not in _conversation_history:
@@ -168,7 +187,23 @@ class AfroBotService:
             logger.error("OpenAI Authentication Error")
             return "I apologize, but I'm experiencing authentication issues. Please contact support at sotubodammy@gmail.com"
         except openai.RateLimitError:
-            logger.error("OpenAI Rate Limit Error")
+            logger.error("OpenAI Rate Limit Error - trying Emergent fallback")
+            # Try Emergent as fallback
+            if EMERGENT_LLM_KEY:
+                try:
+                    from emergentintegrations.llm.chat import LlmChat, UserMessage
+                    
+                    chat = LlmChat(
+                        api_key=EMERGENT_LLM_KEY,
+                        session_id=session_id,
+                        system_message=AFROBOT_SYSTEM_PROMPT
+                    )
+                    chat.with_model("openai", "gpt-4o")
+                    user_message = UserMessage(text=message)
+                    response = await chat.send_message(user_message)
+                    return response
+                except Exception as e:
+                    logger.error(f"Emergent fallback error: {str(e)}")
             return "I'm a bit busy right now! Please try again in a moment."
         except Exception as e:
             logger.error(f"AfroBot Error: {str(e)}")
