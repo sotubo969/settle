@@ -543,7 +543,7 @@ backend:
 
   - task: "Owner Dashboard Overview API"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
@@ -561,6 +561,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ DASHBOARD ISSUE RESOLVED (Feb 10, 2026) - Owner dashboard now loads correctly at /owner/dashboard with comprehensive statistics. Successfully tested with sotubodammy@gmail.com/NewPassword123! credentials. Dashboard displays Total Revenue (£54.97), Total Orders (1), Total Products (32), and Active Vendors (5). All charts and analytics sections are rendering properly. Previous UI rendering errors appear to be fixed."
+      - working: false
+        agent: "testing"
+        comment: "❌ DASHBOARD REGRESSION (Feb 10, 2026) - Owner dashboard page (/owner/dashboard) is accessible but stuck in 'Checking permissions...' state. Dashboard never advances beyond the loading screen. Successfully logged in as owner (sotubodammy@gmail.com), but dashboard content never renders. UI appears to be in an infinite loading state when accessing the dashboard page."
 
   - task: "Owner Vendors Management API"
     implemented: true
