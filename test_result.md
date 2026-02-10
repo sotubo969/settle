@@ -215,6 +215,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ WORKING - User login endpoint (POST /api/auth/login) working correctly with test credentials (info@surulerefoods.com). Returns JWT token and user data including name 'Surulere Foods London'."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE LOGIN TESTING COMPLETED - All authentication scenarios tested successfully: Owner login (sotubodammy@gmail.com/NewPassword123!) → Admin: true, JWT token generated. Regular user login (test@test.com/Test123!) → successful authentication. New user registration → token generated (217 chars). All login endpoints returning valid JWT tokens and proper user data structures."
 
   - task: "JWT Authentication"
     implemented: true
