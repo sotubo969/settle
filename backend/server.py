@@ -614,6 +614,140 @@ async def get_owner_stats(current_user: dict = Depends(get_current_user)):
     }
 
 
+@api_router.get("/owner/dashboard")
+async def get_owner_dashboard(current_user: dict = Depends(get_current_user)):
+    """Get comprehensive owner dashboard data"""
+    if not current_user.get('is_admin') and current_user.get('email') != 'sotubodammy@gmail.com':
+        raise HTTPException(status_code=403, detail="Owner access required")
+    
+    all_vendors = await firestore_db.get_all_vendors()
+    all_orders = await firestore_db.get_all_orders()
+    products = await firestore_db.get_all_products()
+    
+    total_revenue = sum(o.get('total', 0) for o in all_orders)
+    pending_vendors = len([v for v in all_vendors if v.get('status') == 'pending'])
+    
+    return {
+        'totalRevenue': total_revenue,
+        'totalOrders': len(all_orders),
+        'totalVendors': len(all_vendors),
+        'pendingVendors': pending_vendors,
+        'totalProducts': len(products),
+        'platformCommission': total_revenue * 0.10,
+        'recentOrders': all_orders[:10] if all_orders else []
+    }
+
+
+@api_router.get("/owner/products")
+async def get_owner_products(current_user: dict = Depends(get_current_user)):
+    """Get all products for owner dashboard"""
+    if not current_user.get('is_admin') and current_user.get('email') != 'sotubodammy@gmail.com':
+        raise HTTPException(status_code=403, detail="Owner access required")
+    
+    products = await firestore_db.get_all_products()
+    return {'products': products}
+
+
+@api_router.get("/owner/analytics")
+async def get_owner_analytics(
+    days: int = Query(30, description="Number of days for analytics"),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get analytics data for owner dashboard"""
+    if not current_user.get('is_admin') and current_user.get('email') != 'sotubodammy@gmail.com':
+        raise HTTPException(status_code=403, detail="Owner access required")
+    
+    all_orders = await firestore_db.get_all_orders()
+    products = await firestore_db.get_all_products()
+    
+    # Calculate basic analytics
+    total_revenue = sum(o.get('total', 0) for o in all_orders)
+    avg_order_value = total_revenue / len(all_orders) if all_orders else 0
+    
+    return {
+        'totalRevenue': total_revenue,
+        'totalOrders': len(all_orders),
+        'averageOrderValue': avg_order_value,
+        'totalProducts': len(products),
+        'period': f'{days} days'
+    }
+
+
+@api_router.get("/owner/transactions")
+async def get_owner_transactions(current_user: dict = Depends(get_current_user)):
+    """Get all transactions for owner dashboard"""
+    if not current_user.get('is_admin') and current_user.get('email') != 'sotubodammy@gmail.com':
+        raise HTTPException(status_code=403, detail="Owner access required")
+    
+    all_orders = await firestore_db.get_all_orders()
+    # Transform orders into transactions format
+    transactions = [{
+        'id': o.get('id'),
+        'orderId': o.get('order_id'),
+        'amount': o.get('total', 0),
+        'status': o.get('status', 'pending'),
+        'date': o.get('created_at'),
+        'user': o.get('shipping_info', {}).get('fullName', 'Unknown')
+    } for o in all_orders]
+    
+    return transactions
+
+
+@api_router.get("/owner/sales")
+async def get_owner_sales(current_user: dict = Depends(get_current_user)):
+    """Get sales data for owner dashboard"""
+    if not current_user.get('is_admin') and current_user.get('email') != 'sotubodammy@gmail.com':
+        raise HTTPException(status_code=403, detail="Owner access required")
+    
+    all_orders = await firestore_db.get_all_orders()
+    return all_orders
+
+
+@api_router.get("/owner/deliveries")
+async def get_owner_deliveries(current_user: dict = Depends(get_current_user)):
+    """Get delivery data for owner dashboard"""
+    if not current_user.get('is_admin') and current_user.get('email') != 'sotubodammy@gmail.com':
+        raise HTTPException(status_code=403, detail="Owner access required")
+    
+    all_orders = await firestore_db.get_all_orders()
+    # Filter orders that need delivery tracking
+    deliveries = [{
+        'id': o.get('id'),
+        'orderId': o.get('order_id'),
+        'status': o.get('delivery_status', o.get('status', 'pending')),
+        'address': o.get('shipping_info', {}),
+        'trackingNumber': o.get('tracking_number', ''),
+        'carrier': o.get('carrier', ''),
+        'estimatedDelivery': o.get('estimated_delivery', ''),
+        'date': o.get('created_at')
+    } for o in all_orders]
+    
+    return deliveries
+
+
+@api_router.put("/owner/deliveries/{order_id}")
+async def update_owner_delivery(
+    order_id: str,
+    status: str = Query(...),
+    tracking_number: str = Query(''),
+    carrier: str = Query(''),
+    estimated_delivery: str = Query(''),
+    current_user: dict = Depends(get_current_user)
+):
+    """Update delivery status for an order"""
+    if not current_user.get('is_admin') and current_user.get('email') != 'sotubodammy@gmail.com':
+        raise HTTPException(status_code=403, detail="Owner access required")
+    
+    await firestore_db.update_order(order_id, {
+        'delivery_status': status,
+        'tracking_number': tracking_number,
+        'carrier': carrier,
+        'estimated_delivery': estimated_delivery
+    })
+    
+    return {'success': True, 'message': 'Delivery updated'}
+
+
 # ============ ORDER ROUTES ============
 
 @api_router.post("/orders")
