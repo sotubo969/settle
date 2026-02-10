@@ -11,8 +11,8 @@ import time
 from datetime import datetime
 from typing import Dict, Any, Optional
 
-class AfroMarketFirestoreTester:
-    def __init__(self, base_url: str = "https://github-code-pull.preview.emergentagent.com"):
+class AfroMarketAPITester:
+    def __init__(self, base_url: str = "https://afro-market.co.uk"):
         self.base_url = base_url
         self.api_url = f"{base_url}/api"
         self.token = None
