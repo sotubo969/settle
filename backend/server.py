@@ -27,6 +27,7 @@ from firestore_db import firestore_db, seed_firestore_data, get_firebase_app
 from firebase_auth import verify_firebase_token, is_firebase_configured
 from email_service import email_service
 from notification_service import ws_manager, NotificationService, PushNotificationService
+from chatbot_service import get_afrobot
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
