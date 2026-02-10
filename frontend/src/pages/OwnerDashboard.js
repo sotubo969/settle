@@ -1073,14 +1073,14 @@ const OwnerDashboard = () => {
         )}
 
         {/* ==================== FINANCE/TRANSACTIONS TAB ==================== */}
-        {activeTab === 'transactions' && transactions && sales && (
+        {activeTab === 'transactions' && (
           <div className="space-y-6">
             {/* Finance Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <StatCard title="Gross Revenue" value={`£${transactions.summary?.totalRevenue?.toLocaleString()}`} icon={DollarSign} color="emerald" />
-              <StatCard title="Your Commission" value={`£${transactions.summary?.totalCommission?.toLocaleString()}`} icon={Percent} color="purple" />
-              <StatCard title="Vendor Payouts" value={`£${sales.summary?.totalVendorEarnings?.toLocaleString()}`} icon={Banknote} color="blue" />
-              <StatCard title="Avg Order Value" value={`£${(transactions.summary?.totalRevenue / transactions.summary?.totalTransactions || 0).toFixed(2)}`} icon={Receipt} color="orange" />
+              <StatCard title="Gross Revenue" value={`£${(dashboardData?.totalRevenue || 0).toLocaleString()}`} icon={DollarSign} color="emerald" />
+              <StatCard title="Your Commission" value={`£${(dashboardData?.platformCommission || (dashboardData?.totalRevenue || 0) * 0.1).toLocaleString()}`} icon={Percent} color="purple" />
+              <StatCard title="Vendor Payouts" value={`£${((dashboardData?.totalRevenue || 0) * 0.9).toLocaleString()}`} icon={Banknote} color="blue" />
+              <StatCard title="Avg Order Value" value={`£${dashboardData?.totalOrders > 0 ? ((dashboardData?.totalRevenue || 0) / dashboardData.totalOrders).toFixed(2) : '0.00'}`} icon={Receipt} color="orange" />
             </div>
 
             {/* Vendor Revenue Breakdown */}
@@ -1103,31 +1103,31 @@ const OwnerDashboard = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {Array.isArray(sales?.vendorSales) && sales.vendorSales.length > 0 ? sales.vendorSales.map((vendor, idx) => (
-                      <tr key={vendor?.vendorId || idx} className="hover:bg-gray-50 transition-colors">
+                    {Array.isArray(vendors) && vendors.length > 0 ? vendors.filter(v => v?.status === 'approved').map((vendor, idx) => (
+                      <tr key={vendor?.id || idx} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl flex items-center justify-center text-white font-bold">
-                              {(vendor?.vendorName || 'V').charAt(0)}
+                              {(vendor?.business_name || vendor?.businessName || 'V').charAt(0)}
                             </div>
                             <div>
-                              <p className="font-semibold text-gray-900">{vendor?.vendorName || 'Vendor'}</p>
+                              <p className="font-semibold text-gray-900">{vendor?.business_name || vendor?.businessName || 'Vendor'}</p>
                               <p className="text-sm text-gray-500">{vendor?.email || ''}</p>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-center font-medium">{vendor?.productCount || 0}</td>
                         <td className="px-6 py-4 text-center font-medium">{vendor?.orderCount || 0}</td>
-                        <td className="px-6 py-4 text-right font-bold text-gray-900">£{(vendor?.totalSales || 0).toLocaleString()}</td>
-                        <td className="px-6 py-4 text-right font-bold text-purple-600">£{(vendor?.commissionEarned || (vendor?.totalSales || 0) * 0.1).toLocaleString()}</td>
-                        <td className="px-6 py-4 text-right font-bold text-emerald-600">£{(vendor?.vendorEarning || (vendor?.totalSales || 0) * 0.9).toLocaleString()}</td>
+                        <td className="px-6 py-4 text-right font-bold text-gray-900">£{(vendor?.revenue || 0).toLocaleString()}</td>
+                        <td className="px-6 py-4 text-right font-bold text-purple-600">£{((vendor?.revenue || 0) * 0.1).toLocaleString()}</td>
+                        <td className="px-6 py-4 text-right font-bold text-emerald-600">£{((vendor?.revenue || 0) * 0.9).toLocaleString()}</td>
                         <td className="px-6 py-4 text-center">
                           <StatusBadge status={vendor?.status || 'active'} size="small" />
                         </td>
                       </tr>
                     )) : (
                       <tr>
-                        <td colSpan="7" className="px-6 py-8 text-center text-gray-500">No sales data yet</td>
+                        <td colSpan="7" className="px-6 py-8 text-center text-gray-500">No vendor data yet</td>
                       </tr>
                     )}
                   </tbody>
