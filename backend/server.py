@@ -444,7 +444,7 @@ async def register_vendor_public(vendor_data: VendorRegisterRequest):
 
 @api_router.post("/admin/vendors/approve")
 async def approve_vendor(approval: VendorApproval):
-    """Approve or reject a vendor"""
+    """Approve or reject a vendor with comprehensive email notification"""
     vendor = await firestore_db.get_vendor_by_id(approval.vendorId)
     if not vendor:
         raise HTTPException(status_code=404, detail="Vendor not found")
@@ -455,7 +455,7 @@ async def approve_vendor(approval: VendorApproval):
         'verified': approval.status == 'approved'
     })
     
-    # Create notification
+    # Create in-app notification
     if approval.status == 'approved':
         title = "🎉 Your Vendor Application has been Approved!"
         message = f"Congratulations {vendor['business_name']}! You can now start selling."
@@ -473,14 +473,19 @@ async def approve_vendor(approval: VendorApproval):
         'link': link
     })
     
-    # Send email
+    # Send comprehensive approval email notification
     email_sent = False
     try:
-        email_sent = email_service.send_vendor_approval_email(
-            vendor['email'], 
-            vendor['business_name'], 
-            approval.status == 'approved'
+        # Get admin notes if provided in approval request
+        admin_notes = getattr(approval, 'notes', '') or ''
+        
+        email_sent = email_service.send_vendor_approval_notification(
+            vendor_email=vendor['email'], 
+            vendor_name=vendor.get('business_name', vendor.get('businessName', 'Vendor')),
+            approved=approval.status == 'approved',
+            admin_notes=admin_notes
         )
+        logger.info(f"Vendor approval email sent to {vendor['email']}: {email_sent}")
     except Exception as e:
         logger.error(f"Failed to send approval email: {e}")
     
