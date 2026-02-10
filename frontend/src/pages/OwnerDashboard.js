@@ -1073,29 +1073,33 @@ const OwnerDashboard = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {sales.vendorSales?.map(vendor => (
-                      <tr key={vendor.vendorId} className="hover:bg-gray-50 transition-colors">
+                    {Array.isArray(sales?.vendorSales) && sales.vendorSales.length > 0 ? sales.vendorSales.map((vendor, idx) => (
+                      <tr key={vendor?.vendorId || idx} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-xl flex items-center justify-center text-white font-bold">
-                              {vendor.vendorName?.charAt(0)}
+                              {(vendor?.vendorName || 'V').charAt(0)}
                             </div>
                             <div>
-                              <p className="font-semibold text-gray-900">{vendor.vendorName}</p>
-                              <p className="text-sm text-gray-500">{vendor.email}</p>
+                              <p className="font-semibold text-gray-900">{vendor?.vendorName || 'Vendor'}</p>
+                              <p className="text-sm text-gray-500">{vendor?.email || ''}</p>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-center font-medium">{vendor.productCount}</td>
-                        <td className="px-6 py-4 text-center font-medium">{vendor.orderCount}</td>
-                        <td className="px-6 py-4 text-right font-bold text-gray-900">£{vendor.totalSales?.toLocaleString()}</td>
-                        <td className="px-6 py-4 text-right font-bold text-purple-600">£{vendor.commissionEarned?.toLocaleString()}</td>
-                        <td className="px-6 py-4 text-right font-bold text-emerald-600">£{vendor.vendorEarning?.toLocaleString()}</td>
+                        <td className="px-6 py-4 text-center font-medium">{vendor?.productCount || 0}</td>
+                        <td className="px-6 py-4 text-center font-medium">{vendor?.orderCount || 0}</td>
+                        <td className="px-6 py-4 text-right font-bold text-gray-900">£{(vendor?.totalSales || 0).toLocaleString()}</td>
+                        <td className="px-6 py-4 text-right font-bold text-purple-600">£{(vendor?.commissionEarned || (vendor?.totalSales || 0) * 0.1).toLocaleString()}</td>
+                        <td className="px-6 py-4 text-right font-bold text-emerald-600">£{(vendor?.vendorEarning || (vendor?.totalSales || 0) * 0.9).toLocaleString()}</td>
                         <td className="px-6 py-4 text-center">
-                          <StatusBadge status={vendor.status} size="small" />
+                          <StatusBadge status={vendor?.status || 'active'} size="small" />
                         </td>
                       </tr>
-                    ))}
+                    )) : (
+                      <tr>
+                        <td colSpan="7" className="px-6 py-8 text-center text-gray-500">No sales data yet</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
