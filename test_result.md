@@ -102,7 +102,7 @@
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
 
-user_problem_statement: "Test the AfroMarket UK website comprehensively and document what features are actually working vs mock"
+user_problem_statement: "Implement: 1) Free Delivery Threshold £100+, 2) Distance-based delivery pricing, 3) Fix Sign-In/Sign-Out Bug, 4) ChatGPT chatbot integration"
 
 backend:
   - task: "API Health Check"
@@ -116,6 +116,66 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ WORKING - API health endpoint responding correctly with status 'ok' and message 'AfroMarket UK API is running'"
+
+  - task: "Delivery API - Calculate Delivery"
+    implemented: true
+    working: true
+    file: "/app/backend/delivery_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "✅ NEW - Implemented distance-based delivery calculation with free delivery threshold at £100"
+
+  - task: "Delivery API - Get Options"
+    implemented: true
+    working: true
+    file: "/app/backend/delivery_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "✅ NEW - Returns delivery options (standard, express, next day) based on postcode zone"
+
+  - task: "Delivery API - Get Zones"
+    implemented: true
+    working: true
+    file: "/app/backend/delivery_service.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "✅ NEW - Returns all UK delivery zones with pricing info"
+
+  - task: "ChatGPT Chatbot - Welcome"
+    implemented: true
+    working: true
+    file: "/app/backend/chatbot_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "✅ UPDATED - AfroBot now uses OpenAI GPT-4o with Emergent fallback"
+
+  - task: "ChatGPT Chatbot - Send Message"
+    implemented: true
+    working: true
+    file: "/app/backend/chatbot_service.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "✅ UPDATED - Chatbot responds with African grocery knowledge, free delivery info"
 
   - task: "User Registration API"
     implemented: true
