@@ -330,17 +330,17 @@ const Profile = () => {
                       </div>
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {wishlist.map((item) => (
-                          <Card key={item.id} className="relative">
+                        {wishlist.map((item, idx) => (
+                          <Card key={item?.id || idx} className="relative">
                             <CardContent className="pt-6">
-                              <img src={item.image} alt={item.name} className="w-full h-40 object-cover rounded mb-3" />
-                              <h3 className="font-semibold line-clamp-2 mb-2">{item.name}</h3>
-                              <p className="text-emerald-600 font-bold text-xl mb-3">£{item.price.toFixed(2)}</p>
+                              <img src={item?.product?.image || item?.image || '/placeholder.png'} alt={item?.product?.name || item?.name || 'Product'} className="w-full h-40 object-cover rounded mb-3" />
+                              <h3 className="font-semibold line-clamp-2 mb-2">{item?.product?.name || item?.name || 'Product'}</h3>
+                              <p className="text-emerald-600 font-bold text-xl mb-3">£{(item?.product?.price || item?.price || 0).toFixed(2)}</p>
                               <div className="flex gap-2">
-                                <Button size="sm" className="flex-1" onClick={() => navigate(`/product/${item.id}`)}>
+                                <Button size="sm" className="flex-1" onClick={() => navigate(`/product/${item?.product_id || item?.id}`)}>
                                   View
                                 </Button>
-                                <Button size="sm" variant="outline" onClick={() => handleRemoveFromWishlist(item.id)}>
+                                <Button size="sm" variant="outline" onClick={() => handleRemoveFromWishlist(item?.product_id || item?.id)}>
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
