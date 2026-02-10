@@ -80,7 +80,7 @@ class AfroBotService:
     
     def __init__(self):
         self.api_key = OPENAI_API_KEY or EMERGENT_LLM_KEY
-        self.model = "gpt-4o"
+        self.model = "gpt-4o-mini"  # Using mini model for better rate limits
         
         if self.api_key:
             # Initialize OpenAI client
