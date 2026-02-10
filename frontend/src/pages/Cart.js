@@ -331,32 +331,29 @@ const Cart = () => {
                     <span className="font-semibold">£{subtotal.toFixed(2)}</span>
                   </div>
 
-                  {/* Service Fee */}
-                  <div className="flex justify-between text-base">
-                    <span className="text-gray-600 flex items-center gap-1">
-                      Service Fee
-                      <span className="text-xs text-gray-500">(2%)</span>
-                    </span>
-                    <span className="font-semibold">£{serviceFee.toFixed(2)}</span>
-                  </div>
-
                   {/* Delivery */}
                   <div className="flex justify-between text-base">
                     <span className="text-gray-600 flex items-center gap-1">
                       <TruckIcon className="h-4 w-4" />
-                      Delivery
+                      Estimated Delivery
                     </span>
                     <span className={`font-semibold ${deliveryFee === 0 ? 'text-green-600' : ''}`}>
                       {deliveryFee === 0 ? 'FREE' : `£${deliveryFee.toFixed(2)}`}
                     </span>
                   </div>
+                  
+                  {deliveryFee > 0 && (
+                    <p className="text-xs text-gray-500">
+                      Final delivery cost calculated at checkout based on your location
+                    </p>
+                  )}
 
                   {/* Savings */}
                   {savings > 0 && (
                     <div className="flex justify-between text-base text-green-600">
                       <span className="flex items-center gap-1">
                         <Tag className="h-4 w-4" />
-                        You Save
+                        Free Delivery Savings
                       </span>
                       <span className="font-semibold">-£{savings.toFixed(2)}</span>
                     </div>
