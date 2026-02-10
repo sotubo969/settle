@@ -526,7 +526,7 @@ const OwnerDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <StatCard 
                 title="Total Revenue" 
-                value={`£${dashboardData.overview.totalRevenue?.toLocaleString()}`}
+                value={`£${(dashboardData.totalRevenue || dashboardData.overview?.totalRevenue || 0).toLocaleString()}`}
                 subtitle="All time earnings"
                 icon={DollarSign}
                 trend="up"
@@ -535,8 +535,8 @@ const OwnerDashboard = () => {
               />
               <StatCard 
                 title="Total Orders" 
-                value={dashboardData.overview.totalOrders?.toLocaleString()}
-                subtitle={`${dashboardData.overview.pendingOrders} pending`}
+                value={(dashboardData.totalOrders || dashboardData.overview?.totalOrders || 0).toLocaleString()}
+                subtitle={`${dashboardData.pendingOrders || dashboardData.overview?.pendingOrders || 0} pending`}
                 icon={ShoppingCart}
                 trend="up"
                 trendValue="+8.2%"
@@ -544,7 +544,7 @@ const OwnerDashboard = () => {
               />
               <StatCard 
                 title="Commission Earned" 
-                value={`£${dashboardData.overview.totalCommission?.toLocaleString()}`}
+                value={`£${(dashboardData.platformCommission || dashboardData.overview?.totalCommission || (dashboardData.totalRevenue || 0) * 0.1).toLocaleString()}`}
                 subtitle="10% platform fee"
                 icon={Percent}
                 trend="up"
@@ -553,8 +553,8 @@ const OwnerDashboard = () => {
               />
               <StatCard 
                 title="Active Vendors" 
-                value={dashboardData.overview.approvedVendors}
-                subtitle={`${dashboardData.overview.pendingVendors} pending approval`}
+                value={dashboardData.totalVendors || dashboardData.overview?.approvedVendors || 0}
+                subtitle={`${dashboardData.pendingVendors || dashboardData.overview?.pendingVendors || 0} pending approval`}
                 icon={Store}
                 color="orange"
               />
@@ -562,10 +562,10 @@ const OwnerDashboard = () => {
 
             {/* Secondary Stats */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <StatCard title="Total Products" value={dashboardData.overview.totalProducts} icon={Package} color="indigo" />
-              <StatCard title="Total Customers" value={dashboardData.overview.totalUsers} icon={Users} color="pink" />
-              <StatCard title="Page Views" value={dashboardData.overview.totalPageVisits?.toLocaleString() || '0'} icon={Eye} color="blue" />
-              <StatCard title="Product Clicks" value={dashboardData.overview.productClicks?.toLocaleString() || '0'} icon={MousePointer} color="emerald" />
+              <StatCard title="Total Products" value={dashboardData.totalProducts || dashboardData.overview?.totalProducts || 0} icon={Package} color="indigo" />
+              <StatCard title="Total Customers" value={dashboardData.totalUsers || dashboardData.overview?.totalUsers || 0} icon={Users} color="pink" />
+              <StatCard title="Page Views" value={(dashboardData.totalPageVisits || dashboardData.overview?.totalPageVisits || 0).toLocaleString()} icon={Eye} color="blue" />
+              <StatCard title="Product Clicks" value={(dashboardData.productClicks || dashboardData.overview?.productClicks || 0).toLocaleString()} icon={MousePointer} color="emerald" />
             </div>
 
             {/* Charts and Insights Row */}
