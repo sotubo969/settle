@@ -962,8 +962,8 @@ const OwnerDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <StatCard title="Total Orders" value={transactions.summary?.totalTransactions} icon={ShoppingCart} color="blue" />
               <StatCard title="Total Revenue" value={`£${transactions.summary?.totalRevenue?.toLocaleString()}`} icon={DollarSign} color="emerald" />
-              <StatCard title="Pending" value={dashboardData?.overview?.pendingOrders || 0} icon={Clock} color="orange" />
-              <StatCard title="Completed" value={dashboardData?.overview?.completedOrders || 0} icon={CheckCircle} color="emerald" />
+              <StatCard title="Pending" value={dashboardData?.pendingOrders || dashboardData?.overview?.pendingOrders || 0} icon={Clock} color="orange" />
+              <StatCard title="Completed" value={dashboardData?.completedOrders || dashboardData?.overview?.completedOrders || 0} icon={CheckCircle} color="emerald" />
             </div>
 
             {/* Orders Table */}
