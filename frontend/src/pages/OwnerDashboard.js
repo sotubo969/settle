@@ -956,14 +956,14 @@ const OwnerDashboard = () => {
         )}
 
         {/* ==================== ORDERS TAB ==================== */}
-        {activeTab === 'orders' && transactions && (
+        {activeTab === 'orders' && (
           <div className="space-y-6">
             {/* Order Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <StatCard title="Total Orders" value={transactions.summary?.totalTransactions} icon={ShoppingCart} color="blue" />
-              <StatCard title="Total Revenue" value={`£${transactions.summary?.totalRevenue?.toLocaleString()}`} icon={DollarSign} color="emerald" />
-              <StatCard title="Pending" value={dashboardData?.pendingOrders || dashboardData?.overview?.pendingOrders || 0} icon={Clock} color="orange" />
-              <StatCard title="Completed" value={dashboardData?.completedOrders || dashboardData?.overview?.completedOrders || 0} icon={CheckCircle} color="emerald" />
+              <StatCard title="Total Orders" value={Array.isArray(transactions) ? transactions.length : 0} icon={ShoppingCart} color="blue" />
+              <StatCard title="Total Revenue" value={`£${Array.isArray(transactions) ? transactions.reduce((sum, o) => sum + (o?.total || o?.amount || 0), 0).toLocaleString() : '0'}`} icon={DollarSign} color="emerald" />
+              <StatCard title="Pending" value={dashboardData?.pendingOrders || 0} icon={Clock} color="orange" />
+              <StatCard title="Completed" value={Array.isArray(transactions) ? transactions.filter(o => o?.status === 'completed' || o?.status === 'confirmed').length : 0} icon={CheckCircle} color="emerald" />
             </div>
 
             {/* Orders Table */}
@@ -996,7 +996,7 @@ const OwnerDashboard = () => {
                         </td>
                         <td className="px-6 py-4 text-center">
                           <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-700 rounded-full font-semibold">
-                            {order?.items?.length || order?.items || 1}
+                            {Array.isArray(order?.items) ? order.items.length : (order?.items || 1)}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right">
@@ -1009,12 +1009,12 @@ const OwnerDashboard = () => {
                           <StatusBadge status={order?.status || 'pending'} size="small" />
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-sm text-gray-500">{order?.date || order?.createdAt ? new Date(order?.date || order?.createdAt).toLocaleDateString() : 'N/A'}</span>
+                          <span className="text-sm text-gray-500">{order?.date || order?.created_at ? new Date(order?.date || order?.created_at).toLocaleDateString() : 'N/A'}</span>
                         </td>
                       </tr>
                     )) : (
                       <tr>
-                        <td colSpan="7" className="px-6 py-8 text-center text-gray-500">No transactions yet</td>
+                        <td colSpan="7" className="px-6 py-8 text-center text-gray-500">No orders yet</td>
                       </tr>
                     )}
                   </tbody>
