@@ -143,17 +143,32 @@ export const authAPI = {
   },
 };
 
-// ============ PRODUCT API ============
+// ============ PRODUCT API (with caching) ============
 export const productAPI = {
   getProducts: async (params = {}) => {
+    const cacheKey = `products_${JSON.stringify(params)}`;
+    const cached = getCached(cacheKey);
+    if (cached) return cached;
+    
     const response = await apiClient.get('/products', { params });
+    setCache(cacheKey, response.data);
     return response.data;
   },
 
   getProductById: async (id) => {
+    const cacheKey = `product_${id}`;
+    const cached = getCached(cacheKey);
+    if (cached) return cached;
+    
     const response = await apiClient.get(`/products/${id}`);
+    setCache(cacheKey, response.data);
     return response.data;
   },
+  
+  // Clear cache when needed
+  clearCache: () => {
+    cache.clear();
+  }
 };
 
 // ============ ORDER API ============
