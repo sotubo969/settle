@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { 
   onAuthStateChange, 
@@ -31,12 +31,57 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [isVerified, setIsVerified] = useState(false);
   const [firebaseEnabled] = useState(isFirebaseConfigured());
-  const [useFirebaseAuth, setUseFirebaseAuth] = useState(true); // Can be disabled on network errors
+  const [useFirebaseAuth, setUseFirebaseAuth] = useState(true);
+  
+  // Track if we're using legacy auth to prevent Firebase from interfering
+  const isLegacySession = useRef(false);
+  const authInitialized = useRef(false);
 
-  // Listen to Firebase auth state changes (if configured)
+  // Check for legacy auth FIRST before Firebase
+  const checkLegacyAuth = useCallback(() => {
+    const legacyToken = localStorage.getItem('afroToken');
+    const savedUser = localStorage.getItem('afroUser');
+    
+    if (legacyToken && savedUser) {
+      try {
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
+        setIsVerified(true);
+        isLegacySession.current = true;
+        console.log('Legacy auth session restored for:', userData.email);
+        return true;
+      } catch (error) {
+        console.error('Error parsing saved user:', error);
+        localStorage.removeItem('afroToken');
+        localStorage.removeItem('afroUser');
+      }
+    }
+    return false;
+  }, []);
+
+  // Initialize auth - check legacy first, then Firebase
   useEffect(() => {
+    if (authInitialized.current) return;
+    authInitialized.current = true;
+    
+    // PRIORITY 1: Check for existing legacy session
+    const hasLegacySession = checkLegacyAuth();
+    
+    if (hasLegacySession) {
+      // Legacy session found - don't let Firebase override it
+      setLoading(false);
+      return;
+    }
+    
+    // PRIORITY 2: No legacy session - set up Firebase listener
     if (firebaseEnabled && useFirebaseAuth) {
       const unsubscribe = onAuthStateChange(async (fbUser) => {
+        // Don't override legacy sessions
+        if (isLegacySession.current) {
+          console.log('Skipping Firebase auth change - legacy session active');
+          return;
+        }
+        
         setFirebaseUser(fbUser);
         
         if (fbUser) {
@@ -45,10 +90,7 @@ export const AuthProvider = ({ children }) => {
           
           if (verified) {
             try {
-              // Get fresh ID token
               const idToken = await getIdToken();
-              
-              // Sync with backend
               const response = await axios.post(`${API}/auth/firebase`, {
                 idToken,
                 displayName: fbUser.displayName,
@@ -63,7 +105,6 @@ export const AuthProvider = ({ children }) => {
               }
             } catch (error) {
               console.error('Backend sync error:', error);
-              // Still set basic user info from Firebase
               setUser({
                 id: fbUser.uid,
                 email: fbUser.email,
@@ -75,7 +116,6 @@ export const AuthProvider = ({ children }) => {
               });
             }
           } else {
-            // User exists but not verified
             setUser({
               id: fbUser.uid,
               email: fbUser.email,
@@ -87,8 +127,9 @@ export const AuthProvider = ({ children }) => {
             });
           }
         } else {
-          // No Firebase user, check for legacy token
-          checkLegacyAuth();
+          // No Firebase user and no legacy session
+          setUser(null);
+          setIsVerified(false);
         }
         
         setLoading(false);
@@ -96,34 +137,9 @@ export const AuthProvider = ({ children }) => {
 
       return () => unsubscribe();
     } else {
-      // Firebase not configured or disabled, use legacy auth only
-      checkLegacyAuth();
       setLoading(false);
     }
-  }, [firebaseEnabled, useFirebaseAuth]);
-
-  // Check for legacy authentication
-  const checkLegacyAuth = () => {
-    const legacyToken = localStorage.getItem('afroToken');
-    const savedUser = localStorage.getItem('afroUser');
-    
-    if (legacyToken && savedUser) {
-      try {
-        const userData = JSON.parse(savedUser);
-        setUser(userData);
-        setIsVerified(true); // Legacy users are considered verified
-      } catch (error) {
-        console.error('Error parsing saved user:', error);
-        localStorage.removeItem('afroToken');
-        localStorage.removeItem('afroUser');
-        setUser(null);
-        setIsVerified(false);
-      }
-    } else {
-      setUser(null);
-      setIsVerified(false);
-    }
-  };
+  }, [firebaseEnabled, useFirebaseAuth, checkLegacyAuth]);
 
   // Legacy login function (direct API call)
   const legacyLogin = async (email, password) => {
