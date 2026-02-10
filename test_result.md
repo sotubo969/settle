@@ -555,6 +555,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "❌ DASHBOARD LOADING ISSUE (Jul 10, 2025) - Owner dashboard page is accessible at /owner/dashboard, but it's stuck in 'Loading dashboard...' state. Dashboard never fully loads despite successful authentication. The API endpoint may be experiencing issues or frontend integration problems."
+      - working: false
+        agent: "testing"
+        comment: "❌ DASHBOARD UI RENDERING FAILURE (Jul 10, 2025) - Manual testing confirms the backend API endpoint (/api/owner/dashboard) returns correct data with 200 status code including revenue, order count, vendor stats. Root cause identified: Frontend React rendering error 'Objects are not valid as a React child' suggesting the component is failing to properly render the API response data."
 
   - task: "Owner Vendors Management API"
     implemented: true
