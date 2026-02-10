@@ -356,7 +356,7 @@ const Products = () => {
                               <span className="text-xs sm:text-sm text-gray-500 line-through">£{product.originalPrice.toFixed(2)}</span>
                             )}
                           </div>
-                          <p className="text-xs text-gray-600 truncate">by {product.vendor.name}</p>
+                          <p className="text-xs text-gray-600 truncate">by {product.vendor?.name || product.vendorName || 'AfroMarket Vendor'}</p>
                           {product.stock < 20 && product.inStock && (
                             <Badge variant="outline" className="text-red-600 border-red-300 text-xs px-1">
                               Only {product.stock} left
