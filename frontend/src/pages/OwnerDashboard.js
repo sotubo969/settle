@@ -47,6 +47,8 @@ const OwnerDashboard = () => {
   
   // Modal states
   const [selectedVendor, setSelectedVendor] = useState(null);
+  const [showVendorModal, setShowVendorModal] = useState(false);
+  const [vendorApprovalNotes, setVendorApprovalNotes] = useState('');
   const [selectedDelivery, setSelectedDelivery] = useState(null);
   const [showTrackingModal, setShowTrackingModal] = useState(false);
   const [trackingForm, setTrackingForm] = useState({ trackingNumber: '', carrier: '', estimatedDelivery: '' });
