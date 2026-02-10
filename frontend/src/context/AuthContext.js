@@ -147,9 +147,27 @@ export const AuthProvider = ({ children }) => {
             });
           }
         } else {
-          // No Firebase user and no legacy session
-          setUser(null);
-          setIsVerified(false);
+          // No Firebase user - only clear state if also no legacy session
+          if (!isLegacySession.current) {
+            // Triple-check localStorage one more time
+            const token = localStorage.getItem('afroToken');
+            const saved = localStorage.getItem('afroUser');
+            if (token && saved) {
+              try {
+                const userData = JSON.parse(saved);
+                setUser(userData);
+                setIsVerified(true);
+                isLegacySession.current = true;
+                console.log('Restored legacy session in final check');
+              } catch (e) {
+                setUser(null);
+                setIsVerified(false);
+              }
+            } else {
+              setUser(null);
+              setIsVerified(false);
+            }
+          }
         }
         
         setLoading(false);
