@@ -543,9 +543,9 @@ backend:
 
   - task: "Owner Dashboard Overview API"
     implemented: true
-    working: false
+    working: true
     file: "/app/backend/server.py"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -558,6 +558,9 @@ backend:
       - working: false
         agent: "testing"
         comment: "❌ DASHBOARD UI RENDERING FAILURE (Jul 10, 2025) - Manual testing confirms the backend API endpoint (/api/owner/dashboard) returns correct data with 200 status code including revenue, order count, vendor stats. Root cause identified: Frontend React rendering error 'Objects are not valid as a React child' suggesting the component is failing to properly render the API response data."
+      - working: true
+        agent: "testing"
+        comment: "✅ DASHBOARD ISSUE RESOLVED (Feb 10, 2026) - Owner dashboard now loads correctly at /owner/dashboard with comprehensive statistics. Successfully tested with sotubodammy@gmail.com/NewPassword123! credentials. Dashboard displays Total Revenue (£54.97), Total Orders (1), Total Products (32), and Active Vendors (5). All charts and analytics sections are rendering properly. Previous UI rendering errors appear to be fixed."
 
   - task: "Owner Vendors Management API"
     implemented: true
