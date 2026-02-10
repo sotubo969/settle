@@ -167,15 +167,28 @@ const OwnerDashboard = () => {
       const token = getToken();
       const response = await fetch(`${API_URL}/api/owner/vendors/${vendorId}/approve?status=${status}`, {
         method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ notes: vendorApprovalNotes })
       });
       if (response.ok) {
         toast.success(`Vendor ${status === 'approved' ? 'approved' : 'rejected'} successfully`);
+        setShowVendorModal(false);
+        setSelectedVendor(null);
+        setVendorApprovalNotes('');
         fetchDashboardData();
       }
     } catch (err) {
       toast.error('Failed to update vendor');
     }
+  };
+
+  const openVendorModal = (vendor) => {
+    setSelectedVendor(vendor);
+    setVendorApprovalNotes('');
+    setShowVendorModal(true);
   };
 
   const handleAdApproval = async (adId, action) => {
