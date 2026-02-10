@@ -814,6 +814,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "❌ CRITICAL AUTHENTICATION FAILURE (Dec 21, 2024) - Login completely broken with sotubodammy@gmail.com/NewPassword123! credentials. User redirected back to login page after submission, no auth token stored in localStorage, no user session maintained. This breaks the entire e-commerce flow as users cannot login to add items to cart or checkout."
+      - working: false
+        agent: "testing"
+        comment: "❌ ROOT CAUSE IDENTIFIED (Feb 10, 2025) - CORS configuration in backend preventing authentication. The CORS_ORIGINS in backend/.env is set to 'https://afro-market.co.uk,https://www.afro-market.co.uk' but frontend requests come from 'http://localhost:3000', causing API calls to be blocked. Firebase auth also fails with network request error. Login API calls cannot succeed due to CORS blocking."
 
   - task: "Vendor Registration"
     implemented: true
