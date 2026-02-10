@@ -867,7 +867,7 @@ frontend:
     implemented: true
     working: false
     file: "/app/frontend/src/pages/Profile.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "medium"
     needs_retesting: false
     status_history:
@@ -886,6 +886,9 @@ frontend:
       - working: false
         agent: "testing"
         comment: "❌ PROFILE UI RENDERING FAILURE (Jul 10, 2025) - Profile page shows only 'Loading...' message. Backend APIs for profile (orders, wishlist, user profile) all return 200 status codes with proper data. Same React error as dashboard: 'Objects are not valid as a React child' suggesting rendering issues in the component. API calls work but UI fails to display the returned data."
+      - working: false
+        agent: "testing"
+        comment: "❌ PROFILE PAGE REGRESSION (Feb 10, 2026) - Profile page accessible but displays only 'Loading...' message. UI never advances beyond the loading screen. Successfully logged in and navigation to profile page works, but the actual profile content never renders. Profile page appears to be in an infinite loading state."
 
   - task: "Stripe Payment Flow - Frontend Integration"
     implemented: true
