@@ -282,12 +282,14 @@ const AfroBot = () => {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder="Type your message..."
+                data-testid="chatbot-input"
                 className="flex-1 px-4 py-2 bg-gray-100 rounded-full border-0 focus:ring-2 focus:ring-green-500 focus:outline-none text-sm"
                 disabled={isLoading}
               />
               <button
                 type="submit"
                 disabled={!inputValue.trim() || isLoading}
+                data-testid="chatbot-send-button"
                 className="p-2 bg-green-600 text-white rounded-full hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
                 <Send className="w-5 h-5" />
