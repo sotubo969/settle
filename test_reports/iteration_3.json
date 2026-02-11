@@ -7,7 +7,7 @@
     "configuration_issues": [
       {
         "component": "External URL Routing",
-        "issue": "Backend APIs not accessible via external URL (https://code-fetcher-23.preview.emergentagent.com/api/*)",
+        "issue": "Backend APIs not accessible via external URL (https://afromarket-staging.preview.emergentagent.com/api/*)",
         "impact": "Frontend cannot connect to backend APIs in production environment",
         "fix_priority": "HIGH",
         "workaround": "APIs work correctly on localhost:8001"
@@ -23,7 +23,7 @@
         "issue": "Frontend configured to use external backend URL that returns 404",
         "affected_selectors": ["[data-testid='register-submit-btn']", "[data-testid='login-submit-btn']"],
         "fix_priority": "HIGH",
-        "details": "REACT_APP_BACKEND_URL points to https://code-fetcher-23.preview.emergentagent.com which is not accessible"
+        "details": "REACT_APP_BACKEND_URL points to https://afromarket-staging.preview.emergentagent.com which is not accessible"
       }
     ],
     "design_issues": []
@@ -58,7 +58,7 @@
     "/app/backend/server.py"
   ],
 
-  "action_item_for_main_agent": "Fix external URL routing configuration. The backend APIs are not accessible via the external URL (https://code-fetcher-23.preview.emergentagent.com/api/*) which prevents frontend-backend integration. Backend works correctly on localhost:8001. Need to configure nginx/ingress routing or update frontend environment to use correct backend URL.",
+  "action_item_for_main_agent": "Fix external URL routing configuration. The backend APIs are not accessible via the external URL (https://afromarket-staging.preview.emergentagent.com/api/*) which prevents frontend-backend integration. Backend works correctly on localhost:8001. Need to configure nginx/ingress routing or update frontend environment to use correct backend URL.",
 
   "should_call_test_agent_after_fix": "true",
   "should_main_agent_test_itself": "false"

@@ -7,11 +7,11 @@ When a vendor submits a registration form, you will receive an email notificatio
 ### Method 1: Admin Dashboard (Recommended)
 
 1. **Login as Admin**
-   - Go to https://github-code-pull.preview.emergentagent.com/login
+   - Go to https://afromarket-staging.preview.emergentagent.com/login
    - Use your admin credentials
    
 2. **Access Owner Dashboard**
-   - Navigate to https://github-code-pull.preview.emergentagent.com/owner
+   - Navigate to https://afromarket-staging.preview.emergentagent.com/owner
    - Or click "Account & Lists" → "Owner Dashboard"
 
 3. **Review Pending Vendors**
@@ -27,14 +27,14 @@ When a vendor submits a registration form, you will receive an email notificatio
 
 ```bash
 # Get list of all vendors
-curl -X GET https://github-code-pull.preview.emergentagent.com/api/vendors
+curl -X GET https://afromarket-staging.preview.emergentagent.com/api/vendors
 
 # Approve a vendor (requires admin auth)
-curl -X PUT https://github-code-pull.preview.emergentagent.com/api/vendors/{vendor_id}/approve \
+curl -X PUT https://afromarket-staging.preview.emergentagent.com/api/vendors/{vendor_id}/approve \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
 
 # Reject a vendor
-curl -X PUT https://github-code-pull.preview.emergentagent.com/api/vendors/{vendor_id}/reject \
+curl -X PUT https://afromarket-staging.preview.emergentagent.com/api/vendors/{vendor_id}/reject \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
 ```
 

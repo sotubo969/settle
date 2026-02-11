@@ -312,7 +312,7 @@ class EmailService:
                         <p>We're excited to inform you that your vendor application has been approved!</p>
                         <p>You can now start adding products and reaching customers across the UK.</p>
                         <p style="text-align: center;">
-                            <a href="https://afrobasket.preview.emergentagent.com/vendor/dashboard" class="button">Go to Dashboard</a>
+                            <a href="https://afromarket-staging.preview.emergentagent.com/vendor/dashboard" class="button">Go to Dashboard</a>
                         </p>
                         <p>If you have any questions, feel free to contact us.</p>
                         <p>Best regards,<br>The AfroMarket UK Team</p>
@@ -646,7 +646,7 @@ class EmailService:
                     </div>
                     
                     <p style="text-align: center; margin-top: 30px;">
-                        <a href="https://afrobasket.preview.emergentagent.com/login" class="button">Login to Your Account</a>
+                        <a href="https://afromarket-staging.preview.emergentagent.com/login" class="button">Login to Your Account</a>
                     </p>
                     
                     <p style="margin-top: 30px; color: #666;">
@@ -863,7 +863,7 @@ class EmailService:
                     </div>
                     
                     <p style="text-align: center; margin-top: 30px;">
-                        <a href="https://code-fetcher-23.preview.emergentagent.com/profile" class="button">Track Your Order</a>
+                        <a href="https://afromarket-staging.preview.emergentagent.com/profile" class="button">Track Your Order</a>
                     </p>
                     
                     <p style="margin-top: 30px; color: #666;">
@@ -1108,7 +1108,7 @@ class EmailService:
         
         button_html = ""
         if link:
-            full_link = f"https://github-code-pull.preview.emergentagent.com{link}"
+            full_link = f"https://afromarket-staging.preview.emergentagent.com{link}"
             button_html = f'''
             <div style="text-align: center; margin: 30px 0;">
                 <a href="{full_link}" style="display: inline-block; padding: 14px 32px; 
@@ -1204,7 +1204,7 @@ class EmailService:
                 <div class="footer">
                     <p>&copy; 2025 AfroMarket UK. All rights reserved.</p>
                     <p>
-                        <a href="https://github-code-pull.preview.emergentagent.com/vendor/notifications/settings" 
+                        <a href="https://afromarket-staging.preview.emergentagent.com/vendor/notifications/settings" 
                            style="color: #10b981; text-decoration: none;">
                             Manage notification preferences
                         </a>

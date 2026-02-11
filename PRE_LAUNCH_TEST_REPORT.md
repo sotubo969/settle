@@ -2,7 +2,7 @@
 # Pre-Launch Critical Testing Report
 
 **Test Date:** January 11, 2026  
-**URL Tested:** https://github-afrobasket.preview.emergentagent.com/products?category=fresh-produce  
+**URL Tested:** https://afromarket-staging.preview.emergentagent.com/products?category=fresh-produce  
 **Tester:** Automated + Manual Review  
 **Status:** UPDATED AFTER FIXES
 
@@ -31,7 +31,7 @@
 
 ### ✅ CRITICAL FIX 2: robots.txt Created
 **File:** `/app/frontend/public/robots.txt`
-**Verification:** https://github-afrobasket.preview.emergentagent.com/robots.txt - WORKING ✅
+**Verification:** https://afromarket-staging.preview.emergentagent.com/robots.txt - WORKING ✅
 
 ---
 
@@ -39,7 +39,7 @@
 
 ### ✅ HIGH FIX 1: sitemap.xml Created
 **File:** `/app/frontend/public/sitemap.xml`
-**Verification:** https://github-afrobasket.preview.emergentagent.com/sitemap.xml - WORKING ✅
+**Verification:** https://afromarket-staging.preview.emergentagent.com/sitemap.xml - WORKING ✅
 **Contains:** 18 URLs including all category pages
 
 ### ✅ HIGH FIX 2: Security Headers Added

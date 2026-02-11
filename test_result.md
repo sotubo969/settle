@@ -852,7 +852,7 @@ frontend:
         comment: "❌ ROOT CAUSE IDENTIFIED (Feb 10, 2025) - CORS configuration in backend preventing authentication. The CORS_ORIGINS in backend/.env is set to 'https://afro-market.co.uk,https://www.afro-market.co.uk' but frontend requests come from 'http://localhost:3000', causing API calls to be blocked. Firebase auth also fails with network request error. Login API calls cannot succeed due to CORS blocking."
       - working: true
         agent: "testing"
-        comment: "✅ FIXED (Jul 10, 2025) - Authentication is now working with sotubodammy@gmail.com/NewPassword123! credentials. Successfully logged in, redirected to homepage, and maintained session after page refresh. CORS_ORIGINS in backend/.env now includes 'https://vendor-hub-141.preview.emergentagent.com' which allows the authentication to work properly."
+        comment: "✅ FIXED (Jul 10, 2025) - Authentication is now working with sotubodammy@gmail.com/NewPassword123! credentials. Successfully logged in, redirected to homepage, and maintained session after page refresh. CORS_ORIGINS in backend/.env now includes 'https://afromarket-staging.preview.emergentagent.com' which allows the authentication to work properly."
       - working: true
         agent: "testing"
         comment: "✅ VERIFICATION TEST PASSED (Feb 10, 2026) - Authentication system confirmed fully functional. Successfully logged in with owner credentials (sotubodammy@gmail.com/NewPassword123!). Login redirects properly to homepage, session persists after page refresh."

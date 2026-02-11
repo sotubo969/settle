@@ -667,7 +667,7 @@ async def forgot_password(request: ForgotPasswordRequest, db: AsyncSession = Dep
     await db.flush()
     
     # Generate reset link
-    frontend_url = os.environ.get('FRONTEND_URL', 'https://code-fetcher-23.preview.emergentagent.com')
+    frontend_url = os.environ.get('FRONTEND_URL', 'https://afromarket-staging.preview.emergentagent.com')
     reset_link = f"{frontend_url}/reset-password?token={reset_token}"
     
     # Send email

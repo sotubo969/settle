@@ -59,7 +59,7 @@ If Firebase configuration is not available, the platform has a fallback:
 
 ## TESTING AFTER FIX
 
-1. Go to https://github-code-pull.preview.emergentagent.com/login
+1. Go to https://afromarket-staging.preview.emergentagent.com/login
 2. Click "Sign in with Google"
 3. Complete the Google OAuth flow
 4. You should be logged in successfully
@@ -93,7 +93,7 @@ FIREBASE_SERVICE_ACCOUNT={"type":"service_account",...}
 
 You can check if Firebase is configured by visiting:
 ```
-GET https://github-code-pull.preview.emergentagent.com/api/auth/firebase/status
+GET https://afromarket-staging.preview.emergentagent.com/api/auth/firebase/status
 ```
 
 Response:
