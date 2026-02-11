@@ -239,6 +239,11 @@ class FirestoreDB:
         docs = query.limit(limit).get()
         return docs_to_list(docs)
     
+    async def get_products_by_vendor(self, vendor_id: str, limit: int = 100) -> List[Dict]:
+        """Get all products for a specific vendor"""
+        docs = self.db.collection('products').where('vendor_id', '==', vendor_id).limit(limit).get()
+        return docs_to_list(docs)
+    
     async def search_products(self, query_text: str, limit: int = 50) -> List[Dict]:
         """Search products by name (basic search)"""
         # Firestore doesn't support full-text search natively
