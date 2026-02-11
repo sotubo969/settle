@@ -75,6 +75,7 @@ function AppRouter() {
       <Route path="/returns" element={<ReturnsRefunds />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/owner/dashboard" element={<OwnerDashboard />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }
