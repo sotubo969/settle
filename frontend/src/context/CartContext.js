@@ -29,15 +29,23 @@ export const CartProvider = ({ children }) => {
       setIsLoading(true);
       const response = await cartAPI.getCart();
       // Flatten product data onto cart items for easier access in components
-      const items = (response.items || []).map(item => ({
-        ...item,
-        // Spread product properties directly onto item for backward compatibility
-        ...(item.product || {}),
-        // Keep original item properties that shouldn't be overridden
-        id: item.product_id || item.id,
-        quantity: item.quantity,
-        cartItemId: item.id,
-      }));
+      const items = (response.items || []).map(item => {
+        const product = item.product || {};
+        return {
+          ...item,
+          // Spread product properties directly onto item for backward compatibility
+          ...product,
+          // Map snake_case to camelCase for consistency
+          inStock: product.in_stock ?? product.inStock ?? true,
+          stockQuantity: product.stock_quantity ?? product.stockQuantity ?? 100,
+          vendorId: product.vendor_id ?? product.vendorId,
+          originalPrice: product.original_price ?? product.originalPrice,
+          // Keep original item properties that shouldn't be overridden
+          id: item.product_id || item.id,
+          quantity: item.quantity,
+          cartItemId: item.id,
+        };
+      });
       setCart(items);
     } catch (error) {
       console.error('Error fetching cart:', error);
