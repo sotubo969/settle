@@ -27,6 +27,7 @@ import ReturnsRefunds from './pages/ReturnsRefunds';
 import OrderHistory from './pages/OrderHistory';
 import Wishlist from './pages/Wishlist';
 import Messages from './pages/Messages';
+import NotFound from './pages/NotFound';
 import AuthCallback from './components/AuthCallback';
 import InstallPrompt from './components/InstallPrompt';
 import AfroBot from './components/AfroBot';
