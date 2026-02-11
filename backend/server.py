@@ -1607,7 +1607,38 @@ async def get_delivery_zones():
 @api_router.get("/health")
 async def health():
     """Health check"""
-    return {'status': 'ok', 'database': 'firestore', 'message': 'AfroMarket UK API is running'}
+    return {'status': 'healthy', 'database': 'firestore', 'message': 'AfroMarket UK API is running'}
+
+
+@api_router.get("/profile")
+async def get_profile(current_user: dict = Depends(get_current_user)):
+    """Get user profile"""
+    user = await firestore_db.get_user_by_id(current_user['id'])
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Remove sensitive data
+    user.pop('password_hash', None)
+    user.pop('reset_token', None)
+    user.pop('reset_expires', None)
+    
+    return {'user': user}
+
+
+@api_router.get("/categories")
+async def get_categories():
+    """Get all product categories"""
+    categories = [
+        {'id': 'fresh-produce', 'name': 'Fresh Produce', 'slug': 'fresh-produce'},
+        {'id': 'grains-flours', 'name': 'Grains & Flours', 'slug': 'grains-flours'},
+        {'id': 'condiments-seasonings', 'name': 'Condiments & Seasonings', 'slug': 'condiments-seasonings'},
+        {'id': 'frozen-foods-meats', 'name': 'Frozen Foods & Meats', 'slug': 'frozen-foods-meats'},
+        {'id': 'snacks-confectionery', 'name': 'Snacks & Confectionery', 'slug': 'snacks-confectionery'},
+        {'id': 'drinks-beverages', 'name': 'Drinks & Beverages', 'slug': 'drinks-beverages'},
+        {'id': 'dried-preserved-foods', 'name': 'Dried & Preserved Foods', 'slug': 'dried-preserved-foods'},
+        {'id': 'beauty-household', 'name': 'Beauty & Household', 'slug': 'beauty-household'},
+    ]
+    return categories
 
 
 @api_router.get("/")
