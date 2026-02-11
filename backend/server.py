@@ -1266,10 +1266,14 @@ async def update_cart_item(
     current_user: dict = Depends(get_current_user)
 ):
     """Update cart item quantity"""
+    # Validate quantity
     if quantity <= 0:
         # Remove item if quantity is 0 or less
         await firestore_db.remove_from_cart(current_user['id'], product_id)
         return {'success': True, 'message': 'Item removed from cart'}
+    
+    if quantity > 100:
+        raise HTTPException(status_code=400, detail="Quantity cannot exceed 100")
     
     result = await firestore_db.update_cart_item_quantity(current_user['id'], product_id, quantity)
     return {'success': True, 'item': result}
