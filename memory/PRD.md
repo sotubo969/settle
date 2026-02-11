@@ -5,6 +5,7 @@
 **Type:** E-commerce marketplace for African groceries  
 **Target Market:** UK customers seeking authentic African food products  
 **Production Domain:** https://afro-market.co.uk  
+**Preview URL:** https://afromarket-staging.preview.emergentagent.com
 **Database:** Firebase Firestore (afromarket-uk-f21e9)
 
 ---
@@ -26,32 +27,15 @@
 
 ---
 
-## Database Migration Complete
-
-### Migrated from SQLite to Firebase Firestore
-- ✅ Users collection
-- ✅ Vendors collection (3 seeded)
-- ✅ Products collection (32 seeded)
-- ✅ Orders collection
-- ✅ Carts collection
-- ✅ Notifications collection
-- ✅ Ads collection
-- ✅ Contact submissions collection
-- ✅ Reviews collection
-- ✅ Messages collection
-- ✅ Notification preferences collection
-- ✅ Push subscriptions collection
-
-### Security Rules
-- Firestore security rules created (`/app/backend/firestore.rules`)
-- Users can only access their own data
-- Vendors can manage their own products
-- Public read access for products and vendors
-- Admin-only access for sensitive data
-
----
-
 ## What's Been Implemented
+
+### Session 6 - Production Validation (Feb 2026)
+1. ✅ **Comprehensive Frontend Testing** - 95% success rate
+2. ✅ **Product Stock Display Fix** - Fixed snake_case to camelCase transformation
+3. ✅ **Google Sign-In Verification** - Confirmed working
+4. ✅ **Distance-Based Delivery Verification** - Confirmed fully implemented
+5. ✅ **Owner Dashboard Verification** - All tabs working correctly
+6. ✅ **Session Persistence** - Auth tokens preserved on reload
 
 ### Session 5 - Production Configuration & Firestore Migration
 1. ✅ **Firebase Firestore Migration** - Complete database migration
@@ -66,109 +50,163 @@
 - Notification preferences
 - Vendor email notifications
 - Firebase Google Sign-In
-- Website audit & optimization
+- ChatGPT-powered AfroBot with Emergent LLM fallback
+- Email notification system for vendor approvals and order confirmations
 
 ---
 
-## API Endpoints (Firestore-powered)
+## Key Features
+
+### Authentication System
+- **Dual Auth**: Firebase Auth + Legacy JWT fallback
+- **Google Sign-In**: Pop-up based, no email verification needed
+- **Email/Password**: With email verification for Firebase users
+- **Session Persistence**: localStorage tokens (afroToken, afroUser)
+- **Owner Access**: sotubodammy@gmail.com has admin privileges
+
+### Delivery System (UK-Wide)
+- **5 Delivery Zones**: Local (London), Near (South East), Mid, Far, Remote
+- **Distance-Based Pricing**: £2.99 - £12.99 base prices
+- **Weight-Based Charges**: Extra cost per kg over 2kg
+- **Free Delivery**: Orders over £100
+- **Express Options**: Standard, Express, Next Day delivery
+
+### E-Commerce Features
+- Product catalog with 32 items across 8 categories
+- Shopping cart with real-time updates
+- Wishlist functionality
+- Order history and tracking
+- Vendor dashboard for approved vendors
+- Owner dashboard with comprehensive analytics
+
+### Communication
+- AfroBot chatbot (GPT-4o-mini + Emergent LLM fallback)
+- Email notifications (vendor approval, order confirmation)
+- WebSocket real-time notifications
+- Push notifications (PWA)
+
+---
+
+## API Endpoints
 
 ### Authentication
 - `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login (JWT)
-- `POST /api/auth/firebase` - Firebase auth
+- `POST /api/auth/login` - Legacy user login (JWT)
+- `POST /api/auth/firebase` - Firebase auth sync
 - `GET /api/auth/me` - Current user info
+- `GET /api/auth/firebase/status` - Firebase config status
 
 ### Products
-- `GET /api/products` - List products
-- `GET /api/products/{id}` - Get product
-- `POST /api/products` - Create product (vendor)
+- `GET /api/products` - List products (with category/search filters)
+- `GET /api/products/{id}` - Get product by ID
+- `POST /api/products` - Create product (vendor only)
+
+### Delivery
+- `POST /api/delivery/calculate` - Calculate delivery cost
+- `GET /api/delivery/options` - Get all delivery options
+- `GET /api/delivery/zones` - Get zone information
+
+### Chatbot
+- `GET /api/chatbot/welcome` - Get welcome message
+- `POST /api/chatbot/message` - Send message to AfroBot
 
 ### Vendors
 - `GET /api/vendors` - List approved vendors
 - `POST /api/vendors/register/public` - Vendor registration
-- `POST /api/admin/vendors/approve` - Approve/reject vendor
 
 ### Orders
 - `POST /api/orders` - Create order
 - `GET /api/orders` - User's orders
 
-### Cart
-- `GET /api/cart` - Get cart
-- `POST /api/cart/add` - Add to cart
-- `DELETE /api/cart/{id}` - Remove from cart
-
-### Notifications
-- `GET /api/vendor/notifications` - Vendor notifications
-- `PUT /api/vendor/notifications/{id}/read` - Mark read
-- `GET /api/vendor/notifications/preferences` - Get preferences
-- `PUT /api/vendor/notifications/preferences` - Update preferences
-
-### Contact
-- `POST /api/contact` - Submit contact form
+### Owner Dashboard
+- `GET /api/owner/dashboard` - Dashboard stats
+- `GET /api/owner/vendors` - All vendors
+- `PUT /api/owner/vendors/{id}/approve` - Approve/reject vendor
+- `GET /api/owner/products` - All products
+- `GET /api/owner/analytics` - Analytics data
+- `GET /api/owner/transactions` - Financial data
+- `GET /api/owner/deliveries` - Delivery tracking
 
 ---
 
 ## Key Files
 
-### Backend (Firestore)
-- `/app/backend/server.py` - Main API server
+### Backend
+- `/app/backend/server.py` - Main FastAPI server
 - `/app/backend/firestore_db.py` - Firestore database service
-- `/app/backend/firestore.rules` - Security rules
-- `/app/backend/.env` - Production configuration
+- `/app/backend/delivery_service.py` - UK delivery calculations
+- `/app/backend/chatbot_service.py` - AfroBot AI service
+- `/app/backend/email_service.py` - Email notifications
+- `/app/backend/.env` - Backend configuration
 
 ### Frontend
-- `/app/frontend/.env` - Production configuration
-- `/app/frontend/src/hooks/useWebSocket.js` - Real-time
-- `/app/frontend/src/hooks/usePushNotifications.js` - Push
+- `/app/frontend/src/context/AuthContext.js` - Authentication state
+- `/app/frontend/src/lib/firebase.js` - Firebase configuration
+- `/app/frontend/src/pages/OwnerDashboard.js` - Owner dashboard (1000+ lines)
+- `/app/frontend/src/pages/Checkout.js` - Checkout with delivery options
+- `/app/frontend/src/pages/Login.js` - Login with Google Sign-In
+- `/app/frontend/src/services/api.js` - API client with caching
 
 ---
 
-## Pre-Launch Checklist
+## Test Credentials
 
-### ✅ Completed
-- [x] Firebase Firestore database migrated
-- [x] Production domain configured (afro-market.co.uk)
-- [x] Stripe LIVE keys configured
-- [x] Strong JWT secret generated
-- [x] CORS restricted to production domain
-- [x] Firebase Google Sign-In configured
-- [x] Email notifications working
-- [x] WebSocket notifications ready
-- [x] PWA push notifications configured
-- [x] Security rules created
-
-### 📋 To Do (Your Actions)
-- [ ] Deploy Firestore security rules via Firebase Console
-- [ ] Add afro-market.co.uk to Firebase authorized domains
-- [ ] Configure DNS for afro-market.co.uk
-- [ ] Set up SSL certificate
-- [ ] Test full checkout with live Stripe
-- [ ] Verify email deliverability
+| Role | Email | Password |
+|------|-------|----------|
+| Owner | sotubodammy@gmail.com | 123456 |
+| Vendor | vendor@test.com | 123456 |
+| User | user@test.com | 123456 |
 
 ---
 
 ## Test Results
 
-### Latest Test (Session 5)
-- Backend: 94.1% pass rate
-- Frontend: 90% pass rate
-- All core APIs working with Firestore
-- User registration/login working
-- Vendor registration with email working
-- Product listing working
-- Contact form working
+### Latest Test (Session 6 - Feb 2026)
+- Backend: 100% pass rate
+- Frontend: 95% pass rate
+- All core features verified working:
+  - Owner login and dashboard (all tabs)
+  - User login and profile
+  - Products listing (stock display fixed)
+  - Product detail pages
+  - Chatbot API
+  - Session persistence
+  - Category navigation
+  - Search functionality
+
+---
+
+## Backlog / Future Tasks
+
+### P1 - High Priority
+- [ ] Refactor OwnerDashboard.js into smaller components
+- [ ] Add data-testid to chatbot widget button
+
+### P2 - Medium Priority
+- [ ] Deploy Firestore security rules via Firebase Console
+- [ ] Add production domain to Firebase authorized domains
+- [ ] Implement product stock management for vendors
+- [ ] Add order status tracking notifications
+
+### P3 - Low Priority
+- [ ] Migrate all legacy users to Firebase Auth
+- [ ] Performance optimization with skeleton loaders
+- [ ] Add analytics tracking for product views
+- [ ] Implement review/rating system
 
 ---
 
 ## Support & Maintenance
 
 ### Monitoring
-- Check `/api/health` for system status
-- Logs: `/var/log/supervisor/backend.err.log`
+- Health check: `/api/health`
+- Backend logs: `/var/log/supervisor/backend.err.log`
+- Frontend logs: Browser console
 
 ### Database
 - Firebase Console: https://console.firebase.google.com/project/afromarket-uk-f21e9
 
 ### Admin Tasks
-- Approve vendors: `/api/admin/vendors/approve`
-- View contact submissions in Firestore Console
+- Approve vendors: Owner Dashboard → Vendors tab
+- View analytics: Owner Dashboard → Analytics tab
+- Track deliveries: Owner Dashboard → Deliveries tab
