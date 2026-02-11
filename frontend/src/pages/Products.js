@@ -185,8 +185,28 @@ const Products = () => {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header />
-        <div className="max-w-7xl mx-auto px-4 py-16 text-center">
-          <p className="text-xl">Loading products...</p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-8">
+            <div className="h-10 bg-gray-200 rounded w-1/4 animate-pulse"></div>
+            <div className="h-5 bg-gray-200 rounded w-1/6 mt-2 animate-pulse"></div>
+          </div>
+          <div className="flex flex-col lg:flex-row gap-8">
+            {/* Sidebar skeleton */}
+            <aside className="hidden lg:block w-64 flex-shrink-0">
+              <div className="bg-white rounded-xl shadow-lg p-6 space-y-4 animate-pulse">
+                <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="h-5 bg-gray-200 rounded w-3/4"></div>
+                ))}
+                <div className="h-6 bg-gray-200 rounded w-1/2 mt-6"></div>
+                <div className="h-8 bg-gray-200 rounded w-full"></div>
+              </div>
+            </aside>
+            {/* Products grid skeleton */}
+            <div className="flex-1">
+              <ProductGridSkeleton count={8} />
+            </div>
+          </div>
         </div>
       </div>
     );
