@@ -1249,6 +1249,12 @@ async def add_to_cart(
     current_user: dict = Depends(get_current_user)
 ):
     """Add item to cart"""
+    # Validate quantity
+    if quantity < 1:
+        raise HTTPException(status_code=400, detail="Quantity must be at least 1")
+    if quantity > 100:
+        raise HTTPException(status_code=400, detail="Quantity cannot exceed 100")
+    
     result = await firestore_db.add_to_cart(current_user['id'], product_id, quantity)
     return {'success': True, 'item': result}
 
