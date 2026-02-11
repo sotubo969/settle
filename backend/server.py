@@ -767,12 +767,49 @@ async def add_to_wishlist(
     return {'success': True, 'message': 'Added to wishlist'}
 
 
+@api_router.post("/wishlist/toggle")
+async def toggle_wishlist(
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """Toggle product in wishlist (add if not exists, remove if exists)"""
+    try:
+        body = await request.json()
+        product_id = body.get('product_id')
+        if not product_id:
+            raise HTTPException(status_code=400, detail="product_id is required")
+        
+        # Check if product is already in wishlist
+        wishlist = await firestore_db.get_user_wishlist(current_user['id'])
+        is_in_wishlist = any(item.get('product_id') == product_id for item in wishlist)
+        
+        if is_in_wishlist:
+            await firestore_db.remove_from_wishlist(current_user['id'], product_id)
+            return {'success': True, 'in_wishlist': False, 'message': 'Removed from wishlist'}
+        else:
+            await firestore_db.add_to_wishlist(current_user['id'], product_id)
+            return {'success': True, 'in_wishlist': True, 'message': 'Added to wishlist'}
+    except Exception as e:
+        logger.error(f"Error toggling wishlist: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @api_router.delete("/wishlist/{product_id}")
 async def remove_from_wishlist(
     product_id: str,
     current_user: dict = Depends(get_current_user)
 ):
     """Remove product from wishlist"""
+    await firestore_db.remove_from_wishlist(current_user['id'], product_id)
+    return {'success': True, 'message': 'Removed from wishlist'}
+
+
+@api_router.delete("/wishlist/remove/{product_id}")
+async def remove_from_wishlist_alt(
+    product_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Remove product from wishlist (alternative endpoint)"""
     await firestore_db.remove_from_wishlist(current_user['id'], product_id)
     return {'success': True, 'message': 'Removed from wishlist'}
 
