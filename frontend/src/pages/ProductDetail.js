@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { productAPI } from '../services/api';
+import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -27,6 +28,7 @@ const ProductDetail = () => {
   const { isAuthenticated } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(null);
+  const { addToRecentlyViewed } = useRecentlyViewed();
 
   const fetchProduct = useCallback(async () => {
     if (!id) {
@@ -51,6 +53,9 @@ const ProductDetail = () => {
       setProduct(data);
       setSelectedImage(data.image);
       
+      // Track this product as recently viewed
+      addToRecentlyViewed(data);
+      
       // Fetch related products
       if (data.category || data.categoryId) {
         try {
@@ -68,7 +73,7 @@ const ProductDetail = () => {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, addToRecentlyViewed]);
 
   useEffect(() => {
     fetchProduct();
