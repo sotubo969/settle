@@ -148,7 +148,11 @@
 - `/app/frontend/src/pages/OwnerDashboard.js` - Owner dashboard (1000+ lines)
 - `/app/frontend/src/pages/Checkout.js` - Checkout with delivery options
 - `/app/frontend/src/pages/Login.js` - Login with Google Sign-In
-- `/app/frontend/src/services/api.js` - API client with caching
+- `/app/frontend/src/services/api.js` - API client with caching and data transformation
+- `/app/frontend/src/components/dashboard/` - Reusable dashboard components (StatCard, StatusBadge, ProgressBar)
+- `/app/frontend/src/components/RecentlyViewed.js` - Recently viewed products component
+- `/app/frontend/src/components/AfroBot.js` - AI chatbot with data-testid attributes
+- `/app/frontend/src/hooks/useRecentlyViewed.js` - Hook for tracking browsing history
 
 ---
 
