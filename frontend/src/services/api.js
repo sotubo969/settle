@@ -143,6 +143,22 @@ export const authAPI = {
   },
 };
 
+// Helper to transform product data from snake_case to camelCase for frontend
+const transformProduct = (product) => {
+  if (!product) return product;
+  return {
+    ...product,
+    inStock: product.in_stock ?? product.inStock ?? true,
+    stock: product.stock_quantity ?? product.stock ?? 100,
+    stockQuantity: product.stock_quantity ?? product.stockQuantity ?? 100,
+    vendorId: product.vendor_id ?? product.vendorId,
+    createdAt: product.created_at ?? product.createdAt,
+    updatedAt: product.updated_at ?? product.updatedAt,
+    reviewCount: product.review_count ?? product.reviewCount ?? 0,
+    originalPrice: product.original_price ?? product.originalPrice,
+  };
+};
+
 // ============ PRODUCT API (with caching) ============
 export const productAPI = {
   getProducts: async (params = {}) => {
@@ -151,8 +167,12 @@ export const productAPI = {
     if (cached) return cached;
     
     const response = await apiClient.get('/products', { params });
-    setCache(cacheKey, response.data);
-    return response.data;
+    // Transform array of products
+    const transformedData = Array.isArray(response.data) 
+      ? response.data.map(transformProduct)
+      : response.data;
+    setCache(cacheKey, transformedData);
+    return transformedData;
   },
 
   getProductById: async (id) => {
@@ -161,8 +181,10 @@ export const productAPI = {
     if (cached) return cached;
     
     const response = await apiClient.get(`/products/${id}`);
-    setCache(cacheKey, response.data);
-    return response.data;
+    // Transform single product
+    const transformedData = transformProduct(response.data);
+    setCache(cacheKey, transformedData);
+    return transformedData;
   },
   
   // Clear cache when needed
