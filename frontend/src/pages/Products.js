@@ -4,6 +4,7 @@ import { Star, Filter, X, ShoppingCart, Plus } from 'lucide-react';
 import axios from 'axios';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { ProductGridSkeleton } from '../components/Skeletons';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
