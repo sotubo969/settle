@@ -88,10 +88,8 @@ export const cartAPI = {
   },
 
   addToCart: async (productId, quantity = 1) => {
-    const response = await apiClient.post('/cart/add', {
-      productId,
-      quantity,
-    });
+    // Backend expects query parameters, not body
+    const response = await apiClient.post(`/cart/add?product_id=${productId}&quantity=${quantity}`);
     return response.data;
   },
 
