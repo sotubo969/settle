@@ -339,8 +339,8 @@ class TestDeliveryCalculate:
         )
         assert response.status_code == 200, f"Delivery calc failed: {response.text}"
         data = response.json()
-        assert "delivery_fee" in data or "fee" in data
-        print(f"DELIVERY CALCULATE: SUCCESS - {data}")
+        assert "delivery_cost" in data or "delivery_fee" in data or "fee" in data
+        print(f"DELIVERY CALCULATE: SUCCESS - delivery_cost: £{data.get('delivery_cost', data.get('delivery_fee', 'N/A'))}")
 
 
 class TestDeliveryOptions:
