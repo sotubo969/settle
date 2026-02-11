@@ -17,7 +17,7 @@ from google.cloud.firestore_v1 import FieldFilter, Query
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env', override=True)
+load_dotenv(ROOT_DIR / '.env', override=False)
 
 logger = logging.getLogger(__name__)
 

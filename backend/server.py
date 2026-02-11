@@ -20,7 +20,7 @@ from pydantic import BaseModel, EmailStr
 
 # Load environment variables
 ROOT_DIR = Path(__file__).parent
-load_dotenv(ROOT_DIR / '.env', override=True)
+load_dotenv(ROOT_DIR / '.env', override=False)
 
 # Import Firestore database
 from firestore_db import firestore_db, seed_firestore_data, get_firebase_app
