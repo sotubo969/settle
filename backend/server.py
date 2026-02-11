@@ -1253,6 +1253,32 @@ async def add_to_cart(
     return {'success': True, 'item': result}
 
 
+@api_router.put("/cart/update/{product_id}")
+async def update_cart_item(
+    product_id: str,
+    quantity: int = Query(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Update cart item quantity"""
+    if quantity <= 0:
+        # Remove item if quantity is 0 or less
+        await firestore_db.remove_from_cart(current_user['id'], product_id)
+        return {'success': True, 'message': 'Item removed from cart'}
+    
+    result = await firestore_db.update_cart_item_quantity(current_user['id'], product_id, quantity)
+    return {'success': True, 'item': result}
+
+
+@api_router.delete("/cart/remove/{product_id}")
+async def remove_cart_item(
+    product_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Remove item from cart by product ID"""
+    await firestore_db.remove_from_cart(current_user['id'], product_id)
+    return {'success': True, 'message': 'Item removed from cart'}
+
+
 @api_router.delete("/cart/{item_id}")
 async def remove_from_cart(
     item_id: str,
@@ -1261,6 +1287,13 @@ async def remove_from_cart(
     """Remove item from cart"""
     await firestore_db.update_cart_item(item_id, 0)
     return {'success': True}
+
+
+@api_router.delete("/cart/clear")
+async def clear_cart(current_user: dict = Depends(get_current_user)):
+    """Clear all items from cart"""
+    await firestore_db.clear_cart(current_user['id'])
+    return {'success': True, 'message': 'Cart cleared'}
 
 
 # ============ NOTIFICATION ROUTES ============
