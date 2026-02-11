@@ -344,10 +344,11 @@ async def forgot_password(request: Request):
             
             # Send reset email
             try:
+                reset_link = f"{os.environ.get('SITE_URL', 'https://afro-market.co.uk')}/reset-password?token={reset_token}"
                 email_service.send_password_reset_email(
                     to_email=email,
                     user_name=user.get('name', 'Customer'),
-                    reset_token=reset_token
+                    reset_link=reset_link
                 )
                 logger.info(f"Password reset email sent to {email}")
             except Exception as e:
