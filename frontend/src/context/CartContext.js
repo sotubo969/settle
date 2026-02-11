@@ -28,7 +28,17 @@ export const CartProvider = ({ children }) => {
     try {
       setIsLoading(true);
       const response = await cartAPI.getCart();
-      setCart(response.items || []);
+      // Flatten product data onto cart items for easier access in components
+      const items = (response.items || []).map(item => ({
+        ...item,
+        // Spread product properties directly onto item for backward compatibility
+        ...(item.product || {}),
+        // Keep original item properties that shouldn't be overridden
+        id: item.product_id || item.id,
+        quantity: item.quantity,
+        cartItemId: item.id,
+      }));
+      setCart(items);
     } catch (error) {
       console.error('Error fetching cart:', error);
       setCart([]);
