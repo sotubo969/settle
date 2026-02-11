@@ -84,12 +84,29 @@ const Products = () => {
     }
   };
 
+  // Helper to transform product data from snake_case to camelCase
+  const transformProduct = (product) => {
+    if (!product) return product;
+    return {
+      ...product,
+      inStock: product.in_stock ?? product.inStock ?? true,
+      stock: product.stock_quantity ?? product.stock ?? 100,
+      stockQuantity: product.stock_quantity ?? product.stockQuantity ?? 100,
+      vendorId: product.vendor_id ?? product.vendorId,
+      reviewCount: product.review_count ?? product.reviewCount ?? 0,
+    };
+  };
+
   // Fetch products from backend
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const response = await axios.get(`${API}/products`);
-        setAllProducts(response.data);
+        // Transform products from snake_case to camelCase
+        const products = Array.isArray(response.data) 
+          ? response.data.map(transformProduct) 
+          : [];
+        setAllProducts(products);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching products:', error);
