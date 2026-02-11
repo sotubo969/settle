@@ -15,7 +15,7 @@ import jwt
 import bcrypt
 from pathlib import Path
 from typing import List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pydantic import BaseModel, EmailStr
 
 # Load environment variables
