@@ -142,6 +142,13 @@ class FirestoreDB:
         self.db.collection('users').document(user_id).update(updates)
         return True
     
+    async def get_user_by_reset_token(self, reset_token: str) -> Optional[Dict]:
+        """Get user by password reset token"""
+        docs = self.db.collection('users').where('reset_token', '==', reset_token).limit(1).get()
+        for doc in docs:
+            return doc_to_dict(doc)
+        return None
+    
     async def get_all_users(self, limit: int = 100) -> List[Dict]:
         """Get all users"""
         docs = self.db.collection('users').limit(limit).get()
