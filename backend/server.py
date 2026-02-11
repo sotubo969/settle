@@ -316,6 +316,102 @@ async def firebase_status():
     }
 
 
+@api_router.post("/auth/forgot-password")
+async def forgot_password(request: Request):
+    """Send password reset email"""
+    try:
+        body = await request.json()
+        email = body.get('email')
+        
+        if not email:
+            raise HTTPException(status_code=400, detail="Email is required")
+        
+        # Check if user exists
+        user = await firestore_db.get_user_by_email(email)
+        
+        # Always return success to prevent email enumeration attacks
+        if user:
+            # Generate reset token (valid for 1 hour)
+            import secrets
+            reset_token = secrets.token_urlsafe(32)
+            reset_expires = (datetime.utcnow() + timedelta(hours=1)).isoformat()
+            
+            # Store reset token in user document
+            await firestore_db.update_user(user['id'], {
+                'reset_token': reset_token,
+                'reset_expires': reset_expires
+            })
+            
+            # Send reset email
+            try:
+                email_service.send_password_reset_email(
+                    to_email=email,
+                    user_name=user.get('name', 'Customer'),
+                    reset_token=reset_token
+                )
+                logger.info(f"Password reset email sent to {email}")
+            except Exception as e:
+                logger.error(f"Failed to send reset email: {e}")
+        
+        return {
+            'success': True,
+            'message': 'If an account with that email exists, a password reset link has been sent.'
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Forgot password error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process request")
+
+
+@api_router.post("/auth/reset-password")
+async def reset_password(request: Request):
+    """Reset password using token"""
+    try:
+        body = await request.json()
+        token = body.get('token')
+        new_password = body.get('password')
+        
+        if not token or not new_password:
+            raise HTTPException(status_code=400, detail="Token and password are required")
+        
+        if len(new_password) < 6:
+            raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+        
+        # Find user with this reset token
+        user = await firestore_db.get_user_by_reset_token(token)
+        
+        if not user:
+            raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+        
+        # Check if token is expired
+        reset_expires = user.get('reset_expires')
+        if reset_expires:
+            expires_dt = datetime.fromisoformat(reset_expires.replace('Z', '+00:00'))
+            if datetime.now(timezone.utc) > expires_dt:
+                raise HTTPException(status_code=400, detail="Reset token has expired")
+        
+        # Hash new password and update user
+        import hashlib
+        password_hash = hashlib.sha256(new_password.encode()).hexdigest()
+        
+        await firestore_db.update_user(user['id'], {
+            'password_hash': password_hash,
+            'reset_token': None,
+            'reset_expires': None
+        })
+        
+        return {
+            'success': True,
+            'message': 'Password has been reset successfully'
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Reset password error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to reset password")
+
+
 @api_router.get("/auth/me")
 async def get_current_user_info(current_user: dict = Depends(get_current_user)):
     """Get current user info"""
