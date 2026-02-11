@@ -2182,6 +2182,106 @@ class EmailService:
             duplicate_key=f"vendor_approval_{vendor_email}_{approved}"
         )
 
+    def send_order_status_update(self, to_email: str, customer_name: str, order_data: dict, new_status: str, tracking_info: dict = None):
+        """Send email notification when order status changes"""
+        order_id = order_data.get('order_id', order_data.get('orderId', 'N/A'))
+        
+        status_config = {
+            'processing': {'emoji': '⚙️', 'title': 'Order Processing', 'color': '#3b82f6', 'message': 'We are preparing your order for shipment.'},
+            'shipped': {'emoji': '📦', 'title': 'Order Shipped', 'color': '#8b5cf6', 'message': 'Great news! Your order is on its way.'},
+            'in_transit': {'emoji': '🚚', 'title': 'In Transit', 'color': '#6366f1', 'message': 'Your package is currently in transit.'},
+            'out_for_delivery': {'emoji': '🏃', 'title': 'Out for Delivery', 'color': '#f59e0b', 'message': 'Your package is out for delivery today!'},
+            'delivered': {'emoji': '✅', 'title': 'Delivered', 'color': '#10b981', 'message': 'Your order has been delivered successfully.'},
+            'cancelled': {'emoji': '❌', 'title': 'Order Cancelled', 'color': '#ef4444', 'message': 'Your order has been cancelled.'},
+        }
+        
+        config = status_config.get(new_status, {'emoji': '📋', 'title': 'Status Update', 'color': '#6b7280', 'message': f'Your order status has been updated to: {new_status}'})
+        
+        tracking_html = ""
+        if tracking_info and tracking_info.get('tracking_number'):
+            tracking_html = f"""
+            <div style="background: #f0f9ff; border-left: 4px solid #0284c7; padding: 15px 20px; margin: 20px 0; border-radius: 0 8px 8px 0;">
+                <p style="font-weight: 600; color: #0369a1; margin: 0 0 10px;">📍 Tracking Information</p>
+                <p style="margin: 5px 0; color: #0c4a6e;">
+                    <strong>Tracking Number:</strong> {tracking_info.get('tracking_number', 'N/A')}
+                </p>
+                <p style="margin: 5px 0; color: #0c4a6e;">
+                    <strong>Carrier:</strong> {tracking_info.get('carrier', 'N/A')}
+                </p>
+                {f"<p style='margin: 5px 0; color: #0c4a6e;'><strong>Estimated Delivery:</strong> {tracking_info.get('estimated_delivery')}</p>" if tracking_info.get('estimated_delivery') else ""}
+            </div>
+            """
+        
+        subject = f"{config['emoji']} Order #{order_id} - {config['title']}"
+        
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f4f4; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: linear-gradient(135deg, {config['color']} 0%, {config['color']}dd 100%); color: white; padding: 40px 30px; text-align: center; border-radius: 16px 16px 0 0; }}
+                .content {{ background: white; padding: 40px 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }}
+                .status-badge {{ display: inline-block; padding: 10px 25px; background: {config['color']}22; color: {config['color']}; border-radius: 25px; font-weight: 600; font-size: 14px; margin: 20px 0; }}
+                .footer {{ text-align: center; padding: 30px 20px; color: #9ca3af; font-size: 12px; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1 style="font-size: 48px; margin: 0;">{config['emoji']}</h1>
+                    <h2 style="margin: 10px 0 0;">{config['title']}</h2>
+                    <p style="margin: 5px 0 0; opacity: 0.9;">Order #{order_id}</p>
+                </div>
+                <div class="content">
+                    <p style="font-size: 18px; color: #1f2937;">Hello {customer_name},</p>
+                    <p style="color: #4b5563;">{config['message']}</p>
+                    
+                    <div style="text-align: center;">
+                        <span class="status-badge">{new_status.upper().replace('_', ' ')}</span>
+                    </div>
+                    
+                    {tracking_html}
+                    
+                    <div style="text-align: center; margin-top: 30px;">
+                        <a href="{self.site_url}/track-order/{order_id}" style="display: inline-block; padding: 14px 35px; background: {config['color']}; color: white; text-decoration: none; border-radius: 8px; font-weight: 600;">Track Your Order</a>
+                    </div>
+                </div>
+                <div class="footer">
+                    <p>Thank you for shopping with AfroMarket UK!</p>
+                    <p>&copy; 2025 AfroMarket UK. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        text_content = f"""
+        {config['title']} - Order #{order_id}
+        
+        Hello {customer_name},
+        
+        {config['message']}
+        
+        Status: {new_status.upper().replace('_', ' ')}
+        
+        {f"Tracking Number: {tracking_info.get('tracking_number', 'N/A')}" if tracking_info else ""}
+        {f"Carrier: {tracking_info.get('carrier', 'N/A')}" if tracking_info else ""}
+        
+        Track your order at: {self.site_url}/track-order/{order_id}
+        
+        Thank you for shopping with AfroMarket UK!
+        """
+        
+        return self.send_email(
+            to_email=to_email,
+            subject=subject,
+            html_content=html_content,
+            text_content=text_content,
+            duplicate_key=f"order_status_{order_id}_{new_status}"
+        )
+
 
 # Singleton instance
 email_service = EmailService()
