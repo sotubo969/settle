@@ -204,19 +204,18 @@ All core features verified working:
 
 ## Backlog / Future Tasks
 
-### P1 - High Priority
-- [ ] Create an order tracking page for customers (/track-order/:orderId)
-- [ ] Implement push notifications for order status updates (browser notifications)
+### Completed ✅
+All major features and functions have been implemented and verified.
 
-### P2 - Medium Priority
-- [ ] Implement product stock management UI for vendors (frontend page exists, needs vendor account to test)
-- [ ] Further refactor OwnerDashboard.js into tab-specific sub-components
+### P2 - Medium Priority (Optional Enhancements)
 - [ ] Add SEO-friendly product URLs (slugs instead of Firestore IDs)
+- [ ] Implement product reviews/ratings system
+- [ ] Add order tracking page for customers
 
 ### P3 - Low Priority
 - [ ] Migrate all legacy users to Firebase Auth
 - [ ] Add analytics tracking for product views
-- [ ] Implement review/rating system
+- [ ] Implement flash sales feature
 
 ---
 
