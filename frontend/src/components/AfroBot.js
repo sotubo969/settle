@@ -174,7 +174,10 @@ const AfroBot = () => {
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-50 w-96 max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 animate-slideUp">
+        <div 
+          data-testid="chatbot-window"
+          className="fixed bottom-24 right-6 z-50 w-96 max-w-[calc(100vw-3rem)] bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-200 animate-slideUp"
+        >
           {/* Header */}
           <div className="bg-gradient-to-r from-green-600 to-green-500 p-4 text-white">
             <div className="flex items-center gap-3">
