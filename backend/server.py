@@ -748,6 +748,121 @@ async def update_owner_delivery(
     return {'success': True, 'message': 'Delivery updated'}
 
 
+# ============ VENDOR STOCK MANAGEMENT ============
+
+@api_router.get("/vendor/products")
+async def get_vendor_products(current_user: dict = Depends(get_current_user)):
+    """Get all products for the logged-in vendor"""
+    # Get vendor by user email
+    vendor = await firestore_db.get_vendor_by_email(current_user.get('email'))
+    if not vendor:
+        raise HTTPException(status_code=403, detail="Vendor account not found")
+    
+    if vendor.get('status') != 'approved':
+        raise HTTPException(status_code=403, detail="Vendor account not approved yet")
+    
+    products = await firestore_db.get_products_by_vendor(vendor['id'])
+    
+    # Add low stock warnings
+    for product in products:
+        stock = product.get('stock_quantity', 0)
+        product['low_stock'] = stock < 20
+        product['out_of_stock'] = stock <= 0
+    
+    return {
+        'products': products,
+        'vendor_id': vendor['id'],
+        'business_name': vendor.get('business_name')
+    }
+
+
+@api_router.put("/vendor/products/{product_id}/stock")
+async def update_product_stock(
+    product_id: str,
+    request: Request,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update stock quantity for a product"""
+    # Get vendor by user email
+    vendor = await firestore_db.get_vendor_by_email(current_user.get('email'))
+    if not vendor:
+        raise HTTPException(status_code=403, detail="Vendor account not found")
+    
+    # Verify product belongs to vendor
+    product = await firestore_db.get_product_by_id(product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    
+    if product.get('vendor_id') != vendor['id']:
+        raise HTTPException(status_code=403, detail="Not authorized to update this product")
+    
+    body = await request.json()
+    new_stock = body.get('stock_quantity')
+    
+    if new_stock is None or new_stock < 0:
+        raise HTTPException(status_code=400, detail="Invalid stock quantity")
+    
+    # Update product stock
+    await firestore_db.update_product(product_id, {
+        'stock_quantity': new_stock,
+        'in_stock': new_stock > 0,
+        'updated_at': datetime.utcnow().isoformat()
+    })
+    
+    return {
+        'success': True,
+        'product_id': product_id,
+        'new_stock': new_stock,
+        'in_stock': new_stock > 0,
+        'low_stock': new_stock < 20
+    }
+
+
+@api_router.get("/vendor/dashboard")
+async def get_vendor_dashboard(current_user: dict = Depends(get_current_user)):
+    """Get vendor dashboard data"""
+    vendor = await firestore_db.get_vendor_by_email(current_user.get('email'))
+    if not vendor:
+        raise HTTPException(status_code=403, detail="Vendor account not found")
+    
+    # Get vendor's products
+    products = await firestore_db.get_products_by_vendor(vendor['id'])
+    
+    # Get vendor's orders
+    orders = await firestore_db.get_vendor_orders(vendor['id'])
+    
+    # Calculate stats
+    total_products = len(products)
+    low_stock_count = sum(1 for p in products if p.get('stock_quantity', 0) < 20)
+    out_of_stock_count = sum(1 for p in products if p.get('stock_quantity', 0) <= 0)
+    total_orders = len(orders)
+    total_revenue = sum(order.get('total', 0) for order in orders if order.get('status') == 'completed')
+    pending_orders = sum(1 for o in orders if o.get('status') in ['pending', 'processing'])
+    
+    return {
+        'vendor': {
+            'id': vendor['id'],
+            'business_name': vendor.get('business_name'),
+            'status': vendor.get('status'),
+            'verified': vendor.get('verified', False)
+        },
+        'stats': {
+            'total_products': total_products,
+            'low_stock_count': low_stock_count,
+            'out_of_stock_count': out_of_stock_count,
+            'total_orders': total_orders,
+            'pending_orders': pending_orders,
+            'total_revenue': round(total_revenue, 2)
+        },
+        'products': products[:10],  # Latest 10 products
+        'orders': orders[:10],  # Latest 10 orders
+        'alerts': {
+            'low_stock': [p for p in products if 0 < p.get('stock_quantity', 0) < 20][:5],
+            'out_of_stock': [p for p in products if p.get('stock_quantity', 0) <= 0][:5]
+        }
+    }
+
+
 # ============ WISHLIST ENDPOINTS ============
 
 @api_router.get("/wishlist")
