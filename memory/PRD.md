@@ -182,14 +182,13 @@
 ## Backlog / Future Tasks
 
 ### P1 - High Priority
-- [ ] Refactor OwnerDashboard.js into smaller components
-- [ ] Add data-testid to chatbot widget button
-
-### P2 - Medium Priority
 - [ ] Deploy Firestore security rules via Firebase Console
 - [ ] Add production domain to Firebase authorized domains
+
+### P2 - Medium Priority
 - [ ] Implement product stock management for vendors
 - [ ] Add order status tracking notifications
+- [ ] Further refactor OwnerDashboard.js into tab-specific sub-components
 
 ### P3 - Low Priority
 - [ ] Migrate all legacy users to Firebase Auth
