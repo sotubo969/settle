@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Star, TrendingUp, ShoppingBag, Truck } from 
 import axios from 'axios';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import RecentlyViewed from '../components/RecentlyViewed';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
