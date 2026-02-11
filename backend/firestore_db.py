@@ -403,6 +403,43 @@ class FirestoreDB:
             })
         return True
     
+    async def update_cart_item_quantity(self, user_id: str, product_id: str, quantity: int) -> Dict:
+        """Update cart item quantity by user_id and product_id"""
+        docs = self.db.collection('carts').where(
+            filter=FieldFilter('user_id', '==', user_id)
+        ).where(
+            filter=FieldFilter('product_id', '==', product_id)
+        ).limit(1).get()
+        
+        for doc in docs:
+            if quantity <= 0:
+                doc.reference.delete()
+                return {'deleted': True}
+            else:
+                doc.reference.update({
+                    'quantity': quantity,
+                    'updated_at': get_utc_now()
+                })
+                return {'id': doc.id, 'product_id': product_id, 'quantity': quantity}
+        
+        return None
+    
+    async def remove_from_cart(self, user_id: str, product_id: str) -> bool:
+        """Remove item from cart by user_id and product_id"""
+        docs = self.db.collection('carts').where(
+            filter=FieldFilter('user_id', '==', user_id)
+        ).where(
+            filter=FieldFilter('product_id', '==', product_id)
+        ).get()
+        
+        for doc in docs:
+            doc.reference.delete()
+        return True
+    
+    async def clear_cart(self, user_id: str) -> bool:
+        """Alias for clear_user_cart"""
+        return await self.clear_user_cart(user_id)
+    
     async def clear_user_cart(self, user_id: str) -> bool:
         """Clear all cart items for a user"""
         docs = self.db.collection('carts').where(
