@@ -234,6 +234,9 @@ const Home = () => {
           </div>
         </section>
 
+        {/* Recently Viewed Products */}
+        <RecentlyViewed maxItems={4} className="mb-8 sm:mb-16" />
+
         {/* Professional CTA Section - Conditional based on user type */}
         {!loading && (
           <>
