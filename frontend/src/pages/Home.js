@@ -5,6 +5,7 @@ import axios from 'axios';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import RecentlyViewed from '../components/RecentlyViewed';
+import { ProductGridSkeleton, HeroBannerSkeleton, CategoryGridSkeleton } from '../components/Skeletons';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
