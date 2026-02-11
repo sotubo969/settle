@@ -150,13 +150,18 @@ const ProductDetail = () => {
     
     const token = localStorage.getItem('afroToken');
     try {
-      await axios.post(`${API}/wishlist/add/${product.id}`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      toast.success('Added to wishlist!');
+      const response = await axios.post(`${API}/wishlist/toggle`, 
+        { product_id: product.id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data.in_wishlist) {
+        toast.success('Added to wishlist!');
+      } else {
+        toast.success('Removed from wishlist!');
+      }
     } catch (error) {
       console.error('Wishlist error:', error);
-      toast.error(error.response?.data?.detail || 'Failed to add to wishlist');
+      toast.error(error.response?.data?.detail || 'Failed to update wishlist');
     }
   };
 
