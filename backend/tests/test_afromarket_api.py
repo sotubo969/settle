@@ -336,8 +336,9 @@ class TestDeliveryService:
         )
         assert response.status_code == 200
         data = response.json()
-        assert "delivery_fee" in data or "fee" in data or "price" in data
-        print(f"✓ Delivery calculation working")
+        # API returns delivery_cost instead of delivery_fee
+        assert "delivery_cost" in data or "delivery_fee" in data or "fee" in data
+        print(f"✓ Delivery calculation working - Cost: £{data.get('delivery_cost', data.get('delivery_fee', 'N/A'))}")
     
     def test_delivery_zones(self, api_client):
         """Test delivery zones endpoint"""
