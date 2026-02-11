@@ -154,6 +154,7 @@ const AfroBot = () => {
       {/* Chat Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
+        data-testid="chatbot-toggle-button"
         className={`fixed bottom-6 right-6 z-50 p-4 rounded-full shadow-lg transition-all duration-300 transform hover:scale-110 ${
           isOpen 
             ? 'bg-red-500 hover:bg-red-600 rotate-0' 
