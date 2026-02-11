@@ -734,10 +734,16 @@ async def update_owner_delivery(
     estimated_delivery: str = Query(''),
     current_user: dict = Depends(get_current_user)
 ):
-    """Update delivery status for an order"""
+    """Update delivery status for an order with email notification"""
     if not current_user.get('is_admin') and current_user.get('email') != 'sotubodammy@gmail.com':
         raise HTTPException(status_code=403, detail="Owner access required")
     
+    # Get the order to find customer info
+    order = await firestore_db.get_order_by_id(order_id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    
+    # Update order
     await firestore_db.update_order(order_id, {
         'delivery_status': status,
         'tracking_number': tracking_number,
@@ -745,7 +751,50 @@ async def update_owner_delivery(
         'estimated_delivery': estimated_delivery
     })
     
-    return {'success': True, 'message': 'Delivery updated'}
+    # Send email notification to customer
+    email_sent = False
+    try:
+        customer_email = order.get('email') or order.get('shipping_info', {}).get('email')
+        customer_name = order.get('shipping_info', {}).get('fullName', order.get('user_name', 'Customer'))
+        
+        if customer_email:
+            email_sent = email_service.send_order_status_update(
+                to_email=customer_email,
+                customer_name=customer_name,
+                order_data=order,
+                new_status=status,
+                tracking_info={
+                    'tracking_number': tracking_number,
+                    'carrier': carrier,
+                    'estimated_delivery': estimated_delivery
+                }
+            )
+            logger.info(f"Order status email sent to {customer_email}: {email_sent}")
+    except Exception as e:
+        logger.error(f"Failed to send order status email: {e}")
+    
+    # Create in-app notification
+    try:
+        status_messages = {
+            'processing': 'Your order is being prepared',
+            'shipped': 'Your order has been shipped',
+            'in_transit': 'Your order is in transit',
+            'out_for_delivery': 'Your order is out for delivery',
+            'delivered': 'Your order has been delivered'
+        }
+        
+        await firestore_db.create_notification({
+            'user_id': order.get('user_id'),
+            'type': 'order_update',
+            'title': f'Order #{order.get("order_id", order_id)[:8]} Update',
+            'message': status_messages.get(status, f'Order status: {status}'),
+            'link': f'/track-order/{order_id}',
+            'read': False
+        })
+    except Exception as e:
+        logger.error(f"Failed to create in-app notification: {e}")
+    
+    return {'success': True, 'message': 'Delivery updated', 'emailSent': email_sent}
 
 
 # ============ VENDOR STOCK MANAGEMENT ============
