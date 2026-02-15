@@ -26,35 +26,32 @@ def get_firebase_app():
         # Try to load service account from environment variable (JSON string)
         service_account_json = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
         
+    try:
+        # Try env JSON string
+        service_account_json = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
         if service_account_json:
-            try:
-                service_account_info = json.loads(service_account_json)
-                cred = credentials.Certificate("./firebase-adminsdk.json")
-                _firebase_app = firebase_admin.initialize_app(cred)
-                logger.info("Firebase Admin SDK initialized from environment variable")
-                return _firebase_app
-            except json.JSONDecodeError:
-                logger.warning("Failed to parse FIREBASE_SERVICE_ACCOUNT as JSON")
-        
-        # Try to load from file path
-        service_account_path = os.environ.get('FIREBASE_SERVICE_ACCOUNT_PATH', 'firebase-admin.json')
-        
+            service_account_info = json.loads(service_account_json)
+            cred = credentials.Certificate(service_account_info)
+            _firebase_app = firebase_admin.initialize_app(cred)
+            logger.info("Firebase Admin SDK initialized from environment variable")
+            return _firebase_app
+    
+        # Try file path (use your file name)
+        service_account_path = os.environ.get('FIREBASE_SERVICE_ACCOUNT_PATH', './firebase-adminsdk.json')
         if os.path.exists(service_account_path):
-            cred = credentials.Certificate("./firebase-adminsdk.json")
+            cred = credentials.Certificate(service_account_path)
             _firebase_app = firebase_admin.initialize_app(cred)
             logger.info(f"Firebase Admin SDK initialized from file: {service_account_path}")
             return _firebase_app
-        
-        # Initialize without credentials (for testing/development)
-        # This will only work for basic operations
+    
+        # Fallback (limited functionality)
         _firebase_app = firebase_admin.initialize_app()
         logger.warning("Firebase Admin SDK initialized without credentials (limited functionality)")
         return _firebase_app
-        
+    
     except Exception as e:
         logger.error(f"Failed to initialize Firebase Admin SDK: {e}")
         return None
-
 
 async def verify_firebase_token(id_token: str) -> dict:
     """
