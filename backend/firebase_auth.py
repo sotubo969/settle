@@ -29,7 +29,7 @@ def get_firebase_app():
         if service_account_json:
             try:
                 service_account_info = json.loads(service_account_json)
-                cred = credentials.Certificate(service_account_info)
+                cred = credentials.Certificate("./firebase-adminsdk.json")
                 _firebase_app = firebase_admin.initialize_app(cred)
                 logger.info("Firebase Admin SDK initialized from environment variable")
                 return _firebase_app
@@ -40,7 +40,7 @@ def get_firebase_app():
         service_account_path = os.environ.get('FIREBASE_SERVICE_ACCOUNT_PATH', 'firebase-admin.json')
         
         if os.path.exists(service_account_path):
-            cred = credentials.Certificate(service_account_path)
+            cred = credentials.Certificate("./firebase-adminsdk.json")
             _firebase_app = firebase_admin.initialize_app(cred)
             logger.info(f"Firebase Admin SDK initialized from file: {service_account_path}")
             return _firebase_app
