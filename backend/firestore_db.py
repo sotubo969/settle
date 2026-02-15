@@ -46,7 +46,7 @@ def get_firebase_app():
     if service_account_json:
         try:
             service_account = json.loads(service_account_json)
-            cred = credentials.Certificate(service_account)
+            cred = credentials.Certificate("./firebase-adminsdk.json")
             _firebase_app = firebase_admin.initialize_app(cred)
             logger.info("Firebase Admin initialized with service account")
             return _firebase_app
