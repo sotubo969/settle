@@ -5,6 +5,7 @@ from fastapi import HTTPException
 import os
 import json
 import logging
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -14,84 +15,98 @@ _firebase_app = None
 def get_firebase_app():
     """Get or initialize Firebase Admin SDK"""
     global _firebase_app
-    
+
     if _firebase_app is not None:
         return _firebase_app
-    
+
     if firebase_admin._apps:
         _firebase_app = firebase_admin.get_app()
         return _firebase_app
-    
+
+    # Default path to your uploaded file (in the same folder as this script)
+    DEFAULT_SERVICE_ACCOUNT_PATH = "./firebase-adminsdk.json"
+
     try:
-        # Try to load service account from environment variable (JSON string)
-        service_account_json = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
-        
-    try:
-        # Try env JSON string
+        # 1. Try to load from environment variable (JSON string) - highest priority
         service_account_json = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
         if service_account_json:
-            service_account_info = json.loads(service_account_json)
-            cred = credentials.Certificate(service_account_info)
-            _firebase_app = firebase_admin.initialize_app(cred)
-            logger.info("Firebase Admin SDK initialized from environment variable")
-            return _firebase_app
-    
-        # Try file path (use your file name)
-        service_account_path = os.environ.get('FIREBASE_SERVICE_ACCOUNT_PATH', './firebase-adminsdk.json')
+            try:
+                service_account_info = json.loads(service_account_json)
+                cred = credentials.Certificate(service_account_info)
+                _firebase_app = firebase_admin.initialize_app(cred)
+                logger.info("Firebase Admin SDK initialized from FIREBASE_SERVICE_ACCOUNT env var (JSON string)")
+                return _firebase_app
+            except json.JSONDecodeError as e:
+                logger.warning(f"Failed to parse FIREBASE_SERVICE_ACCOUNT as JSON: {e}")
+            except Exception as e:
+                logger.error(f"Error initializing from FIREBASE_SERVICE_ACCOUNT env var: {e}")
+
+        # 2. Try to load from file path (environment variable or default hardcoded path)
+        service_account_path = os.environ.get('FIREBASE_SERVICE_ACCOUNT_PATH', DEFAULT_SERVICE_ACCOUNT_PATH)
+
+        # Convert to absolute path for reliability
+        service_account_path = str(Path(service_account_path).resolve())
+
         if os.path.exists(service_account_path):
-            cred = credentials.Certificate(service_account_path)
-            _firebase_app = firebase_admin.initialize_app(cred)
-            logger.info(f"Firebase Admin SDK initialized from file: {service_account_path}")
-            return _firebase_app
-    
-        # Fallback (limited functionality)
+            try:
+                cred = credentials.Certificate(service_account_path)
+                _firebase_app = firebase_admin.initialize_app(cred)
+                logger.info(f"Firebase Admin SDK initialized successfully from file: {service_account_path}")
+                return _firebase_app
+            except Exception as e:
+                logger.error(f"Failed to initialize from file {service_account_path}: {e}")
+        else:
+            logger.warning(f"Firebase service account file not found at: {service_account_path}")
+
+        # 3. Final fallback: initialize without credentials (very limited - only for testing)
         _firebase_app = firebase_admin.initialize_app()
-        logger.warning("Firebase Admin SDK initialized without credentials (limited functionality)")
+        logger.warning("Firebase Admin SDK initialized WITHOUT credentials (limited functionality - auth/Firestore will be restricted)")
         return _firebase_app
-    
+
     except Exception as e:
-        logger.error(f"Failed to initialize Firebase Admin SDK: {e}")
+        logger.error(f"Critical error during Firebase Admin SDK initialization: {e}")
         return None
+
 
 async def verify_firebase_token(id_token: str) -> dict:
     """
     Verify Firebase ID token and return user info.
-    
+
     Args:
         id_token: Firebase ID token from client
-        
+
     Returns:
         dict with user info: uid, email, email_verified, name, picture, auth_provider
     """
     app = get_firebase_app()
-    
+
     if not app:
         raise HTTPException(
-            status_code=500, 
+            status_code=500,
             detail="Firebase not configured. Please set up Firebase credentials."
         )
-    
+
     try:
         # Verify the ID token
         decoded_token = firebase_auth.verify_id_token(id_token)
-        
+
         # Extract user information
         uid = decoded_token.get('uid')
         email = decoded_token.get('email')
         email_verified = decoded_token.get('email_verified', False)
         name = decoded_token.get('name')
         picture = decoded_token.get('picture')
-        
+
         # Determine auth provider
         sign_in_provider = decoded_token.get('firebase', {}).get('sign_in_provider', 'password')
-        
+
         # Google users are always considered verified
         if sign_in_provider == 'google.com':
             email_verified = True
             auth_provider = 'google'
         else:
             auth_provider = 'email'
-        
+
         return {
             'uid': uid,
             'email': email,
@@ -101,7 +116,7 @@ async def verify_firebase_token(id_token: str) -> dict:
             'auth_provider': auth_provider,
             'sign_in_provider': sign_in_provider
         }
-        
+
     except firebase_auth.InvalidIdTokenError:
         raise HTTPException(status_code=401, detail="Invalid Firebase token")
     except firebase_auth.ExpiredIdTokenError:
@@ -118,10 +133,10 @@ async def verify_firebase_token(id_token: str) -> dict:
 async def get_firebase_user(uid: str) -> dict:
     """Get Firebase user by UID"""
     app = get_firebase_app()
-    
+
     if not app:
         raise HTTPException(status_code=500, detail="Firebase not configured")
-    
+
     try:
         user = firebase_auth.get_user(uid)
         return {
