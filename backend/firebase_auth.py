@@ -23,44 +23,41 @@ def get_firebase_app():
         _firebase_app = firebase_admin.get_app()
         return _firebase_app
 
-    # Default path to your uploaded file (in the same folder as this script)
+    # Default to your uploaded file (same folder as this script)
     DEFAULT_SERVICE_ACCOUNT_PATH = "./firebase-adminsdk.json"
 
     try:
-        # 1. Try to load from environment variable (JSON string) - highest priority
+        # 1. Highest priority: Load from environment variable (JSON string)
         service_account_json = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
         if service_account_json:
             try:
                 service_account_info = json.loads(service_account_json)
-                cred = credentials.Certificate(service_account_info)
+                cred = credentials.Certificate(service_account_info)  # dict is correct here
                 _firebase_app = firebase_admin.initialize_app(cred)
                 logger.info("Firebase Admin SDK initialized from FIREBASE_SERVICE_ACCOUNT env var (JSON string)")
                 return _firebase_app
             except json.JSONDecodeError as e:
                 logger.warning(f"Failed to parse FIREBASE_SERVICE_ACCOUNT as JSON: {e}")
             except Exception as e:
-                logger.error(f"Error initializing from FIREBASE_SERVICE_ACCOUNT env var: {e}")
+                logger.error(f"Error initializing from env JSON string: {e}")
 
-        # 2. Try to load from file path (environment variable or default hardcoded path)
+        # 2. Load from file path (env var or hardcoded default)
         service_account_path = os.environ.get('FIREBASE_SERVICE_ACCOUNT_PATH', DEFAULT_SERVICE_ACCOUNT_PATH)
 
-        # Convert to absolute path for reliability
+        # Make absolute path for reliability
         service_account_path = str(Path(service_account_path).resolve())
 
         if os.path.exists(service_account_path):
-            try:
-                cred = credentials.Certificate(service_account_path)
-                _firebase_app = firebase_admin.initialize_app(cred)
-                logger.info(f"Firebase Admin SDK initialized successfully from file: {service_account_path}")
-                return _firebase_app
-            except Exception as e:
-                logger.error(f"Failed to initialize from file {service_account_path}: {e}")
+            cred = credentials.Certificate(service_account_path)
+            _firebase_app = firebase_admin.initialize_app(cred)
+            logger.info(f"Firebase Admin SDK initialized successfully from file: {service_account_path}")
+            return _firebase_app
         else:
             logger.warning(f"Firebase service account file not found at: {service_account_path}")
 
-        # 3. Final fallback: initialize without credentials (very limited - only for testing)
+        # 3. Fallback: initialize without credentials (limited functionality - testing only)
         _firebase_app = firebase_admin.initialize_app()
-        logger.warning("Firebase Admin SDK initialized WITHOUT credentials (limited functionality - auth/Firestore will be restricted)")
+        logger.warning("Firebase Admin SDK initialized WITHOUT credentials (limited functionality - auth/Firestore restricted)")
         return _firebase_app
 
     except Exception as e:
