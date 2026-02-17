@@ -27,7 +27,7 @@ def get_firebase_app():
     DEFAULT_SERVICE_ACCOUNT_PATH = "./firebase-adminsdk.json"
 
     try:
-        # 1. Highest priority: Load from environment variable (JSON string)
+        # Priority 1: Load from environment variable (JSON string)
         service_account_json = os.environ.get('FIREBASE_SERVICE_ACCOUNT')
         if service_account_json:
             try:
@@ -41,10 +41,10 @@ def get_firebase_app():
             except Exception as e:
                 logger.error(f"Error initializing from env JSON string: {e}")
 
-        # 2. Load from file path (env var or hardcoded default)
+        # Priority 2: Load from file path (env var or default hardcoded path)
         service_account_path = os.environ.get('FIREBASE_SERVICE_ACCOUNT_PATH', DEFAULT_SERVICE_ACCOUNT_PATH)
 
-        # Make absolute path for reliability
+        # Make it absolute for reliability
         service_account_path = str(Path(service_account_path).resolve())
 
         if os.path.exists(service_account_path):
@@ -55,7 +55,7 @@ def get_firebase_app():
         else:
             logger.warning(f"Firebase service account file not found at: {service_account_path}")
 
-        # 3. Fallback: initialize without credentials (limited functionality - testing only)
+        # Priority 3: Fallback - initialize without credentials (very limited - testing only)
         _firebase_app = firebase_admin.initialize_app()
         logger.warning("Firebase Admin SDK initialized WITHOUT credentials (limited functionality - auth/Firestore restricted)")
         return _firebase_app
